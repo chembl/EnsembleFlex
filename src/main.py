@@ -4,8 +4,10 @@ import os
 #import ntpath
 # IMPORTING ALL THE NECESSARY PySide6 MODULES FOR THE APPLICATION.
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import (QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject, QObject, QPoint, QRect, QSize, QTime, QUrl, Qt, QEvent)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient)
+from PySide6.QtCore import (QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject, QObject, QPoint,
+                            QRect, QSize, QTime, QUrl, Qt, QEvent)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon, QKeySequence,
+                           QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient)
 from PySide6.QtWidgets import *
 #import subprocess
 #subprocess.check_call(['Rscript', 'myscript.R'], shell=False)
@@ -114,7 +116,9 @@ class MainWindow(QMainWindow):
         if os.path.exists(self.outputdir) and not os.listdir(self.outputdir):
             self.selection_response_lab2.setText('Output directory set to: '+str(self.outputdir))
         elif os.path.exists(self.outputdir) and os.listdir(self.outputdir):
-            self.selection_response_lab2.setText('Output directory set to: '+str(self.outputdir)+'\n Attention: The directory may not be empty and existing files may be overwritten.')
+            self.selection_response_lab2.setText('Output directory set to: '+str(self.outputdir)+
+                                                 '\n Attention: The directory may not be empty and existing files may '
+                                                 'be overwritten.')
 
     def getFileNames(self):
         #file_filter = 'Data File (*.xlsx *.csv *.dat);; Excel File (*.xlsx *.xls)'
@@ -169,7 +173,7 @@ class MainWindow(QMainWindow):
         selection_label2.setMinimumSize(QSize(0, 0))
         selection_label2.setMaximumSize(QSize(16777215, 55))
         selection_label2.setFont(self.font2)
-        selection_label2.setText("Select Output Directory")
+        selection_label2.setText("Create/select Output folder")
 
         self.selection_btn2 = QPushButton('Browse')
         self.selection_btn2.clicked.connect(self.launchSelectionDialog2)
@@ -214,14 +218,16 @@ class MainWindow(QMainWindow):
 
     def hide_superimpose_btn1(self, state):
         # if checkbutton is checked and input files and output folder are given
-        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and os.path.exists(self.outputdir):
+        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and \
+                os.path.exists(self.outputdir):
             self.superimpose_btn1.setEnabled(True)
         else:
             self.superimpose_btn1.setEnabled(False)
 
     def hide_superimpose_btn2(self, state):
         # if checkbutton is checked and input files and output folder are given
-        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and os.path.exists(self.outputdir):
+        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and \
+                os.path.exists(self.outputdir):
             self.superimpose_btn2.setEnabled(True)
         else:
             self.superimpose_btn2.setEnabled(False)
@@ -239,8 +245,8 @@ class MainWindow(QMainWindow):
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('python3',
                            ['./superimpose_prody.py', '-i', str(self.inputdir), '-o', str(self.outputdir)])
-        self.superimposed = self.outputdir + '/superimposed'
-        self.superimpose_response.setText("Superimposed structures are saved in " + self.superimposed)
+        self.superimposed = self.outputdir + '/superimposed/split_ensemble'
+        self.superimpose_response.setText("Superimposed structures are saved separately in " + self.superimposed)
         self.runBio3D_btn.setEnabled(True)
         self.runProDy_btn.setEnabled(True)
 
@@ -326,14 +332,14 @@ class MainWindow(QMainWindow):
     #############################################################
 
     def callAnalysisBio3D(self):
-        self.outputdirBio3D = self.outputdir + '/Bio3D_Analysis'
+        self.outputdirBio3D = self.outputdir + '/Analysis_Bio3D'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('/usr/local/bin/Rscript',
                            ['./analysis_bio3d.R', '-d', str(self.superimposed), '-o', str(self.outputdirBio3D)])
         self.Bio3d_response.setText("Results will be saved in " + self.outputdirBio3D)
 
     def callAnalysisProDy(self):
-        self.outputdirProDy = self.outputdir + '/ProDy_Analysis'
+        self.outputdirProDy = self.outputdir + '/Analysis_ProDy'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('python3',
                            ['./analysis_prody.py', '-i', str(self.superimposed), '-o', str(self.outputdirProDy)])
@@ -367,7 +373,9 @@ class MainWindow(QMainWindow):
         lab2 = QLabel()
         lab2.setFont(self.font4)
         lab2.setWordWrap(True)  # making it multi line
-        lab2.setText(" - Root Mean Square Fluctuations (RMSF)\n - Torsion/Dihedral analysis\n - Difference distance matrix analysis (DDM)\n - Principal Component Analysis (PCA)\n - Ensemble Normal Mode Analysis (eNMA)")
+        lab2.setText(" - Root Mean Square Fluctuations (RMSF)\n - Torsion/Dihedral analysis\n"
+                     " - Difference distance matrix analysis (DDM)\n - Principal Component Analysis (PCA)\n"
+                     " - Ensemble Normal Mode Analysis (eNMA)")
         self.runBio3D_btn = QPushButton('Run')
         # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
         self.runBio3D_btn.setEnabled(False)
@@ -406,7 +414,8 @@ class MainWindow(QMainWindow):
         lab2 = QLabel()
         lab2.setFont(self.font4)
         lab2.setWordWrap(True)  # making it multi line
-        lab2.setText(" - Root Mean Square Fluctuations (RMSF)\n - Principal Component Analysis (PCA)\n - Normal Mode Analysis (NMA)")
+        lab2.setText(" - Root Mean Square Fluctuations (RMSF)\n - Principal Component Analysis (PCA)\n"
+                     " - Normal Mode Analysis (NMA)")
 
         self.runProDy_btn = QPushButton('Run')
         # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
@@ -441,6 +450,21 @@ class MainWindow(QMainWindow):
     # COMPARE (global)
     #############################################################
 
+    def callPDBFlex(self):
+        self.outputdirPDBFlex = self.outputdir + '/Compare_PDBFlex'
+        # run the process # `start` takes the exec and a list of arguments
+        self.process.start('python3',
+                           ['./call_pdbflex.py', '-i', str(self.superimposed), '-o', str(self.outputdirPDBFlex)])
+        self.PDBFlex_response.setText("Results will be saved in " + self.outputdirPDBFlex)
+
+    def callAlphaFold(self):
+        self.outputdirAlphaFold = self.outputdir + '/Compare_AlphaFold'
+        # run the process # `start` takes the exec and a list of arguments
+        self.process.start('python3',
+                           ['./call_.py', '-i', str(self.superimposed), '-o', str(self.outputdirAlphaFold)])
+        self.AlphaFold_response.setText("Results will be saved in " + self.outputdirAlphaFold)
+
+
     def createGroupCompare(self):
         groupbox = QGroupBox("4")
         groupbox.setStyleSheet("background-color:rgb(65, 122, 122);")  # darker cyan
@@ -464,10 +488,30 @@ class MainWindow(QMainWindow):
         lab = QLabel()
         lab.setFont(self.font2)
         # lab.setStyleSheet("background-color:rgb(255,255,255);")
-        lab.setText("Compare with PDBFlex cluster")
+        lab.setText("A) Compare with PDBFlex cluster")
+
+        lab2 = QLabel()
+        lab2.setFont(self.font4)
+        lab2.setWordWrap(True)  # making it multi line
+        lab2.setText(" - Download PDBFlex cluster\n - Root Mean Square Fluctuations (RMSF)\n"
+                     " - Principal Component Analysis (PCA)\n - Normal Mode Analysis (NMA)")
+
+        self.runPDBFlex_btn = QPushButton('Run')
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        self.runPDBFlex_btn.setEnabled(False)
+        self.runPDBFlex_btn.clicked.connect(self.callPDBFlex)
+
+        self.PDBFlex_response = QTextEdit()
+        self.PDBFlex_response.setReadOnly(True)
+        self.PDBFlex_response.setFont(self.font4)
+        self.PDBFlex_response.setMaximumHeight(45)
+        self.PDBFlex_response.setStyleSheet("background-color:rgb(118, 168, 168);")
 
         layout = QGridLayout()
         layout.addWidget(lab, 0, 0)
+        layout.addWidget(lab2, 1, 0)
+        layout.addWidget(self.runPDBFlex_btn, 2, 0)
+        layout.addWidget(self.PDBFlex_response, 3, 0, 1, 1)
         groupbox.setLayout(layout)
         return groupbox
 
@@ -477,10 +521,30 @@ class MainWindow(QMainWindow):
         lab = QLabel()
         lab.setFont(self.font2)
         # lab.setStyleSheet("background-color:rgb(255,255,255);")
-        lab.setText("Compare with AlphaFold prediction")
+        lab.setText("B) Compare with AlphaFold prediction")
+
+        lab2 = QLabel()
+        lab2.setFont(self.font4)
+        lab2.setWordWrap(True)  # making it multi line
+        lab2.setText(" - Download AlphaFold prediction\n - Root Mean Square Fluctuations (RMSF)\n"
+                     " - Principal Component Analysis (PCA)\n - Normal Mode Analysis (NMA)")
+
+        self.runAlphaFold_btn = QPushButton('Run')
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        self.runAlphaFold_btn.setEnabled(False)
+        self.runAlphaFold_btn.clicked.connect(self.callAlphaFold)
+
+        self.AlphaFold_response = QTextEdit()
+        self.AlphaFold_response.setReadOnly(True)
+        self.AlphaFold_response.setFont(self.font4)
+        self.AlphaFold_response.setMaximumHeight(45)
+        self.AlphaFold_response.setStyleSheet("background-color:rgb(118, 168, 168);")
 
         layout = QGridLayout()
         layout.addWidget(lab, 0, 0)
+        layout.addWidget(lab2, 1, 0)
+        layout.addWidget(self.runAlphaFold_btn, 2, 0)
+        layout.addWidget(self.AlphaFold_response, 3, 0, 1, 1)
         groupbox.setLayout(layout)
         return groupbox
 
@@ -521,14 +585,16 @@ class MainWindow(QMainWindow):
 
     def hide_superimpose_bs_btn1(self, state):
         # if checkbutton is checked and input files and output folder are given
-        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and os.path.exists(self.outputdir):
+        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and \
+                os.path.exists(self.outputdir):
             self.superimpose_bs_btn1.setEnabled(True)
         else:
             self.superimpose_bs_btn1.setEnabled(False)
 
     def hide_superimpose_bs_btn2(self, state):
         # if checkbutton is checked and input files and output folder are given
-        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and os.path.exists(self.outputdir):
+        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and \
+                os.path.exists(self.outputdir):
             self.superimpose_bs_btn2.setEnabled(True)
         else:
             self.superimpose_bs_btn2.setEnabled(False)
@@ -716,4 +782,4 @@ if __name__ == "__main__":
 
     sys.exit(app.exec())
 
-############################################################################################################################################################
+#######################################################################################################################

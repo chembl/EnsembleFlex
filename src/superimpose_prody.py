@@ -2,7 +2,7 @@
 import glob
 import os
 from optparse import OptionParser
-# import sys
+import subprocess
 from prody import *
 
 parser = OptionParser()
@@ -15,16 +15,27 @@ parser.add_option("-o", "--out", dest="output_dir", default="outdir",
 if os.path.isdir(opts.input_path) and os.path.isdir(opts.output_dir):
     output_path = os.path.abspath(opts.output_dir)
 elif os.path.isdir(opts.input_path) and not os.path.isdir(opts.output_dir):
-    output_path = opts.input_path+"/"+opts.output_dir
+    if os.path.isdir(os.path.dirname(opts.output_dir)):
+        output_path = opts.output_dir
+        os.mkdir(output_path)
+    else:
+        output_path = opts.input_path+"/"+opts.output_dir
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 else:
     print("Please specify a valid input directory path to your structure files.\n")
 
-os.chdir(output_path)
+toolsdir = os.path.dirname(os.path.realpath(__file__))+"/tools"
 
+os.chdir(output_path)
+if not os.path.exists(output_path+"/superimposed"):
+    os.mkdir('superimposed')
+os.chdir('superimposed')
+
+# list of pdb files
 pdbfiles = glob.glob(opts.input_path+"/*.pdb")
 
+# parsing structures
 structures = parsePDB(pdbfiles, compressed=False) #, subset='ca'
 
 # buildPDBEnsemble() maps each structure against the reference structure using a function such as mapOntoChain().
@@ -34,15 +45,15 @@ ensemble = buildPDBEnsemble(structures)
 ensemble.iterpose()
 # Save coordinates
 writePDB('ensemble.pdb', ensemble)
-print("Superimposed ensemble coordinates are saved to ensemble.pdb\n")
+print("Superimposed ensemble coordinates are saved to ensemble.pdb.\n ")
 
-print(output_path)
+# Using pdb_splitmodel.py from tools directory to split the ensemble file into directory "split_ensemble"
 
-if not os.path.exists(output_path+"/split_ensemble"):
-    os.mkdir(output_path+"/split_ensemble")
-os.chdir(output_path +"/split_ensemble")
+if not os.path.exists(output_path+"/superimposed/split_ensemble"):
+    os.mkdir(output_path+"/superimposed/split_ensemble")
+os.chdir(output_path +"/superimposed/split_ensemble")
 
-from tools import pdb_splitmodel
-pdb_splitmodel.run(output_path+"/ensemble.pdb")
+print("toolsdir = "+toolsdir)
+subprocess.call(['python3', '{}/pdb_splitmodel.py'.format(toolsdir), '{}/superimposed/ensemble.pdb'.format(output_path)])
 
-print("Multimodelfile split and saved to directory split_ensemble\n")
+print("\nMultimodelfile split and saved to directory /superimposed/split_ensemble.\n ")

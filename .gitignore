@@ -2,4 +2,4 @@
 /.idea
 /.DS_Store
 /src/tools/__pycache__
-/src/tools/pdb_splitmodel.py
+/src/tools
