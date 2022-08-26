@@ -68,6 +68,9 @@ core <- core.find(pdbs)
 core.inds <- print(core, vol=1.0)
 write.pdb(xyz = pdbs$xyz[1,core.inds$xyz], file = "quick_core.pdb")
 
+# pdbfit is a wrapper for the function fit.xyz
+# The reference frame for supperposition (i.e. the fixed structure to which others are superposed) is the first entry
+# in the input "pdbs" object (fixed=pdbs$xyz[1,]). For finer control use fit.xyz.
 xyz <- pdbfit.pdbs(pdbs, inds = core.inds, outpath = "superimposed")
 
 
