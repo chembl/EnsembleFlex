@@ -71,7 +71,12 @@ write.pdb(xyz = pdbs$xyz[1,core.inds$xyz], file = "quick_core.pdb")
 # pdbfit is a wrapper for the function fit.xyz
 # The reference frame for supperposition (i.e. the fixed structure to which others are superposed) is the first entry
 # in the input "pdbs" object (fixed=pdbs$xyz[1,]). For finer control use fit.xyz.
-xyz <- pdbfit.pdbs(pdbs, inds = core.inds, outpath = "superimposed")
+xyz <- pdbfit.pdbs(pdbs, inds = core.inds, outpath = "superimposed", pdbext = "")
 
 
-
+superimp_dir <- paste(outdir, "/superimposed", sep='')
+# remove double file extensions "pdb_flsq." from file names
+superimp_files <- list.files(path = superimp_dir, pattern = "*.pdb_flsq.pdb", full.names = T, recursive = F)
+sapply(superimp_files,FUN=function(eachPath){
+  file.rename(from=eachPath,to= sub(pattern="pdb_flsq.", paste0(""),eachPath))
+})

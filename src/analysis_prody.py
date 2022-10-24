@@ -38,7 +38,8 @@ reference_structure = structures[1]
 
 # buildPDBEnsemble() maps each structure against the reference structure using a function such as mapOntoChain().
 # The reference structure is automatically the first member of list provided.
-ensemble = buildPDBEnsemble(structures)
+# Here superpositioning is omitted by setting it to 'False'.
+ensemble = buildPDBEnsemble(structures, superpose=False)
 
 ### 1. RMSF
 rmsf = ensemble.getRMSFs()

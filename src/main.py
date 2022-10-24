@@ -415,7 +415,8 @@ class MainWindow(QMainWindow):
         lab2.setFont(self.font4)
         lab2.setWordWrap(True)  # making it multi line
         lab2.setText(" - Root Mean Square Fluctuations (RMSF)\n - Principal Component Analysis (PCA)\n"
-                     " - Normal Mode Analysis (NMA)")
+                     " - Anisotropic Network Model (ANM) Normal Mode Analysis (NMA)\n"
+                     " - Dynamical Domain Decomposition of reference structure")
 
         self.runProDy_btn = QPushButton('Run')
         # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog

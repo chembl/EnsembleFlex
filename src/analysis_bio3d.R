@@ -58,11 +58,12 @@ if (!is.null(opt$directory)){
 # option 1.
 #pdbs <- pdbaln(files)
 pdbs <- pdbaln(files, exefile='msa')
-number_of_groups <- 2
+ids <- sub("[.].*", "", basename(pdbs$id)) # get filenames and drop any extensions
+#ids <- sapply(strsplit(basename(pdbs$id), "[.]"), head, 1)
 #ids <- unlist(strsplit(basename(pdbs$id), split=".pdb"))
-ids <- unlist(substr(basename(pdbs$id), 1, 7))
+#ids <- unlist(substr(basename(pdbs$id), 1, 7))
 print(ids)
-
+number_of_groups <- 2
 # # option 2. if they are of identical composition and you only want xyz coordinates
 # xyz <- NULL
 # for(i in files) {
@@ -80,7 +81,7 @@ dev.off()
 library(pheatmap)
 png("RMSD_heatmap.png", units="in", width=5, height=5, res=300)
 #heatmap(rd, labCol=ids, main="RMSD Heatmap")
-pheatmap(rd, labCol=ids, main="RMSD Heatmap")
+pheatmap(rd, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
 dev.off()
 
 ## RMSD clustering
@@ -111,41 +112,6 @@ rf <- rmsf(pdbs$xyz[, gaps.pos$f.inds])
 png("RMSF.png", units="in", width=5, height=5, res=300)
 plot.bio3d(rf, resno=ref.pdb, sse=ref.pdb, ylab="RMSF (Å)",
            xlab="Residue No.", typ="l", main="RMSFs")
-dev.off()
-
-
-## Torsion/Dihedral analysis
-##-------------------------------------
-# Locate the two structures in pdbs
-#print(files[1], files[length(files)])
-ind.a <- grep(pdb1$id, pdbs$id)
-ind.b <- grep(pdb2$id, pdbs$id)
-
-# Exclude gaps in the two structures to make them comparable
-gaps.xyz2 <- gap.inspect(pdbs$xyz[c(ind.a, ind.b), ])
-a.xyz <- pdbs$xyz[ind.a, gaps.xyz2$f.inds]
-b.xyz <- pdbs$xyz[ind.b, gaps.xyz2$f.inds]
-
-# Compare CA based pseudo-torsion angles between the two structures
-a <- torsion.xyz(a.xyz, atm.inc=1)
-b <- torsion.xyz(b.xyz, atm.inc=1)
-d.ab <- wrap.tor(a-b)
-d.ab[is.na(d.ab)] <- 0
-
-# Plot results with SSE annotation
-png("Ca_torsion_diff_between_first&last_structure.png", units="in", width=5, height=5, res=300)
-plot.bio3d(abs(d.ab), resno=pdb1, sse=pdb1, typ="h", xlab="Residue No.",
-           ylab = "Difference Angle", main="Ca torsion difference - first&last structure")
-dev.off()
-
-
-## Difference distance matrix analysis (DDM)
-##-------------------------------------
-a <- dm.xyz(a.xyz)
-b <- dm.xyz(b.xyz)
-
-png("DDM.png", units="in", width=5, height=5, res=300)
-plot.dmat( (a - b), nlevels=10, grid.col="gray", xlab=basename(pdb1$id), ylab=basename(pdb2$id), main="Difference distance matrix")
 dev.off()
 
 
@@ -189,11 +155,48 @@ dev.off()
 # dev.off()
 
 
+## Difference distance matrix analysis (DDM)
+##-------------------------------------
+a <- dm.xyz(a.xyz)
+b <- dm.xyz(b.xyz)
+
+png("DDM.png", units="in", width=5, height=5, res=300)
+plot.dmat( (a - b), nlevels=10, grid.col="gray", xlab=basename(pdb1$id), ylab=basename(pdb2$id), main="Difference distance matrix")
+dev.off()
+
+
+## Torsion/Dihedral analysis
+##-------------------------------------
+# Locate the two structures in pdbs
+#print(files[1], files[length(files)])
+ind.a <- grep(pdb1$id, pdbs$id)
+ind.b <- grep(pdb2$id, pdbs$id)
+
+# Exclude gaps in the two structures to make them comparable
+gaps.xyz2 <- gap.inspect(pdbs$xyz[c(ind.a, ind.b), ])
+a.xyz <- pdbs$xyz[ind.a, gaps.xyz2$f.inds]
+b.xyz <- pdbs$xyz[ind.b, gaps.xyz2$f.inds]
+
+# Compare CA based pseudo-torsion angles between the two structures
+a <- torsion.xyz(a.xyz, atm.inc=1)
+b <- torsion.xyz(b.xyz, atm.inc=1)
+d.ab <- wrap.tor(a-b)
+d.ab[is.na(d.ab)] <- 0
+
+# Plot results with SSE annotation
+png("Ca_torsion_diff_between_first&last_structure.png", units="in", width=5, height=5, res=300)
+plot.bio3d(abs(d.ab), resno=pdb1, sse=pdb1, typ="h", xlab="Residue No.",
+           ylab = "Difference Angle", main="Ca torsion difference - first&last structure")
+dev.off()
+
+
+
 # # Calculate pair-wise RMSD values
 # rmsd.map <- rmsd(pdbs$xyz, a.inds=gaps.pos$f.inds, fit=TRUE)
 # png("pair-wise_RMSDs.png", units="in", width=5, height=5, res=300)
 # heatmap(rmsd.map, labCol=ids, symm=TRUE, main="Pair-wise RMSDs") #, labRow=annotation[, "state"]
 # dev.off()
+
 
 #writeLines(capture.output(sessionInfo()), paste0(outdir, "/Data/session_info.", format(Sys.time(), "%Y%m%d.%H%M"), ".txt"))
 writeLines(capture.output(sessionInfo()), paste0(outdir, "/R_session_info.txt"))

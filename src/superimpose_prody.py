@@ -41,7 +41,12 @@ structures = parsePDB(pdbfiles, compressed=False) #, subset='ca'
 # buildPDBEnsemble() maps each structure against the reference structure using a function such as mapOntoChain().
 # The reference structure is automatically the first member of list provided.
 ensemble = buildPDBEnsemble(structures)
-# Perform an iterative superimposition
+# Perform an iterative superimposition:
+# Iteratively superpose the ensemble until convergence. Initially, all conformations are aligned with the reference
+# coordinates. Then mean coordinates are calculated, and are set as the new reference coordinates. This is repeated
+# until reference coordinates do not change. This is determined by the value of RMSD between the new and old reference
+# coordinates. Note that at the end of the iterative procedure the reference coordinate set will be average of
+# conformations in the ensemble.
 ensemble.iterpose()
 # Save coordinates
 writePDB('ensemble.pdb', ensemble)
