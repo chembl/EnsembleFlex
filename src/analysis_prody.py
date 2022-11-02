@@ -34,7 +34,8 @@ os.chdir(output_path)
 pdbfiles = glob.glob(opts.input_path+"/*.pdb")
 # parsing structures
 structures = parsePDB(pdbfiles, compressed=False)  #, subset='ca'
-reference_structure = structures[1]
+reference_structure = structures[0] # by default first structure of ensemble is taken as reference structure and
+# For unresolved atoms, the coordinates of the reference structure is assumed in RMSD calculations and superpositions.
 
 # buildPDBEnsemble() maps each structure against the reference structure using a function such as mapOntoChain().
 # The reference structure is automatically the first member of list provided.
@@ -218,7 +219,7 @@ print('\nCross Correlations of ANM1 per residue is saved to CrossCorrelations_AN
 gnm, _ = calcGNM(reference_structure, selstr='all')
 domains = calcGNMDomains(gnm[:8])
 # assign this data to the AtomGroup:
-emd.setData('domain', domains)
+reference_structure.setData('domain', domains)
 # using the B-factor field for writing the domains
 writePDB('reference_structure_dynamic_domains.pdb', reference_structure, beta=domains)
 print('\nDynamical domains of reference structure are saved in B-factor column of reference_structure_dynamic_domains.pdb '

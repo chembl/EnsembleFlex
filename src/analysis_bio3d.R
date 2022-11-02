@@ -1,6 +1,10 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 
+#install.packages("devtools")
+#library(devtools)
+#devtools::install_bitbucket("Grantlab/bio3d", subdir = "bio3d-core", ref="core")
+#devtools::install_bitbucket("Grantlab/bio3d-eddm")
 #install.packages("bio3d", dependencies=TRUE)
 #install.packages("optparse", dependencies=TRUE)
 # if (!require("BiocManager", quietly = TRUE))
@@ -111,7 +115,15 @@ ref.pdb <- trim.pdb(pdb1, inds = atom.select(pdb1, resno = pdbs$resno[pdb1$id, g
 rf <- rmsf(pdbs$xyz[, gaps.pos$f.inds])
 png("RMSF.png", units="in", width=5, height=5, res=300)
 plot.bio3d(rf, resno=ref.pdb, sse=ref.pdb, ylab="RMSF (Å)",
-           xlab="Residue No.", typ="l", main="RMSFs")
+           xlab="Residue No.", main="RMSFs", col="gray") #, typ="l"
+dev.off()
+
+
+## B-factors
+##-------------------------------------
+png("B-factors.png", units="in", width=5, height=5, res=300)
+plot.bio3d(pdbs$b, rm.gaps=TRUE, resno=ref.pdb, sse=ref.pdb, ylab="B-factor",
+           xlab="Residue No.", main="B-factors", col="gray") #, typ="l"
 dev.off()
 
 
@@ -155,18 +167,48 @@ dev.off()
 # dev.off()
 
 
-## Difference distance matrix analysis (DDM)
+## eDDM
 ##-------------------------------------
-a <- dm.xyz(a.xyz)
-b <- dm.xyz(b.xyz)
-
-png("DDM.png", units="in", width=5, height=5, res=300)
-plot.dmat( (a - b), nlevels=10, grid.col="gray", xlab=basename(pdb1$id), ylab=basename(pdb2$id), main="Difference distance matrix")
+# The eDDM analysis compares structural ensembles under distinct ligation, activation, etc. conditions.
+# At least two groups of structures are required.
+# we use PCA of the distance matrices (through the bio3d function, pca.array()) followed by a conventional hierarchical
+# clustering in the PC1-PC2 subspace to get the intrinsic grouping of the structures.
+library(bio3d.eddm)
+# need to update the aligned structures to include all heavy atoms:
+pdbs.aa <- read.all(pdbs)
+# Calculate distance matrices.
+# The option `all.atom=TRUE` tells that all heavy-atom coordinates will be used.
+dm <- dm(pdbs.aa, all.atom=TRUE)
+# Perform PCA of distance matrices.
+pc_dm <- pca.array(dm)
+# Plot importance of PCs
+png("PCA_on_all_atom_dm_PCimportance.png", units="in", width=5, height=5, res=300)
+plot.pca.scree(pc_dm)
 dev.off()
+# Perform structural clustering in the PC1-PC2 subspace.
+hc_dm <- hclust(dist(pc_dm$z[, 1:2]))
+grps_dm <- cutree(hc_dm, k=3)
+# Plot importance of PCs
+png("PCA_on_all_atom_dm.png", units="in", width=5, height=5, res=300)
+plot(pc_dm, pc.axes=c(1,2), col=grps_dm)
+dev.off()
+# Calculating difference distance matrices
+tbl <- eddm(pdbs.aa, grps=grps_dm, dm=dm, mask="cmap")
+# Identifying significant distance changes
+keys <- subset.eddm(tbl, alpha=0.005, beta=1.0, switch.only=TRUE)
+print(keys)
+# Plot
+png("eDDM.png", units="in", width=5, height=5, res=300)
+plot(keys, pdbs=pdbs, full=TRUE, resno=NULL, sse=pdbs$sse[1, ], type="tile") #,labels=TRUE, labels.ind=c(1:3, 17:19)
+dev.off()
+# Generate PyMol script to visualise all identified key residue pairs showing significant distance changes
+pymol.eddm(keys, pdbs=pdbs, grps=grps_dm, as="sticks")
 
 
-## Torsion/Dihedral analysis
-##-------------------------------------
+
+### Two-structure comparisons
+###-------------------------------------
+
 # Locate the two structures in pdbs
 #print(files[1], files[length(files)])
 ind.a <- grep(pdb1$id, pdbs$id)
@@ -177,6 +219,19 @@ gaps.xyz2 <- gap.inspect(pdbs$xyz[c(ind.a, ind.b), ])
 a.xyz <- pdbs$xyz[ind.a, gaps.xyz2$f.inds]
 b.xyz <- pdbs$xyz[ind.b, gaps.xyz2$f.inds]
 
+## Difference distance matrix analysis (DDM)
+##-------------------------------------
+a <- dm.xyz(a.xyz)
+b <- dm.xyz(b.xyz)
+# Calculate DDM
+ddm <- a - b
+# Plot DDM
+png("DDM.png", units="in", width=5, height=5, res=300)
+plot.dmat( ddm, nlevels=10, grid.col="gray", xlab=basename(pdb1$id), ylab=basename(pdb2$id), main="Difference distance matrix")
+dev.off()
+
+## Torsion/Dihedral analysis
+##-------------------------------------
 # Compare CA based pseudo-torsion angles between the two structures
 a <- torsion.xyz(a.xyz, atm.inc=1)
 b <- torsion.xyz(b.xyz, atm.inc=1)
