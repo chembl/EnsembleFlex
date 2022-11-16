@@ -1,5 +1,6 @@
 # Ignored folders and files
 /.idea
 /.DS_Store
+/src/__pycache__
 /src/tools/__pycache__
 /src/tools
