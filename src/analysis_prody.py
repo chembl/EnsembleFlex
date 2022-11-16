@@ -1,4 +1,5 @@
 
+import sys
 import glob
 import os
 from optparse import OptionParser
@@ -8,6 +9,7 @@ import numpy as np
 #from matplotlib.pylab import *
 from matplotlib.backends.backend_pdf import PdfPages
 
+#------- File Argument/Option Parser -------#
 parser = OptionParser()
 parser.add_option("-i", "--in", dest="input_path",
                   help="input dataset directory path", metavar="PATH")
@@ -27,10 +29,31 @@ elif os.path.isdir(opts.input_path) and not os.path.isdir(opts.output_dir):
         os.mkdir(output_path)
 else:
     print("Please specify a valid input directory path to your structure files.\n")
+#-------------------------------------------#
 
+# change working directory to output_path
 os.chdir(output_path)
 
-# list of pdb files
+#------- Logging to file and console -------#
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open("logfile.log", "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        # this flush method is needed for python 3 compatibility.
+        # this handles the flush command by doing nothing.
+        # you might want to specify some extra behavior here.
+        pass
+sys.stdout = Logger()
+#-------------------------------------------#
+
+
+# list of input pdb files
 pdbfiles = glob.glob(opts.input_path+"/*.pdb")
 # parsing structures
 structures = parsePDB(pdbfiles, compressed=False)  #, subset='ca'
@@ -54,6 +77,7 @@ print('\nRoot mean square fluctuation (RMSF) plot saved to RMSF.png.\n')
 # Save reference structure with RMSF in B-factor column
 writePDB('RMSFonReference.pdb', reference_structure, beta=rmsf)
 print('\nRMSF values are saved in B-factor column of RMSFonReference.pdb for visualisation.\n')
+
 
 
 ### 2. Principal Component Analysis (PCA)
@@ -83,19 +107,32 @@ else:
     print("Ensembles must contain more than 3 structures to perform singular value decomposition. \n")
 
 ## Variance along PCs
+# print to sys.stdout
 print('Variance along PCs:')
 for mode in pca[:3]:
     var = calcFractVariance(mode)*100
     print(str(mode) + '  % variance = {:.2f}'.format(var))
     #print('{0:s}  % variance = {1:.2f}'.format(mode, var))
+# save to file
+with open('PCA_variance.txt', 'w') as f:
+    print('Variance along PCs:', file=f)
+    for mode in pca[:3]:
+        var = calcFractVariance(mode) * 100
+        print(str(mode) + '  % variance = {:.2f}'.format(var), file=f)
 
 ## Collectivity of modes
+# print to sys.stdout
 print('PCA mode collectivity:')
 for mode in pca[:3]:    # Print PCA mode collectivity
     coll = calcCollectivity(mode)
     print(str(mode) + '  collectivity = {:.2f}'.format(coll))
     #print('{0:s}  collectivity = {1:.2f}'.format(mode, coll))
-
+# save to file
+with open('PCA_mode_collectivity.txt', 'w') as f:
+    print('PCA mode collectivity:', file=f)
+    for mode in pca[:3]:  # Print PCA mode collectivity
+        coll = calcCollectivity(mode)
+        print(str(mode) + '  collectivity = {:.2f}'.format(coll), file=f)
 
 writeArray('PCA_eigvecs.txt', pca.getEigvecs() ) # PCA eigenvectors
 print('\nPCA eigenvectors are written to PCA_eigvecs.txt.\n')
@@ -117,12 +154,33 @@ anm = ANM('')                 # Instantiate a ANM instance
 anm.buildHessian(reference_structure)   # Build Hessian for the reference chain
 anm.calcModes()                   # Calculate slowest non-trivial 20 modes
 
+## Variance along PCs
+# print to sys.stdout
+print('Variance along ANM modes:')
+for mode in anm[:3]:
+    var = calcFractVariance(mode)*100
+    print(str(mode) + '  % variance = {:.2f}'.format(var))
+    #print('{0:s}  % variance = {1:.2f}'.format(mode, var))
+# save to file
+with open('ANM_mode_variance.txt', 'w') as f:
+    print('Variance along ANM modes:', file=f)
+    for mode in anm[:3]:
+        var = calcFractVariance(mode) * 100
+        print(str(mode) + '  % variance = {:.2f}'.format(var), file=f)
+
 ## Collectivity of modes
+# print to sys.stdout
 print('ANM mode collectivity:')
 for mode in anm[:3]:    # Print ANM mode collectivity
     coll = calcCollectivity(mode)
     print(str(mode) + '  collectivity = {:.2f}'.format(coll))
     #print('{0:s}  collectivity = {1:.2f}'.format(mode, coll))
+# save to file
+with open('ANM_mode_collectivity.txt', 'w') as f:
+    print('ANM mode collectivity:', file=f)
+    for mode in anm[:3]:  # Print ANM mode collectivity
+        coll = calcCollectivity(mode)
+        print(str(mode) + '  collectivity = {:.2f}'.format(coll), file=f)
 
 writeModes('ANM_modes.txt', anm) # This function is based on writeArray
 print('\nAnisotropic Network Model (ANM) modes are written to ANM_modes.txt.\n')
@@ -225,3 +283,7 @@ writePDB('reference_structure_dynamic_domains.pdb', reference_structure, beta=do
 print('\nDynamical domains of reference structure are saved in B-factor column of reference_structure_dynamic_domains.pdb '
       'for visualisation.\n')
 
+
+### Generate Report
+import analysis_prody_reporting as reporting
+reporting.generate_report(str_input_path=opts.input_path, output_path=output_path)
