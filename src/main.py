@@ -205,7 +205,7 @@ class MainWindow(QMainWindow):
     #     print(btn.text() + " is selected")
 
     def hide_confirm_btn(self, state):
-        if state == QtCore.Qt.Checked:
+        if state == QtCore.Qt.Checked.value:
             self.confirm_btn.setEnabled(True)
         else:
             self.confirm_btn.setEnabled(False)
@@ -218,7 +218,7 @@ class MainWindow(QMainWindow):
 
     def hide_superimpose_btn1(self, state):
         # if checkbutton is checked and input files and output folder are given
-        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and \
+        if state == QtCore.Qt.Checked.value and self.structureFiles and len(self.structureFiles) > 1 and \
                 os.path.exists(self.outputdir):
             self.superimpose_btn1.setEnabled(True)
         else:
@@ -226,7 +226,7 @@ class MainWindow(QMainWindow):
 
     def hide_superimpose_btn2(self, state):
         # if checkbutton is checked and input files and output folder are given
-        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and \
+        if state == QtCore.Qt.Checked.value and self.structureFiles and len(self.structureFiles) > 1 and \
                 os.path.exists(self.outputdir):
             self.superimpose_btn2.setEnabled(True)
         else:
@@ -573,7 +573,7 @@ class MainWindow(QMainWindow):
     # SUPERIMPOSE (Binding Site)
     #############################################################
     def hide_confirm_bs_btn(self, state):
-        if state == QtCore.Qt.Checked:
+        if state == QtCore.Qt.Checked.value:
             self.confirm_bs_btn.setEnabled(True)
         else:
             self.confirm_bs_btn.setEnabled(False)
@@ -586,7 +586,7 @@ class MainWindow(QMainWindow):
 
     def hide_superimpose_bs_btn1(self, state):
         # if checkbutton is checked and input files and output folder are given
-        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and \
+        if state == QtCore.Qt.Checked.value and self.structureFiles and len(self.structureFiles) > 1 and \
                 os.path.exists(self.outputdir):
             self.superimpose_bs_btn1.setEnabled(True)
         else:
@@ -594,7 +594,7 @@ class MainWindow(QMainWindow):
 
     def hide_superimpose_bs_btn2(self, state):
         # if checkbutton is checked and input files and output folder are given
-        if state == QtCore.Qt.Checked and self.structureFiles and len(self.structureFiles) > 1 and \
+        if state == QtCore.Qt.Checked.value and self.structureFiles and len(self.structureFiles) > 1 and \
                 os.path.exists(self.outputdir):
             self.superimpose_bs_btn2.setEnabled(True)
         else:
