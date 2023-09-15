@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
 
     def dataReady(self):
         cursor = self.logviewer.textCursor()
-        cursor.movePosition(cursor.End)
+        cursor.movePosition(cursor.MoveOperation.End)
         cursor.insertText(str(self.process.readAll().data().decode('utf-8', 'ignore').strip()))
         self.logviewer.ensureCursorVisible()
 
@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
 
     def callSuperimposeBio3D(self):
         # run the process # `start` takes the exec and a list of arguments
-        self.process.start('/usr/local/bin/Rscript',
+        self.process.start('Rscript',
                            ['./superimpose_bio3d.R', '-d', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed = self.outputdir + '/superimposed'
         self.superimpose_response.setText("Superimposed structures are saved in " + self.superimposed)
@@ -334,7 +334,7 @@ class MainWindow(QMainWindow):
     def callAnalysisBio3D(self):
         self.outputdirBio3D = self.outputdir + '/Analysis_Bio3D'
         # run the process # `start` takes the exec and a list of arguments
-        self.process.start('/usr/local/bin/Rscript',
+        self.process.start('Rscript',
                            ['./analysis_bio3d.R', '-d', str(self.superimposed), '-o', str(self.outputdirBio3D)])
         self.Bio3d_response.setText("Results will be saved in " + self.outputdirBio3D)
 
@@ -602,7 +602,7 @@ class MainWindow(QMainWindow):
 
     def callSuperimposeBio3D_bs(self):
         # run the process # `start` takes the exec and a list of arguments
-        self.process.start('/usr/local/bin/Rscript',
+        self.process.start('Rscript',
                            ['./superimpose_bio3d_bs.R', '-d', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed_bs = self.outputdir + '/superimposed_bs'
         self.superimpose_bs_response.setText("Superimposed structures are saved in " + self.superimposed_bs)
