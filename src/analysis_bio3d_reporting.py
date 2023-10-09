@@ -14,6 +14,7 @@ def generate_report(str_input_path, output_path, clustering_groups):
     text_intro = '...'
     # list of pdb files
     pdbfiles = glob.glob(str_input_path+"/*.pdb")
+    filenames = [os.path.basename(x) for x in pdbfiles]
     #pdbfiles = args.pdbfiles
     text_rmsd = '...'
     text_pca = '...'
@@ -29,9 +30,9 @@ def generate_report(str_input_path, output_path, clustering_groups):
                 <h1>{title_text}</h1>
                 <p>The following {len(pdbfiles)} files were included in the analysis:</p>
                 <div style="height:200px;width:700px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">
-                {pdbfiles}
+                {filenames}
                 </div>
-                <p>Structure {pdbfiles[0]} served as reference structure for superpositioning and for all calculations \
+                <p>Structure {filenames[0]} served as reference structure for superpositioning and for all calculations \
                 based on atomic coordinates.</p>
                 
                 B-factor fluctuations of the C&#945; atoms of the ensemble are shown below. 
@@ -124,13 +125,13 @@ def generate_report(str_input_path, output_path, clustering_groups):
     with open('analysis_bio3d_html_report.html', 'w') as f:
         f.write(html)
 
-    # 4. Convert the HTML file to PDF
-    from weasyprint import HTML, CSS
-    css = CSS(string='''
-        @page {size: A4; margin: 1cm;} 
-        th, td {border: 1px solid black;}
-        ''')
-    HTML('analysis_bio3d_html_report.html').write_pdf('analysis_bio3d_pdf_report.pdf', stylesheets=[css])
+    # # 4. Convert the HTML file to PDF
+    # from weasyprint import HTML, CSS
+    # css = CSS(string='''
+    #     @page {size: A4; margin: 1cm;}
+    #     th, td {border: 1px solid black;}
+    #     ''')
+    # HTML('analysis_bio3d_html_report.html').write_pdf('analysis_bio3d_pdf_report.pdf', stylesheets=[css])
 
 
 ## Running the function using arguments

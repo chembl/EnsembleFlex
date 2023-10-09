@@ -1,6 +1,9 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 
+projectdir = getwd()
+#print(projectdir)
+
 #install.packages("devtools")
 #library(devtools)
 #devtools::install_bitbucket("Grantlab/bio3d", subdir = "bio3d-core", ref="core")
@@ -29,9 +32,8 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-print(opt$directory)
-print(opt$out)
-
+#print(opt$directory)
+#print(opt$out)
 
 if (opt$out == "Bio3D_Analysis"){
   outdir <- file.path(opt$directory, opt$out)
@@ -40,6 +42,7 @@ if (opt$out == "Bio3D_Analysis"){
   outdir <- file.path(opt$out)
   dir.create(outdir, showWarnings = FALSE)
 }
+
 setwd(outdir)
 print(outdir)
 
@@ -68,12 +71,14 @@ ids <- sub("[.].*", "", basename(pdbs$id)) # get filenames and drop any extensio
 #ids <- unlist(strsplit(basename(pdbs$id), split=".pdb"))
 #ids <- unlist(substr(basename(pdbs$id), 1, 7))
 print(ids)
-number_of_groups <- 3
 # # option 2. if they are of identical composition and you only want xyz coordinates
 # xyz <- NULL
 # for(i in files) {
 #   xyz = rbind(xyz, read.pdb(files)$xyz)
 # }
+
+### Set number_of_groups for clustering
+number_of_groups <- 3
 
 ## RMSD
 ##-------------------------------------
@@ -298,9 +303,14 @@ if (length(keys)) {
 # dev.off()
 
 
-#writeLines(capture.output(sessionInfo()), paste0(outdir, "/Data/session_info.", format(Sys.time(), "%Y%m%d.%H%M"), ".txt"))
-writeLines(capture.output(sessionInfo()), paste0(outdir, "/R_session_info.txt"))
+# Protect spaces in path names with gsub(" ","\\\\ ",pathname)
+scriptpath = gsub(" ","\\\\ ",paste(projectdir,'/src/analysis_bio3d_reporting.py', sep=''))
+str_input_path = gsub(" ","\\\\ ",opt$directory)
+output_path = gsub(" ","\\\\ ",outdir)
 
+### Save R session info
+writeLines(capture.output(sessionInfo()), paste0(output_path, "/R_session_info_", format(Sys.time(), "%Y%m%d.%H%M"), ".txt"))
+#writeLines(capture.output(sessionInfo()), paste0(output_path, "/R_session_info.txt"))
 
 ### Generate Report
-system(cat('python3 analysis_bio3d_reporting.py', opt$directory, outdir, number_of_groups, sep=' '), wait=FALSE)
+system(paste('python3', scriptpath, str_input_path, output_path, number_of_groups, sep=' '), wait=FALSE)

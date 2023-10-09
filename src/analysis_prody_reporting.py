@@ -13,6 +13,7 @@ def generate_report(str_input_path, output_path):
     text_intro = '...'
     # list of pdb files
     pdbfiles = glob.glob(str_input_path+"/*.pdb")
+    filenames = [os.path.basename(x) for x in pdbfiles]
     #pdbfiles = args.pdbfiles
     text_rmsd = '...'
     text_pca = '...'
@@ -28,9 +29,9 @@ def generate_report(str_input_path, output_path):
                 <h1>{title_text}</h1>
                 <p>The following {len(pdbfiles)} files were included in the analysis:</p>
                 <div style="height:200px;width:700px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">
-                {pdbfiles}
+                {filenames}
                 </div>
-                <p>Structure {pdbfiles[0]} served as reference structure.</p>
+                <p>Structure {filenames[0]} served as reference structure.</p>
                 <p>Besides root mean square fluctuations (RMSFs) Principal component analysis (PCA) and normal mode analysis (NMA) have emerged as two invaluable tools \
                 for studying conformational changes in proteins.</p>
     
