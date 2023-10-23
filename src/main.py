@@ -235,7 +235,7 @@ class MainWindow(QMainWindow):
     def callSuperimposeBio3D(self):
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('Rscript',
-                           ['./superimpose_bio3d.R', '-d', str(self.inputdir), '-o', str(self.outputdir)])
+                           ['./superimpose_bio3d.R', '-i', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed = self.outputdir + '/superimposed'
         self.superimpose_response.setText("Superimposed structures are saved in " + self.superimposed)
         self.runBio3D_btn.setEnabled(True)
@@ -335,7 +335,7 @@ class MainWindow(QMainWindow):
         self.outputdirBio3D = self.outputdir + '/Analysis_Bio3D'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('Rscript',
-                           ['./analysis_bio3d.R', '-d', str(self.superimposed), '-o', str(self.outputdirBio3D)])
+                           ['./analysis_bio3d.R', '-i', str(self.superimposed), '-o', str(self.outputdirBio3D)])
         self.Bio3d_response.setText("Results will be saved in " + self.outputdirBio3D)
 
     def callAnalysisProDy(self):
