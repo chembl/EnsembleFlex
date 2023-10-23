@@ -21,38 +21,38 @@ library("bio3d")
 library("msa")
 
 option_list = list(
-  make_option(c("-d", "--directory"), type="character", default=NULL,
-              help="dataset directory path", metavar="character"),
+  make_option(c("-i", "--indir"), type="character", default=NULL, 
+              help="input directory path", metavar="character"),
   # make_option(c("-f", "--filenames"), type="character", default=NULL,
   #             help="dataset file names - example: [file1.pdb,file2.pdb]", metavar="character"),
-  make_option(c("-o", "--out"), type="character", default="Bio3D_Analysis",
+  make_option(c("-o", "--outdir"), type="character", default="Bio3D_Analysis",
               help="output directory [default=%default]", metavar="character")
 );
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-#print(opt$directory)
-#print(opt$out)
+#print(opt$indir)
+#print(opt$outdir)
 
-if (opt$out == "Bio3D_Analysis"){
-  outdir <- file.path(opt$directory, opt$out)
+if (opt$outdir == "Bio3D_Analysis"){
+  outdir <- file.path(opt$indir, opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
 } else {
-  outdir <- file.path(opt$out)
+  outdir <- file.path(opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
 }
 
 setwd(outdir)
 print(outdir)
 
-if (!is.null(opt$directory)){
+if (!is.null(opt$indir)){
   setwd(outdir)
-  files <- list.files(path = opt$directory, pattern = "*.pdb", full.names = T, recursive = F)
+  files <- list.files(path = opt$indir, pattern = "*.pdb", full.names = T, recursive = F)
   # } else if (!is.null(opt$filenames)) {
   #   files <- as.list(strsplit(opt$filenames, ",")[[1]])
   #   #files <- opt$filenames
-  #   setwd(paste(dirname(files[1]),opt$out))
+  #   setwd(paste(dirname(files[1]),opt$outdir))
 } else {
     print_help(opt_parser)
     stop("At least one input argument must be supplied (input filepath or files).\n\n", call.=FALSE)
@@ -305,7 +305,7 @@ if (length(keys)) {
 
 # Protect spaces in path names with gsub(" ","\\\\ ",pathname)
 scriptpath = gsub(" ","\\\\ ",paste(projectdir,'/src/analysis_bio3d_reporting.py', sep=''))
-str_input_path = gsub(" ","\\\\ ",opt$directory)
+str_input_path = gsub(" ","\\\\ ",opt$indir)
 output_path = gsub(" ","\\\\ ",outdir)
 
 ### Save R session info
