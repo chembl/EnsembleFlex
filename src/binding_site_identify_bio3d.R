@@ -162,7 +162,7 @@ pdb_bindingsite_as_b_occ$atom$b[ binding.inds$atom ] <- 1
 write.pdb(pdb_bindingsite_as_b_occ, file=paste(outdir,"/binding_site_interface_labelled_occurance.pdb",sep=''))
 
 #--------------
-## Save residue occurance counts in b-factor column on reference structure
+## Save residue occurance frequency in b-factor column on reference structure
 
 pdb_bindingsite_as_b_freq <- pdb
 # get indices of all bindingsite residues
