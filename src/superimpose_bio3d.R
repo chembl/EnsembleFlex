@@ -23,16 +23,15 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-print(opt$indir)
-print(opt$outdir)
-
 
 if (opt$outdir == "outdir"){
   outdir <- file.path(opt$indir, opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
 } else {
   outdir <- file.path(opt$outdir)
+  dir.create(outdir, showWarnings = FALSE)
 }
+
 setwd(outdir)
 print(outdir)
 

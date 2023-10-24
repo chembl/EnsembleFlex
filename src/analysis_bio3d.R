@@ -32,8 +32,6 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
-#print(opt$indir)
-#print(opt$outdir)
 
 if (opt$outdir == "Bio3D_Analysis"){
   outdir <- file.path(opt$indir, opt$outdir)
