@@ -101,8 +101,8 @@ binding_residue_list_unique <- residue_occurance_df$Residue
 number_of_structures <- as.character(length(file_list))
 
 # Fitting Labels
-#png(filename="Histogram_binding_residues.png", width=1100, height=700, units="px", res=150)
-pdf(file="Histogram_binding_residues_occurance.pdf", width=8, height=5)
+#pdf(file="Histogram_binding_residues_occurance.pdf", width=8, height=5)
+png(filename="Histogram_binding_residues_occurance.png", width=8, height=5, units="in", res=150)
 par(las=2) # make label text perpendicular to axis
 #par(mar=c(5,5,3,1)) # adjust margins.
 barplot(residue_occurance, main=sprintf("Residues implied in ligand binding in %s structures (cutoff=%sA)",number_of_structures,opt$distance),
@@ -114,8 +114,8 @@ residue_occurance_freq <- mutate(residue_occurance_df, Percentage=Freq/length(fi
 # Safe dataframe
 write.csv(residue_occurance_freq, "binding_site_residue_occurance.csv", row.names=FALSE, quote=FALSE)
 
-#png(filename="Histogram_binding_residues_freq.png", width=1100, height=700, units="px", res=150)
-pdf(file="Histogram_binding_residues_percentage.pdf", width=8, height=5)
+#pdf(file="Histogram_binding_residues_percentage.pdf", width=8, height=5)
+png(filename="Histogram_binding_residues_percentage.png", width=8, height=5, units="in", res=150)
 par(las=2) # make label text perpendicular to axis
 #par(mar=c(5,5,3,1)) # adjust margins.
 barplot(residue_occurance_freq$Percentage, names.arg=residue_occurance_freq$Residue,
@@ -124,8 +124,8 @@ barplot(residue_occurance_freq$Percentage, names.arg=residue_occurance_freq$Resi
 #barplot(rev(residue_occurance), main="Residues implied in ligand binding", horiz=TRUE, cex.names=0.8)
 dev.off()
 
-#png(filename="Histogram_binding_residues_freq_colored.png", width=1100, height=700, units="px", res=150)
-pdf(file="Histogram_binding_residues_percentage_colored.pdf", width=8, height=5)
+#pdf(file="Histogram_binding_residues_percentage_colored.pdf", width=8, height=5)
+png(filename="Histogram_binding_residues_percentage_colored.png", width=8, height=5, units="in", res=150)
 ggplot(residue_occurance_freq, aes(x=Residue, y=Percentage, fill=Percentage)) +
   geom_bar(stat="identity") +
   ggtitle(sprintf("Residues implied in ligand binding in %s structures (cutoff=%sA)",number_of_structures,opt$distance)) +
