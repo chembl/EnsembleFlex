@@ -144,6 +144,9 @@ dev.off()
 
 # get residue numbers sorted by occurancy
 binding_residue_num <- gsub("[A-Z]", "", toString(binding_residue_list_unique)) %>% strsplit(",") %>% unlist() %>% trimws() %>% as.integer()
+# safe binding_residue_num to file
+# to be used for superimposing only on binding site residues
+write.table(binding_residue_num, "binding_site_residue_numbers.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
 
 # read the reference pdb file (first file in filelist)
 pdb <- read.pdb(file_list[[1]])
