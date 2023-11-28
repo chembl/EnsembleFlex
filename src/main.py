@@ -7,8 +7,10 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import (QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject, QObject, QPoint,
                             QRect, QSize, QTime, QUrl, Qt, QEvent)
 from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon, QKeySequence,
-                           QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient)
+                           QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient, QIntValidator)
 from PySide6.QtWidgets import *
+
+
 #import subprocess
 #subprocess.check_call(['Rscript', 'myscript.R'], shell=False)
 
@@ -33,11 +35,12 @@ class MainWindow(QMainWindow):
         #############################################################
 
         # Fonts
-        self.font1 = QFont("Sans", 24, QFont.Bold)
-        self.font2 = QFont("Sans", 18)
-        self.font3 = QFont("Sans", 16)
-        self.font4 = QFont("Sans", 14)
-        self.font5 = QFont("Sans", 12)
+        self.font0 = QFont("Helvetica [Cronyx]", 28, QFont.Bold)
+        self.font1 = QFont("Helvetica [Cronyx]", 24, QFont.Bold)
+        self.font2 = QFont("Helvetica [Cronyx]", 18)
+        self.font3 = QFont("Helvetica [Cronyx]", 16)
+        self.font4 = QFont("Helvetica [Cronyx]", 14)
+        self.font5 = QFont("Helvetica [Cronyx]", 12)
 
         self.initUI()
 
@@ -55,45 +58,53 @@ class MainWindow(QMainWindow):
         cursor.insertText(str(self.process.readAll().data().decode('utf-8', 'ignore').strip()))
         self.logviewer.ensureCursorVisible()
 
-    #############################################################
-    # ENSEMBLE NAME
-    #############################################################
-    def confirmName(self):
-        self.name = self.input_name_edit.text()
-        print('Ensemble Name: ' + self.name)
+    def createLogviewer(self):
+        self.logviewer = QTextEdit()
+        self.logviewer.setReadOnly(True)
+        self.logviewer.setMinimumHeight(100)
+        self.logviewer.setStyleSheet("background-color:rgb(115, 148, 148);")  # grey-cyan
+        return self.logviewer
 
-    def createGroupName(self):
-        groupbox = QGroupBox("")
-        groupbox.setStyleSheet("background-color:rgb(47,79,79);")  # darkslategrey
 
-        input_name_lab = QLabel()
-        input_name_lab.setText("Ensemble Name:")
-        input_name_lab.setFont(self.font2)
-
-        self.input_name_edit = QLineEdit(self)
-        self.input_name_edit.setMaxLength(8)
-        self.input_name_edit.setStyleSheet("background-color:rgb(190, 230, 230);")  # light cyan
-        self.input_name_edit.setAlignment(Qt.AlignRight)
-        self.input_name_edit.setFont(self.font2)
-        self.input_name_edit.editingFinished.connect(self.confirmName)
-
-        self.confirm_name_btn = QPushButton('Confirm')
-        self.confirm_name_btn.setEnabled(True)
-        self.confirm_name_btn.clicked.connect(self.confirmName)
-
-        layout = QGridLayout()
-        # # addWidget(*Widget, row, column, rowspan, colspan)
-        layout.addWidget(input_name_lab, 0, 0)
-        layout.addWidget(self.input_name_edit, 0, 1)
-        layout.addWidget(self.confirm_name_btn, 0, 2)
-        groupbox.setLayout(layout)
-        return groupbox
+    # #############################################################
+    # # ENSEMBLE NAME
+    # #############################################################
+    # def confirmName(self):
+    #     self.name = self.input_name_edit.text()
+    #     print('Ensemble Name: ' + self.name)
+    #
+    # def createGroupName(self):
+    #     groupbox = QGroupBox("")
+    #     groupbox.setStyleSheet("background-color:rgb(47,79,79);")  # darkslategrey
+    #
+    #     input_name_lab = QLabel()
+    #     input_name_lab.setText("Ensemble Name:")
+    #     input_name_lab.setFont(self.font2)
+    #
+    #     self.input_name_edit = QLineEdit(self)
+    #     self.input_name_edit.setMaxLength(8)
+    #     self.input_name_edit.setStyleSheet("background-color:rgb(190, 230, 230);")  # light cyan
+    #     self.input_name_edit.setAlignment(Qt.AlignRight)
+    #     self.input_name_edit.setFont(self.font2)
+    #     self.input_name_edit.editingFinished.connect(self.confirmName)
+    #
+    #     self.confirm_name_btn = QPushButton('Confirm')
+    #     self.confirm_name_btn.setEnabled(True)
+    #     self.confirm_name_btn.clicked.connect(self.confirmName)
+    #
+    #     layout = QGridLayout()
+    #     # # addWidget(*Widget, row, column, rowspan, colspan)
+    #     layout.addWidget(input_name_lab, 0, 0)
+    #     layout.addWidget(self.input_name_edit, 0, 1)
+    #     layout.addWidget(self.confirm_name_btn, 0, 2)
+    #     groupbox.setLayout(layout)
+    #     return groupbox
 
     #############################################################
     # INPUT/OUTPUT
     #############################################################
 
-    def launchSelectionDialog(self):
+    def launchSelectionDialogInput(self):
         option = self.options.index(self.combo.currentText())
         if option == 0:
             self.inputdir = self.getDirectory()
@@ -110,7 +121,7 @@ class MainWindow(QMainWindow):
         else:
             print('Got Nothing')
 
-    def launchSelectionDialog2(self):
+    def launchSelectionDialogOutput(self):
         self.outputdir = self.getDirectory()
         # Checking if the directory exists and is empty or not
         if os.path.exists(self.outputdir) and not os.listdir(self.outputdir):
@@ -143,28 +154,34 @@ class MainWindow(QMainWindow):
         groupbox = QGroupBox("1")
         groupbox.setStyleSheet("background-color:rgb(47,79,79);")  # darkslategrey
 
-        # Input
         selection_label = QLabel()
         selection_label.setMinimumSize(QSize(0, 0))
         selection_label.setMaximumSize(QSize(16777215, 55))
         selection_label.setFont(self.font1)
+        selection_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # selection_label.setStyleSheet("background-color:rgb(255,255,255);")
         # selection_label.setText(QCoreApplication.translate(u"MainWindow", u"<html><head/><body><p><span style=\" color:#ffffff;\">Select Input Structures</span></p></body></html>", None))
-        selection_label.setText("Select Input Structures")
+        selection_label.setText("Select Input & Output Folders")
 
+        # Input
         # self.options = ('Select File Names', 'Select Folder Dir', 'Save File Name')
         # self.options = ('Select whole folder', 'Select distinct files')
         self.options = ('Select whole folder',)
-
         self.combo = QComboBox()
         self.combo.addItems(self.options)
 
+        selection_label1 = QLabel()
+        selection_label1.setMinimumSize(QSize(0, 0))
+        selection_label1.setMaximumSize(QSize(16777215, 55))
+        selection_label1.setFont(self.font3)
+        selection_label1.setText("Select Input folder containing the structures to analyse")
+
         selection_btn = QPushButton('Browse')
-        selection_btn.clicked.connect(self.launchSelectionDialog)
+        selection_btn.clicked.connect(self.launchSelectionDialogInput)
 
         self.selection_response_lab = QTextEdit()
         self.selection_response_lab.setReadOnly(True)
-        self.selection_response_lab.setFont(self.font4)
+        self.selection_response_lab.setFont(self.font5)
         self.selection_response_lab.setMaximumHeight(45)
         self.selection_response_lab.setStyleSheet("background-color:rgb(118, 168, 168);")
 
@@ -172,11 +189,11 @@ class MainWindow(QMainWindow):
         selection_label2 = QLabel()
         selection_label2.setMinimumSize(QSize(0, 0))
         selection_label2.setMaximumSize(QSize(16777215, 55))
-        selection_label2.setFont(self.font2)
+        selection_label2.setFont(self.font3)
         selection_label2.setText("Create/select Output folder")
 
         self.selection_btn2 = QPushButton('Browse')
-        self.selection_btn2.clicked.connect(self.launchSelectionDialog2)
+        self.selection_btn2.clicked.connect(self.launchSelectionDialogOutput)
 
         self.selection_response_lab2 = QTextEdit()
         self.selection_response_lab2.setReadOnly(True)
@@ -184,13 +201,15 @@ class MainWindow(QMainWindow):
         self.selection_response_lab2.setMaximumHeight(45)
         self.selection_response_lab2.setStyleSheet("background-color:rgb(118, 168, 168);")
 
+        # Layout
         layout = QGridLayout()
         # # addWidget(*Widget, row, column, rowspan, colspan)
-        layout.addWidget(selection_label, 0, 0)
-        layout.addWidget(self.combo, 1, 0)
+        layout.addWidget(selection_label, 0, 0, 1, 2)
+        # layout.addWidget(self.combo, 1, 0)
+        layout.addWidget(selection_label1, 1, 0, 1, 1)
         layout.addWidget(selection_btn, 1, 1)
         layout.addWidget(self.selection_response_lab, 2, 0, 1, 2)
-        layout.addWidget(selection_label2, 3, 0)
+        layout.addWidget(selection_label2, 3, 0, 1, 1)
         layout.addWidget(self.selection_btn2, 3, 1)
         layout.addWidget(self.selection_response_lab2, 4, 0, 1, 2)
         groupbox.setLayout(layout)
@@ -259,12 +278,13 @@ class MainWindow(QMainWindow):
         superimpose_label.setMinimumSize(QSize(0, 40))
         superimpose_label.setMaximumSize(QSize(16777215, 55))
         superimpose_label.setFont(self.font1)
+        superimpose_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         superimpose_label.setText("Superimpose Structures (global)")
 
         self.checkbox1 = QCheckBox("My input structures are already superimposed.")
         self.checkbox1.setChecked(True)
         #self.checkbox1.stateChanged.connect(lambda: self.btnstate(self.checkbox1))
-        self.checkbox2 = QCheckBox("Superimpose structures using Bio3D.")
+        self.checkbox2 = QCheckBox("Superimpose structures using Bio3D. (recommended)")
         self.checkbox2.setChecked(False)
         #self.checkbox2.stateChanged.connect(lambda: self.btnstate(self.checkbox2))
         self.checkbox3 = QCheckBox("Superimpose structures using ProDy.")
@@ -280,21 +300,16 @@ class MainWindow(QMainWindow):
         self.confirm_btn.clicked.connect(self.confirmSuper)
 
         self.superimpose_btn1 = QPushButton('Run')
-        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialogInput
         self.superimpose_btn1.setEnabled(False)
         self.checkbox2.stateChanged.connect(self.hide_superimpose_btn1)
         self.superimpose_btn1.clicked.connect(self.callSuperimposeBio3D)
 
         self.superimpose_btn2 = QPushButton('Run')
-        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialogInput
         self.superimpose_btn2.setEnabled(False)
         self.checkbox3.stateChanged.connect(self.hide_superimpose_btn2)
         self.superimpose_btn2.clicked.connect(self.callSuperimposeProDy)
-
-        self.logviewer = QTextEdit()
-        self.logviewer.setReadOnly(True)
-        self.logviewer.setMinimumHeight(100)
-        self.logviewer.setStyleSheet("background-color:rgb(115, 148, 148);")  # grey-cyan
 
         # QProcess object for external app
         self.process = QtCore.QProcess(self)
@@ -314,7 +329,7 @@ class MainWindow(QMainWindow):
         self.superimpose_response.setStyleSheet("background-color:rgb(118, 168, 168);")
 
         layout = QGridLayout()
-        layout.addWidget(superimpose_label, 0, 0)
+        layout.addWidget(superimpose_label, 0, 0, 1, 2)
         layout.addWidget(self.checkbox1, 1, 0)
         layout.addWidget(self.checkbox2, 2, 0)
         layout.addWidget(self.checkbox3, 3, 0)
@@ -322,7 +337,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.superimpose_btn1, 2, 1)
         layout.addWidget(self.superimpose_btn2, 3, 1)
         layout.addWidget(self.superimpose_response, 4, 0, 1, 2)
-        # layout.addWidget(self.logviewer, 5, 0, 1, 2)
         groupbox.setLayout(layout)
         return groupbox
 
@@ -353,12 +367,13 @@ class MainWindow(QMainWindow):
         lab.setMinimumSize(QSize(0, 40))
         lab.setMaximumSize(QSize(16777215, 55))
         lab.setFont(self.font1)
+        lab.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lab.setText("Flexibility Analysis (global)")
 
         layout = QGridLayout()
-        layout.addWidget(lab, 0, 0)
+        layout.addWidget(lab, 0, 0, 1, 2)
         layout.addWidget(self.createGroupAnalyseBio3D(), 1, 0)
-        layout.addWidget(self.createGroupAnalyseProDy(), 2, 0)
+        layout.addWidget(self.createGroupAnalyseProDy(), 1, 1)
         groupbox.setLayout(layout)
         return groupbox
 
@@ -377,7 +392,7 @@ class MainWindow(QMainWindow):
                      " - Difference distance matrix analysis (DDM)\n - Principal Component Analysis (PCA)\n"
                      " - Ensemble Normal Mode Analysis (eNMA)")
         self.runBio3D_btn = QPushButton('Run')
-        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialogInput
         self.runBio3D_btn.setEnabled(False)
         self.runBio3D_btn.clicked.connect(self.callAnalysisBio3D)
 
@@ -419,7 +434,7 @@ class MainWindow(QMainWindow):
                      " - Dynamical Domain Decomposition of reference structure")
 
         self.runProDy_btn = QPushButton('Run')
-        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialogInput
         self.runProDy_btn.setEnabled(False)
         self.runProDy_btn.clicked.connect(self.callAnalysisProDy)
 
@@ -473,13 +488,14 @@ class MainWindow(QMainWindow):
         lab.setMinimumSize(QSize(0, 40))
         lab.setMaximumSize(QSize(16777215, 55))
         lab.setFont(self.font1)
-        # lab4.setStyleSheet("background-color:rgb(255,255,255);")
+        lab.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # lab.setStyleSheet("background-color:rgb(255,255,255);")
         lab.setText("Compare Flexibility (global)")
 
         layout = QGridLayout()
-        layout.addWidget(lab, 0, 0)
+        layout.addWidget(lab, 0, 0, 1, 2)
         layout.addWidget(self.createGroupComparePDBFlex(), 1, 0)
-        layout.addWidget(self.createGroupCompareAlphaFold(), 2, 0)
+        layout.addWidget(self.createGroupCompareAlphaFold(), 1, 1)
         groupbox.setLayout(layout)
         return groupbox
 
@@ -498,7 +514,7 @@ class MainWindow(QMainWindow):
                      " - Principal Component Analysis (PCA)\n - Normal Mode Analysis (NMA)")
 
         self.runPDBFlex_btn = QPushButton('Run')
-        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialogInput
         self.runPDBFlex_btn.setEnabled(False)
         self.runPDBFlex_btn.clicked.connect(self.callPDBFlex)
 
@@ -531,7 +547,7 @@ class MainWindow(QMainWindow):
                      " - Principal Component Analysis (PCA)\n - Normal Mode Analysis (NMA)")
 
         self.runAlphaFold_btn = QPushButton('Run')
-        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialogInput
         self.runAlphaFold_btn.setEnabled(False)
         self.runAlphaFold_btn.clicked.connect(self.callAlphaFold)
 
@@ -561,14 +577,170 @@ class MainWindow(QMainWindow):
         lab.setMinimumSize(QSize(0, 40))
         lab.setMaximumSize(QSize(16777215, 55))
         lab.setFont(self.font1)
+        lab.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # lab.setStyleSheet("background-color:rgb(255,255,255);")
         lab.setText("Focus on Binding Site")
         layout = QGridLayout()
         layout.addWidget(lab, 0, 0)
-        layout.addWidget(self.createGroupSuperimposeBindingSite(), 1, 0)
-        layout.addWidget(self.createGroupAnalyseBindingSite(), 0, 1, 2, 1)
+        layout.addWidget(self.createGroupIdentifyBindingSite(), 1, 0)
+        layout.addWidget(self.createGroupSuperimposeBindingSite(), 2, 0)
+        layout.addWidget(self.createGroupAnalyseBindingSite(), 3, 0)
         groupbox.setLayout(layout)
         return groupbox
+
+
+    # IDENTIFY (Binding Site)
+    #############################################################
+
+    def launchSelectionDialog_BS(self):
+        option = self.options.index(self.combo.currentText())
+        if option == 0:
+            self.inputdir_bs = self.getDirectory()
+            self.structureFiles_bs = [os.path.join(self.inputdir_bs, f) for f in os.listdir(self.inputdir_bs) if
+                                   f.endswith(".pdb") or f.endswith(".ent") or f.endswith(".cif") or f.endswith(".cif.txt")]
+            self.selection_response_lab_bs.setText(
+                str(len(self.structureFiles_bs)) + ' files selected from folder: ' + str(self.inputdir_bs))
+        # elif option == 1:
+        #     self.structureFiles_bs = self.getFileNames()
+        #     self.selection_response_lab_bs.setText(str(len(self.structureFiles_bs)) + ' selected files: ' + str(
+        #         [path_leaf(path) for path in self.structureFiles_bs]))
+        # elif option == 2:
+        #     response = self.getSaveFileName()
+        else:
+            print('Got Nothing')
+
+    def createSubGroupInputBindingSite(self):
+        groupbox = QGroupBox("")
+        groupbox.setStyleSheet("background-color:rgb(47,79,79);")  # darkslategrey
+
+        # Input
+        selection_label = QLabel()
+        selection_label.setMinimumSize(QSize(0, 0))
+        selection_label.setMaximumSize(QSize(16777215, 55))
+        selection_label.setFont(self.font3)
+        # selection_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        selection_label.setText("Select Input folder containing only liganded structures (necessary only for binding site identification)")
+
+        selection_btn = QPushButton('Browse')
+        selection_btn.clicked.connect(self.launchSelectionDialog_BS)
+
+        self.selection_response_lab_bs = QTextEdit()
+        self.selection_response_lab_bs.setReadOnly(True)
+        self.selection_response_lab_bs.setFont(self.font5)
+        self.selection_response_lab_bs.setMaximumHeight(45)
+        self.selection_response_lab_bs.setStyleSheet("background-color:rgb(118, 168, 168);")
+
+        # Layout
+        layout = QGridLayout()
+        layout.addWidget(selection_label, 1, 0, 1, 1)
+        layout.addWidget(selection_btn, 1, 1)
+        layout.addWidget(self.selection_response_lab_bs, 2, 0, 1, 2)
+        groupbox.setLayout(layout)
+        return groupbox
+
+    # def show_get_int_dialog(self):
+    #     self.cutoff, ok = QInputDialog.getInt(self, "age", "Distance cutoff:", value=4, minValue=1)
+    #     if ok:
+    #         print("Distance cutoff for binding site detection is ", self.cutoff)
+
+    def sortPDBs(self):
+        self.process.start('Rscript',
+                           ['./pdb_sorter_has_ligand.R', '-i', str(self.superimposed), '-o', str(self.outputdir)])
+        self.liganded = self.outputdir + '/structures_with_ligand'
+        not_liganded = self.outputdir + '/structures_without_ligand'
+
+
+    def confirmCutoff(self):
+        self.cutoff = self.cutoff_edit.text()
+        print('Distance cutoff for binding site detection is ' + self.cutoff + 'A')
+
+    def callBSIdentifyBio3D(self):
+        self.process.start('Rscript',
+                           ['./binding_site_identify_bio3d.R', '-i', str(self.inputdir_bs), '-o', str(self.outputdir), '-d', str(self.cutoff)])
+        labeled_bs = self.outputdir + '/structures_labeled_binding_site'
+        self.bs_residues_display.setText("Structures with labelled binding site are saved in " + labeled_bs)
+        # loading textfile containing binding site residue information
+        file = open('dictLrg.txt', 'r', encoding="utf8").read()
+        self.bs_residues_display.setText()
+        # display image
+        #
+
+    def createGroupIdentifyBindingSite(self):
+        groupbox = QGroupBox("")
+        #groupbox.setStyleSheet("background-color:rgb(112, 189, 189);") # cyan
+        lab = QLabel()
+        lab.setMinimumSize(QSize(0, 40))
+        lab.setMaximumSize(QSize(16777215, 55))
+        lab.setFont(self.font2)
+        lab.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lab.setText("Binding Site Identification")
+
+        lab_sort = QLabel()
+        lab_sort.setMinimumSize(QSize(0, 40))
+        lab_sort.setMaximumSize(QSize(16777215, 55))
+        lab_sort.setFont(self.font4)
+        lab_sort.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lab_sort.setText("Helper tool: Sort liganded and apo structures automatically into distinct subfolders")
+        self.run_sort_btn = QPushButton('Run')
+        self.run_sort_btn.setEnabled(True)
+        self.run_sort_btn.clicked.connect(self.sortPDBs)
+
+        lab_cutoff = QLabel()
+        lab_cutoff.setMinimumSize(QSize(0, 40))
+        lab_cutoff.setMaximumSize(QSize(16777215, 55))
+        lab_cutoff.setFont(self.font4)
+        lab_cutoff.setText("Distance cutoff for binding site detection (in angstrom):")
+
+        self.cutoff_edit = QLineEdit(self)
+        self.cutoff_edit.setMaxLength(2)
+        self.cutoff_edit.setAlignment(Qt.AlignRight)
+        self.cutoff_edit.setFont(self.font2)
+        # allow only integers
+        onlyInt = QIntValidator()
+        onlyInt.setRange(1, 10)
+        self.cutoff_edit.setValidator(onlyInt)
+        # show default of 4 Angstrom
+        self.cutoff_edit.setText("4")
+        self.cutoff_edit.editingFinished.connect(self.confirmCutoff)
+
+        self.confirm_cutoff_btn = QPushButton('Confirm')
+        self.confirm_cutoff_btn.setEnabled(True)
+        self.confirm_cutoff_btn.clicked.connect(self.confirmCutoff)
+
+        self.identify_bs_btn = QPushButton('Run Binding Site Identification')
+        # # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog_BS
+        # self.identify_bs_btn.setEnabled(False)
+        # if len(self.structureFiles_bs)>0:
+        #     self.identify_bs_btn.setEnabled(True)
+        self.identify_bs_btn.clicked.connect(self.callBSIdentifyBio3D)
+
+        lab2 = QLabel()
+        lab2.setMinimumSize(QSize(0, 40))
+        lab2.setMaximumSize(QSize(16777215, 55))
+        lab2.setFont(self.font4)
+        lab2.setText("Residues detected as being part of binding site:")
+
+        self.bs_residues_display = QTextEdit()
+        self.bs_residues_display.setReadOnly(True)
+        self.bs_residues_display.setFont(self.font4)
+        self.bs_residues_display.setMaximumHeight(50)
+        self.bs_residues_display.setStyleSheet("background-color:rgb(118, 168, 168);")
+
+        layout = QGridLayout()
+        layout.addWidget(lab, 0, 0, 1, 3)
+        layout.addWidget(lab_sort, 1, 0, 1, 2)
+        layout.addWidget(self.run_sort_btn, 1, 2, 1, 1)
+        layout.addWidget(self.createSubGroupInputBindingSite(), 2, 0, 1, 3)
+        # layout.addWidget(self.show_get_int_dialog(), 3, 0)
+        layout.addWidget(lab_cutoff, 3, 0)
+        layout.addWidget(self.cutoff_edit, 3, 1)
+        layout.addWidget(self.confirm_cutoff_btn, 3, 2)
+        layout.addWidget(self.identify_bs_btn, 4, 1, 1, 1)
+        layout.addWidget(lab2, 5, 0)
+        layout.addWidget(self.bs_residues_display, 6, 0, 2, 3)
+        groupbox.setLayout(layout)
+        return groupbox
+
 
     # SUPERIMPOSE (Binding Site)
     #############################################################
@@ -603,7 +775,7 @@ class MainWindow(QMainWindow):
     def callSuperimposeBio3D_bs(self):
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('Rscript',
-                           ['./superimpose_bio3d_bs.R', '-d', str(self.inputdir), '-o', str(self.outputdir)])
+                           ['./superimpose_bio3d_bs.R', '-i', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed_bs = self.outputdir + '/superimposed_bs'
         self.superimpose_bs_response.setText("Superimposed structures are saved in " + self.superimposed_bs)
         self.runBio3D_bs_btn.setEnabled(True)
@@ -627,13 +799,13 @@ class MainWindow(QMainWindow):
         lab.setMaximumSize(QSize(16777215, 55))
         lab.setFont(self.font2)
         # lab.setStyleSheet("background-color:rgb(255,255,255);")
-        lab.setText("Superimpose Binding Site")
+        lab.setText("Superimpose all structures using backbone atoms of Binding Site residues")
 
         self.checkbox_bs1 = QCheckBox("Skip and use globally superimposed structures.")
         self.checkbox_bs1.setChecked(True)
-        self.checkbox_bs2 = QCheckBox("Superimpose binding site residues using Bio3D.")
+        self.checkbox_bs2 = QCheckBox("Superimpose using only binding site residues with Bio3D.")
         self.checkbox_bs2.setChecked(False)
-        self.checkbox_bs3 = QCheckBox("Superimpose binding site residues using ProDy.")
+        self.checkbox_bs3 = QCheckBox("Superimpose using only binding site residues with ProDy.")
         self.checkbox_bs3.setChecked(False)
         self.bg_bs = QButtonGroup()
         self.bg_bs.addButton(self.checkbox_bs1, 1)
@@ -646,13 +818,13 @@ class MainWindow(QMainWindow):
         self.confirm_bs_btn.clicked.connect(self.confirmSuper_bs)
 
         self.superimpose_bs_btn1 = QPushButton('Run')
-        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog_BS
         self.superimpose_bs_btn1.setEnabled(False)
         self.checkbox2.stateChanged.connect(self.hide_superimpose_bs_btn1)
         self.superimpose_bs_btn1.clicked.connect(self.callSuperimposeBio3D_bs)
 
         self.superimpose_bs_btn2 = QPushButton('Run')
-        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog
+        # Disable the button as default - enabled when more than one file is selected in launchSelectionDialog_BS
         self.superimpose_bs_btn2.setEnabled(False)
         self.checkbox_bs3.stateChanged.connect(self.hide_superimpose_bs_btn2)
         self.superimpose_bs_btn2.clicked.connect(self.callSuperimposeProDy_bs)
@@ -675,7 +847,7 @@ class MainWindow(QMainWindow):
         groupbox.setLayout(layout)
         return groupbox
 
-    # ANALYSE (Binding Site)
+    # ANALYSE Flexibility (Binding Site)
     #############################################################
     def createGroupAnalyseBindingSite(self):
         groupbox = QGroupBox("")
@@ -685,7 +857,7 @@ class MainWindow(QMainWindow):
         lab.setMaximumSize(QSize(16777215, 55))
         lab.setFont(self.font2)
         # lab.setStyleSheet("background-color:rgb(255,255,255);")
-        lab.setText("Binding Site Analysis")
+        lab.setText("Binding Site Flexibility Analysis")
         layout = QGridLayout()
         layout.addWidget(lab, 0, 0)
         groupbox.setLayout(layout)
@@ -722,8 +894,8 @@ class MainWindow(QMainWindow):
         #self.setStyleSheet("background-color:rgb(91,90,90);")
         #self.setStyleSheet("background-color:rgb(0,124,130);")
         #self.setStyleSheet("background-color:rgb(112, 189, 189);") # cyan
-        #self.setStyleSheet("background-color:rgb(255,255,255);") # white
-        self.setStyleSheet("background-color:rgb(192,192,192);") # silver
+        self.setStyleSheet("background-color:rgb(255,255,255);") # white
+        #self.setStyleSheet("background-color:rgb(192,192,192);") # silver
 
         # # creating a vertical box layout
         # layout = QVBoxLayout()
@@ -734,14 +906,32 @@ class MainWindow(QMainWindow):
 
         self.setLayout(layout)
 
+        lab = QLabel()
+        lab.setMinimumSize(QSize(0, 40))
+        lab.setMaximumSize(QSize(16777215, 55))
+        lab.setFont(self.font0)
+        lab.setStyleSheet("color:rgb(65, 122, 122);")  # darker cyan
+        lab.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lab.setText("EnsembleFlex - Flexibility Analysis of Structure Ensembles")
+
+        lab1 = QLabel()
+        lab1.setMinimumSize(QSize(0, 40))
+        lab1.setMaximumSize(QSize(16777215, 55))
+        lab1.setFont(self.font4)
+        lab1.setStyleSheet("color:rgb(47, 79, 79);")  # darkslategrey
+        lab1.setText("Description ....")
+
         #############################################################
-        layout.addWidget(self.createGroupName(), 0, 0, 1, 2)
-        layout.addWidget(self.createGroupInputOutput(), 1, 0, 2, 2)
-        layout.addWidget(self.createGroupSuperimp(), 3, 0, 2, 2)
-        layout.addWidget(self.logviewer, 5, 0, 2, 2)
-        layout.addWidget(self.createGroupAnalyse(), 0, 3, 5, 2)
-        layout.addWidget(self.createGroupCompare(), 0, 5, 5, 2)
-        layout.addWidget(self.createGroupBindingSite(), 5, 3, 2, 4)
+        layout.addWidget(lab, 0, 3, 1, 5)
+        layout.addWidget(lab1, 1, 3, 1, 5)
+        # layout.addWidget(self.createGroupDescription(), 0, 3, 2, 5)
+        layout.addWidget(self.createGroupInputOutput(), 1, 3, 2, 3)
+        # layout.addWidget(self.createGroupName(), 3, 0, 1, 2)
+        layout.addWidget(self.createLogviewer(), 1, 6, 2, 2)
+        layout.addWidget(self.createGroupSuperimp(), 3, 3, 2, 3)
+        layout.addWidget(self.createGroupAnalyse(), 5, 3, 5, 3)
+        layout.addWidget(self.createGroupCompare(), 10, 3, 5, 3)
+        layout.addWidget(self.createGroupBindingSite(), 15, 3, 5, 3)
 
 
         #############################################################
