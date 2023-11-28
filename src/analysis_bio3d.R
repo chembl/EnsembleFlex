@@ -93,9 +93,9 @@ pheatmap(rd, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotati
 dev.off()
 
 ## RMSD Hierarchical clustering
-hc.rd <- hclust(as.dist(rd))
+hc_rmsd <- hclust(as.dist(rd))
 png("RMSD_clust.png", units="in", width=5, height=5, res=300)
-hclustplot(hc.rd, labels=ids, cex=0.5, k=number_of_groups,
+hclustplot(hc_rmsd, labels=ids, cex=0.5, k=number_of_groups,
            ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
 
@@ -157,7 +157,8 @@ mktrj.pca(pc.xray, pc=3, file="PC3.pdb") #, mag = 1, step = 0.125
 # Vector field representation
 pymol(pc.xray, pdb=ref_pdb, pc=1, as="cartoon", file="PC1vectors.pml", type="script")
 
-# Hierarchical clustering in PC space
+
+### Hierarchical clustering in PC space
 # Perform structural clustering in the PC1-PC2 subspace.
 hc_pc12 <- hclust(dist(pc.xray$z[, 1:2]))
 grps_pc12 <- cutree(hc_pc12, k=number_of_groups)
@@ -169,6 +170,14 @@ png("PCA_clust.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12, labels=ids, cex=0.5, k=number_of_groups,
            ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
+
+
+## Cluster attributions
+grps_rmsd <- cutree(hc_rmsd, k=number_of_groups)
+# store cluster attributions in dataframe
+clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12), col.names = c("Structure", "RMSD Cluster", "PC1/2 Cluster"))
+# safe dataframe
+write.csv(clusters_df, "cluster_attributions.csv", row.names=FALSE, quote=FALSE)
 
 
 ## eNMA
