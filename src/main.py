@@ -656,7 +656,7 @@ class MainWindow(QMainWindow):
 
     def callBSIdentifyBio3D(self):
         self.process.start('Rscript',
-                           ['./binding_site_identify_bio3d.R', '-i', str(self.inputdir_bs), '-o', str(self.outputdir), '-d', str(self.cutoff)])
+                           ['./identify_binding_site_bio3d.R', '-i', str(self.inputdir_bs), '-o', str(self.outputdir), '-d', str(self.cutoff)])
         labeled_bs = self.outputdir + '/structures_labeled_binding_site'
         self.bs_residues_display.setText("Structures with labelled binding site are saved in " + labeled_bs)
         # loading textfile containing binding site residue information
@@ -775,7 +775,7 @@ class MainWindow(QMainWindow):
     def callSuperimposeBio3D_bs(self):
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('Rscript',
-                           ['./superimpose_bio3d_bs.R', '-i', str(self.inputdir), '-o', str(self.outputdir)])
+                           ['./superimpose_binding_site_bio3d.R', '-i', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed_bs = self.outputdir + '/superimposed_bs'
         self.superimpose_bs_response.setText("Superimposed structures are saved in " + self.superimposed_bs)
         self.runBio3D_bs_btn.setEnabled(True)
