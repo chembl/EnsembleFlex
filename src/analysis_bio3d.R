@@ -26,7 +26,9 @@ option_list = list(
   # make_option(c("-f", "--filenames"), type="character", default=NULL,
   #             help="dataset file names - example: [file1.pdb,file2.pdb]", metavar="character"),
   make_option(c("-o", "--outdir"), type="character", default="Bio3D_Analysis",
-              help="output directory [default=%default]", metavar="character")
+              help="output directory [default=%default]", metavar="character"),
+  make_option(c("-n", "--ngroups"), type="integer", default=3,
+              help="number of groups for clustering [default=%default]", metavar="integer")
 );
 
 opt_parser = OptionParser(option_list=option_list);
@@ -76,7 +78,7 @@ print(ids)
 # }
 
 ### Set number_of_groups for clustering
-number_of_groups <- 3
+number_of_groups <- opt$ngroups
 
 ## RMSD
 ##-------------------------------------
