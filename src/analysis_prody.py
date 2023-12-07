@@ -1,30 +1,29 @@
+#!/usr/bin/env python
 
-import sys
-import glob
 import os
-from optparse import OptionParser
+from argparse
 from prody import *
 import matplotlib.pylab as plt
 import numpy as np
 #from matplotlib.pylab import *
-from matplotlib.backends.backend_pdf import PdfPages
+
 
 #------- File Argument/Option Parser -------#
-parser = OptionParser()
-parser.add_option("-i", "--in", dest="input_path",
-                  help="input dataset directory path", metavar="PATH")
-parser.add_option("-o", "--out", dest="output_dir", default="outdir",
-                  help="output directory name", metavar="STRING")
+parser = argparse.ArgumentParser(description="Perform analysis on protein structures.")
+parser.add_argument("-i", "--input", dest="input_path", required=True,
+                    help="input dataset directory path", metavar="PATH")
+parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
+                    help="output directory name", metavar="STRING")
 
-(opts, args) = parser.parse_args()
-if os.path.isdir(opts.input_path) and os.path.isdir(opts.output_dir):
-    output_path = os.path.abspath(opts.output_dir)
-elif os.path.isdir(opts.input_path) and not os.path.isdir(opts.output_dir):
-    if os.path.isdir(os.path.dirname(opts.output_dir)):
-        output_path = opts.output_dir
+args = parser.parse_args()
+if os.path.isdir(args.input_path) and os.path.isdir(args.output_dir):
+    output_path = os.path.abspath(args.output_dir)
+elif os.path.isdir(args.input_path) and not os.path.isdir(args.output_dir):
+    if os.path.isdir(os.path.dirname(args.output_dir)):
+        output_path = args.output_dir
         os.mkdir(output_path)
     else:
-        output_path = opts.input_path+"/"+opts.output_dir
+        output_path = args.input_path+"/"+args.output_dir
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 else:
@@ -54,7 +53,7 @@ sys.stdout = Logger()
 
 
 # list of input pdb files
-pdbfiles = glob.glob(opts.input_path+"/*.pdb")
+pdbfiles = glob.glob(args.input_path+"/*.pdb")
 # parsing structures
 structures = parsePDB(pdbfiles, compressed=False)  #, subset='ca'
 reference_structure = structures[0] # by default first structure of ensemble is taken as reference structure and
@@ -286,4 +285,4 @@ print('\nDynamical domains of reference structure are saved in B-factor column o
 
 ### Generate Report
 import analysis_prody_reporting as reporting
-reporting.generate_report(str_input_path=opts.input_path, output_path=output_path)
+reporting.generate_report(str_input_path=args.input_path, output_path=output_path)
