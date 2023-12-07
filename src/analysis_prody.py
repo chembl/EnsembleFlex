@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from argparse
+import argparse
 from prody import *
 import matplotlib.pylab as plt
 import numpy as np
@@ -9,7 +9,7 @@ import numpy as np
 
 
 #------- File Argument/Option Parser -------#
-parser = argparse.ArgumentParser(description="Perform analysis on protein structures.")
+parser = argparse.ArgumentParser(description="Perform flexibility analysis on protein structures.")
 parser.add_argument("-i", "--input", dest="input_path", required=True,
                     help="input dataset directory path", metavar="PATH")
 parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
