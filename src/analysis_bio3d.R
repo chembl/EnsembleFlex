@@ -182,6 +182,14 @@ clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12), col.names = c("Str
 write.csv(clusters_df, "cluster_attributions.csv", row.names=FALSE, quote=FALSE)
 
 
+# Save PyMOL scripts for coloring by group
+# color by clustering (based on PCA)
+pymol(pdbs, col=grps_pc12, as="cartoon", file="col_by_grps_PC.pml", type="script")
+# color by clustering (based on RMSD)
+pymol(pdbs, col=grps_rmsd, as="cartoon", file="col_by_grps_RMSD.pml", type="script")
+
+
+
 ## eNMA
 ##-------------------------------------
 # NMA on all structures; use 'rm.gaps=FALSE' to keep the gap containing columns, but note that this is not compatible
