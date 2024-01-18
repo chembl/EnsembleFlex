@@ -67,12 +67,6 @@ if (!is.null(opt$indir)){
 #pdbs <- pdbaln(files)
 pdbs <- pdbaln(files, exefile='msa')
 
-# read all atoms for each residue
-#pdbs_allatoms <- read.all(pdbaln(files, exefile='msa'))
-# update the aligned structures to include all heavy atoms:
-pdbs_allatoms <- read.all(pdbs)
-
-
 ids <- sub("[.].*", "", basename(pdbs$id)) # get filenames and drop any extensions
 #ids <- sapply(strsplit(basename(pdbs$id), "[.]"), head, 1)
 #ids <- unlist(strsplit(basename(pdbs$id), split=".pdb"))
@@ -94,6 +88,7 @@ rd <- rmsd(pdbs, fit=FALSE)
 png("RMSD_hist.png", units="in", width=5, height=5, res=300)
 hist(rd, breaks=40, xlab="RMSD (Å)", main="Histogram of RMSD")
 dev.off()
+print("Plot saved to file RMSD_hist.png")
 
 ## RMSD heatmap
 library(pheatmap)
@@ -101,6 +96,7 @@ png("RMSD_heatmap.png", units="in", width=5, height=5, res=300)
 #heatmap(rd, labCol=ids, main="RMSD Heatmap")
 pheatmap(rd, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
 dev.off()
+print("Plot saved to file RMSD_heatmap.png")
 
 ## RMSD Hierarchical clustering
 hc_rmsd <- hclust(as.dist(rd))
@@ -108,27 +104,7 @@ png("RMSD_clust.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_rmsd, labels=ids, cex=0.5, k=number_of_groups,
            ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
-
-## all-atom RMSD
-##-------------------------------------
-rd_allatom <- rmsd(pdbs_allatoms$all, fit=FALSE)
-png("RMSD_hist_allatom.png", units="in", width=5, height=5, res=300)
-hist(rd_allatom, breaks=40, xlab="RMSD (Å)", main="Histogram of RMSD")
-dev.off()
-
-## RMSD heatmap
-library(pheatmap)
-png("RMSD_heatmap_allatom.png", units="in", width=5, height=5, res=300)
-#heatmap(rd_allatom, labCol=ids, main="RMSD Heatmap")
-pheatmap(rd_allatom, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
-dev.off()
-
-## RMSD Hierarchical clustering
-hc_rmsd_allatom <- hclust(as.dist(rd_allatom))
-png("RMSD_clust_allatom.png", units="in", width=5, height=5, res=300)
-hclustplot(hc_rmsd_allatom, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
-dev.off()
+print("Plot saved to file RMSD_clust.png")
 
 
 ## RMSF
@@ -152,18 +128,19 @@ png("RMSF.png", units="in", width=5, height=5, res=300)
 plot.bio3d(rf, resno=ref_pdb, sse=ref_pdb, ylab="RMSF (Å)",
            xlab="Residue No.", col="gray", main="RMSFs per Residue") #, typ="l"
 dev.off()
+print("Plot saved to file RMSF.png")
 
-# all-atom RMSF
-rf_allatom <- rmsf(pdbs_allatoms$all[, gaps.pos$f.inds])
-png(filename="RMSF_allatom.png", units="in", width=5, height=5, res=300)
-plot.bio3d(rf_allatom, resno=ref_pdb, sse=ref_pdb, ylab="RMSF (Å)",
-           xlab="Residue No.", col="gray", main="All-atom RMSFs per Residue") #, typ="l"
+rf_gaps <- rmsf(pdbs$xyz)
+png("RMSF_gaps.png", units="in", width=5, height=5, res=300)
+plot.bio3d(rf_gaps, rm.gaps=FALSE, resno=pdb1, sse=pdb1, sse.min.length=0, ylab="RMSF (Å)",
+           xlab="Residue No.", col="gray", main="RMSFs per Residue") #, typ="l"
 dev.off()
+print("Plot saved to file RMSF_gaps.png")
 
 # Save reference structure with RMSF in B-factor column
 ca.ref_pdb <- trim.pdb(ref_pdb, "calpha")
 write.pdb(ca.ref_pdb, b=rf, file="RMSFonReference.pdb")
-write.pdb(ca.ref_pdb, b=rf_allatom, file="RMSFonReference_allatom.pdb")
+print("PDB saved to file RMSFonReference.pdb")
 
 
 ## B-factors
@@ -172,6 +149,7 @@ png("B-factors.png", units="in", width=5, height=5, res=300)
 plot.bio3d(pdbs$b, rm.gaps=TRUE, resno=ref_pdb, sse=ref_pdb, ylab="B-factor",
            xlab="Residue No.", main="B-factors", col="gray") #, typ="l"
 dev.off()
+print("Plot saved to file B-factors.png")
 
 
 ## PCA
@@ -180,12 +158,8 @@ dev.off()
 pc_xyz <- pca.xyz(pdbs$xyz[, gaps.pos$f.inds])
 pc_xyz
 
-## PCA on all-atom coordinates
-#---------
-# Perform PCA on all-atom coordinates
-pc_xyz_allatom <- pca(pdbs_allatoms$all, rm.gaps=TRUE, fit=F)
-pc_xyz_allatom
-
+resno = pdbs$resno[1, !is.gap(pdbs)]
+resid = aa123(pdbs$ali[1, !is.gap(pdbs)])
 
 ## Residue contribution to PCA
 png("PCA_residue_contribution.png", units="in", width=5, height=5, res=300)
@@ -194,70 +168,41 @@ plot.bio3d(pc_xyz$au[,1], resno=ref_pdb, sse=ref_pdb, ylab="PC1")
 plot.bio3d(pc_xyz$au[,2], resno=ref_pdb, sse=ref_pdb, ylab="PC2")
 plot.bio3d(pc_xyz$au[,3], resno=ref_pdb, sse=ref_pdb, ylab="PC3")
 dev.off()
-
-## Residue contribution to all-atom PCA
-png("PCA_residue_contribution_allatom.png", units="in", width=5, height=5, res=300)
-par(mfrow = c(3, 1), cex = 0.75, mar = c(3, 4, 1, 1))
-plot.bio3d(pc_xyz_allatom$au[,1], resno=ref_pdb, sse=ref_pdb, ylab="PC1")
-plot.bio3d(pc_xyz_allatom$au[,2], resno=ref_pdb, sse=ref_pdb, ylab="PC2")
-plot.bio3d(pc_xyz_allatom$au[,3], resno=ref_pdb, sse=ref_pdb, ylab="PC3")
-dev.off()
+print("Plot saved to file PCA_residue_contribution.png")
 
 ## Interpolated structures along PC1/2/3 produced by the mktrj.pca() function
-mktrj.pca(pc_xyz, pc=1, file="PC1.pdb") #, mag = 1, step = 0.125
-mktrj.pca(pc_xyz, pc=2, file="PC2.pdb") #, mag = 1, step = 0.125
-mktrj.pca(pc_xyz, pc=3, file="PC3.pdb") #, mag = 1, step = 0.125
-mktrj.pca(pc_xyz_allatom, pc=1, file="PC1_allatom.pdb") #, mag = 1, step = 0.125
-mktrj.pca(pc_xyz_allatom, pc=2, file="PC2_allatom.pdb") #, mag = 1, step = 0.125
-mktrj.pca(pc_xyz_allatom, pc=3, file="PC3_allatom.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz, pc=1, resno=resno, resid=resid, file="PC1.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz, pc=2, resno=resno, resid=resid, file="PC2.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz, pc=3, resno=resno, resid=resid, file="PC3.pdb") #, mag = 1, step = 0.125
+print("Interpolated trajectory structures saved to files PC1.pdb, PC2.pdb, PC3.pdb")
 
 # PC1 Vector field representation
-pymol(pc_xyz, pdb=pdb1, pc=1, as="ribbon", file="PC1vectors.pml", type="script")
-# PC1-allatom Vector field representation
-pymol(pc_xyz_allatom, pdb=pdbs_allatoms[1]$all, pc=1, as="wire", file="PC1vectors_allatom.pml", type="script")
-
+pymol(pc_xyz, pdb=pdb1, pc=1, resno=resno, resid=resid, as="ribbon", file="PC1vectors.pml", type="script")
 
 ### Hierarchical clustering in PC space
 # Perform structural clustering in the PC1-PC2 subspace.
 hc_pc12 <- hclust(dist(pc_xyz$z[, 1:2]))
 grps_pc12 <- cutree(hc_pc12, k=number_of_groups)
-# Perform structural clustering in the PC1-PC2 subspace (for allatom data).
-hc_pc12_allatom <- hclust(dist(pc_xyz_allatom$z[, 1:2]))
-grps_pc12_allatom <- cutree(hc_pc12_allatom, k=number_of_groups)
 
 # Plot PCs
 png("PCA.png", units="in", width=5, height=5, res=300)
 plot(pc_xyz, col=grps_pc12) #, col=annotation[, "color"]
 dev.off()
-png("PCA_allatom.png", units="in", width=5, height=5, res=300)
-plot(pc_xyz_allatom, col=grps_pc12_allatom)
-dev.off()
+print("Plot saved to file PCA.png")
 
 png("PCA_clust.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12, labels=ids, cex=0.5, k=number_of_groups,
            ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
-
-
-## Cluster attributions
-grps_rmsd <- cutree(hc_rmsd, k=number_of_groups)
-grps_rmsd_allatom <- cutree(hc_rmsd_allatom, k=number_of_groups)
-# store cluster attributions in dataframe
-clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_rmsd_allatom, grps_pc12_allatom),
-                             col.names = c("Structure", "RMSD Cluster", "PC1/2 Cluster", "RMSD-allatom Cluster", "PC1/2-allatom Cluster"))
-# safe dataframe
-write.csv(clusters_df, "cluster_attributions.csv", row.names=FALSE, quote=FALSE)
+print("Plot saved to file PCA_clust.png")
 
 
 # Save PyMOL scripts for coloring by group
+grps_rmsd <- cutree(hc_rmsd, k=number_of_groups)
 # color by clustering (based on RMSD)
 pymol(pdbs, col=grps_rmsd, as="cartoon", file="col_by_grps_RMSD.pml", type="script")
-# color by clustering (based on RMSD on all-atom)
-pymol(pdbs_allatoms, col=grps_rmsd_allatom, as="cartoon", file="col_by_grps_RMSD_allatom.pml", type="script")
 # color by clustering (based on PCA)
 pymol(pdbs, col=grps_pc12, as="cartoon", file="col_by_grps_PC.pml", type="script")
-# color by clustering (based on PCA on all-atom)
-pymol(pdbs_allatoms, col=grps_pc12_allatom, as="cartoon", file="col_by_grps_PC_allatom.pml", type="script")
 
 
 
@@ -284,8 +229,10 @@ modes_ref_pdb <- nma(ref_pdb)
 png(filename="NMA_fluctuations_reference_pdb.png", width=900, height=750, units="px", res=120)
 plot.nma(modes_ref_pdb, resno=ref_pdb, sse=ref_pdb, sse.min.length=3)#, main="NMA on reference structure"
 dev.off()
+print("Plot saved to file NMA_fluctuations_reference_pdb.png")
 # Make a PDB trajectory
 mktrj(modes_ref_pdb, mode=7, pdb=ref_pdb, file="NMA_reference_pdb_mode7_traj.pdb")
+print("Interpolated trajectory structures saved to file NMA_reference_pdb_mode7_traj.pdb")
 # Vector field representation
 pymol(modes_ref_pdb, mode=7, pdb=ref_pdb, file="NMA_reference_pdb_mode7.pml", type="script")
 
@@ -304,9 +251,114 @@ cm <- cmap(pdbs, binary=FALSE, all.atom=FALSE)
 vec <- rowSums(cm, na.rm=TRUE)
 pymol(pdbs, col="user", user.vec=vec, as="cartoon", file="col_by_averaged_contact_density.pml", type="script")
 
+
+
+##-------------------------------------
+## All-atom Analysis
+##-------------------------------------
+
+# read all atoms for each residue
+#pdbs_allatoms <- read.all(pdbaln(files, exefile='msa'))
+# update the aligned structures to include all heavy atoms:
+pdbs_allatoms <- read.all(pdbs)
+##-------------------------------------
+
+
+## all-atom RMSD
+##-------------------------------------
+rd_allatom <- rmsd(pdbs_allatoms$all, fit=FALSE)
+png("RMSD_hist_allatom.png", units="in", width=5, height=5, res=300)
+hist(rd_allatom, breaks=40, xlab="RMSD (Å)", main="Histogram of RMSD")
+dev.off()
+print("Plot saved to file RMSD_hist_allatom.png")
+
+## all-atom RMSD heatmap
+library(pheatmap)
+png("RMSD_heatmap_allatom.png", units="in", width=5, height=5, res=300)
+#heatmap(rd_allatom, labCol=ids, main="RMSD Heatmap")
+pheatmap(rd_allatom, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
+dev.off()
+print("Plot saved to file RMSD_heatmap_allatom.png")
+
+## all-atom RMSD Hierarchical clustering
+hc_rmsd_allatom <- hclust(as.dist(rd_allatom))
+png("RMSD_clust_allatom.png", units="in", width=5, height=5, res=300)
+hclustplot(hc_rmsd_allatom, labels=ids, cex=0.5, k=number_of_groups,
+           ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+dev.off()
+print("Plot saved to file RMSD_clust_allatom.png")
+
+
+# all-atom RMSF
+##-------------------------------------
+rf_allatom <- rmsf(pdbs_allatoms$all[, gaps.pos$f.inds])
+png(filename="RMSF_allatom.png", units="in", width=5, height=5, res=300)
+plot.bio3d(rf_allatom, resno=ref_pdb, sse=ref_pdb, ylab="RMSF (Å)",
+           xlab="Residue No.", col="gray", main="All-atom RMSFs per Residue") #, typ="l"
+dev.off()
+print("Plot saved to file RMSF_allatom.png")
+
+# Save reference structure with RMSF in B-factor column
+write.pdb(ca.ref_pdb, b=rf_allatom, file="RMSFonReference_allatom.pdb")
+print("PDB saved to file RMSFonReference_allatom.pdb")
+
+
+## PCA on all-atom coordinates
+##-------------------------------------
+# Perform PCA on all-atom coordinates
+pc_xyz_allatom <- pca(pdbs_allatoms$all, rm.gaps=TRUE, fit=FALSE)
+pc_xyz_allatom
+
+# ## Residue contribution to all-atom PCA - not possible to calculate straight away, as each residue has different number of atoms
+# png("PCA_residue_contribution_allatom.png", units="in", width=5, height=5, res=300)
+# par(mfrow = c(3, 1), cex = 0.75, mar = c(3, 4, 1, 1))
+# plot.bio3d(pc_xyz_allatom$au[,1], resno=pdbs_allatoms[1], sse=pdbs_allatoms[1], ylab="PC1")
+# plot.bio3d(pc_xyz_allatom$au[,2], resno=pdbs_allatoms[1], sse=pdbs_allatoms[1], ylab="PC2")
+# plot.bio3d(pc_xyz_allatom$au[,3], resno=pdbs_allatoms[1], sse=pdbs_allatoms[1], ylab="PC3")
+# dev.off()
+# print("Plot saved to file PCA_residue_contribution_allatom.png")
+
+## Interpolated structures along PC1/2/3 produced by the mktrj.pca() function
+mktrj.pca(pc_xyz_allatom, pc=1, file="PC1_allatom.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz_allatom, pc=2, file="PC2_allatom.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz_allatom, pc=3, file="PC3_allatom.pdb") #, mag = 1, step = 0.125
+print("Interpolated trajectory structures saved to files PC1_allatom.pdb, PC2_allatom.pdb, PC3_allatom.pdb")
+
+# PC1-allatom Vector field representation
+pymol(pc_xyz_allatom, pdb=pdbs_allatoms[1]$all, pc=1, as="lines", file="PC1vectors_allatom.pml", type="script")
+
+# Perform structural clustering in the PC1-PC2 subspace (for allatom data).
+hc_pc12_allatom <- hclust(dist(pc_xyz_allatom$z[, 1:2]))
+grps_pc12_allatom <- cutree(hc_pc12_allatom, k=number_of_groups)
+
+png("PCA_allatom.png", units="in", width=5, height=5, res=300)
+plot(pc_xyz_allatom, col=grps_pc12_allatom)
+dev.off()
+print("Plot saved to file PCA_allatom.png")
+
+png("PCA_clust_allatom.png", units="in", width=5, height=5, res=300)
+hclustplot(hc_pc12_allatom, labels=ids, cex=0.5, k=number_of_groups,
+           ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+dev.off()
+print("Plot saved to file PCA_clust_allatom.png")
+
+# Save PyMOL scripts for coloring by group
+grps_rmsd_allatom <- cutree(hc_rmsd_allatom, k=number_of_groups)
+# color by clustering (based on RMSD on all-atom)
+pymol(pdbs_allatoms, col=grps_rmsd_allatom, as="cartoon", file="col_by_grps_RMSD_allatom.pml", type="script")
+# color by clustering (based on PCA on all-atom)
+pymol(pdbs_allatoms, col=grps_pc12_allatom, as="cartoon", file="col_by_grps_PC_allatom.pml", type="script")
+
+
+# Construct a Contact Map for Structures
+##-------------------------------------
+# Calculate and color by averaged contact density around each residue
+# binary=FALSE: the raw matrix containing fraction of frames that two residues are in contact is returned
 cm_allatom <- cmap(pdbs_allatoms, binary=FALSE, all.atom=TRUE)
 vec_allatom <- rowSums(cm_allatom, na.rm=TRUE)
 pymol(pdbs, col="user", user.vec=vec_allatom, as="cartoon", file="col_by_averaged_contact_density_allatom.pml", type="script")
+
+
 
 
 ## Ensemble Difference Distance Matrix (eDDM) Analysis
@@ -334,6 +386,7 @@ grps_dm_pc12 <- cutree(hc_dm_pc12, k=number_of_groups)
 png("PCA_on_allatom_DifferenceDistanceMatrix.png", units="in", width=5, height=5, res=300)
 plot(pc_dm, col=grps_dm_pc12) # for only PC1-2 subplot add:, pc.axes=c(1,2)
 dev.off()
+print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix.png")
 # Calculating difference distance matrices between groups
 # the difference mean distance between groups for each residue pair are calculated and statistical significance assessed
 # using a two-sample Wilcoxon test. Long-distance pairs in all structures are omitted.
@@ -342,6 +395,7 @@ tbl <- eddm(pdbs_allatoms, grps=grps_dm_pc12, dm=dm, mask="cmap")
 png("eDDM_complete.png", units="in", width=5, height=5, res=300)
 plot(tbl, pdbs=pdbs_allatoms, full=TRUE, resno=NULL, sse=pdbs$sse[1, ], type="tile") #,labels=TRUE, labels.ind=c(1:3, 17:19)
 dev.off()
+print("Plot saved to file eDDM_complete.png")
 # Generate PyMol script to visualise all residue pairs showing any distance changes
 pymol(tbl, pdbs=pdbs_allatoms, grps=grps_dm_pc12, as="sticks", file="eDDM_any.pml", type="script")
 # Identifying significant distance changes
@@ -352,6 +406,7 @@ if (length(keys)) {
     png("eDDM_significant.png", units="in", width=5, height=5, res=300)
     plot(keys, pdbs=pdbs_allatoms, full=TRUE, resno=NULL, sse=pdbs$sse[1, ], type="tile") #,labels=TRUE, labels.ind=c(1:3, 17:19)
     dev.off()
+    print("Plot saved to file eDDM_significant.png")
     # Generate PyMol script to visualise all identified key residue pairs showing significant distance changes
     pymol(keys, pdbs=pdbs_allatoms, grps=grps_dm_pc12, as="sticks", file="eDDM_significant.pml", type="script")
     } else {print("No key switch residues identified.")}
@@ -396,7 +451,6 @@ if (length(keys)) {
 # dev.off()
 
 
-
 # # Calculate pair-wise RMSD values
 # rmsd.map <- rmsd(pdbs$xyz, a.inds=gaps.pos$f.inds, fit=TRUE)
 # png("pair-wise_RMSDs.png", units="in", width=5, height=5, res=300)
@@ -404,14 +458,28 @@ if (length(keys)) {
 # dev.off()
 
 
+##-------------------------------------
+## Cluster attributions for RMSD, PC, RMSD-allatom, PC-allatom
+##-------------------------------------
+# store cluster attributions in dataframe
+clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_rmsd_allatom, grps_pc12_allatom),
+                             col.names = c("Structure", "RMSD Cluster", "PC1/2 Cluster", "RMSD-allatom Cluster", "PC1/2-allatom Cluster"))
+# safe dataframe
+write.csv(clusters_df, "cluster_attributions.csv", row.names=FALSE, quote=FALSE)
+
+
+##-------------------------------------
 # Protect spaces in path names with gsub(" ","\\\\ ",pathname)
 scriptpath = gsub(" ","\\\\ ",paste(projectdir,'/src/analysis_bio3d_reporting.py', sep=''))
 str_input_path = gsub(" ","\\\\ ",opt$indir)
 output_path = gsub(" ","\\\\ ",outdir)
 
 ### Save R session info
+##-------------------------------------
 writeLines(capture.output(sessionInfo()), paste0(output_path, "/R_session_info_", format(Sys.time(), "%Y%m%d.%H%M"), ".txt"))
 #writeLines(capture.output(sessionInfo()), paste0(output_path, "/R_session_info.txt"))
+print(paste0("R session info saved to file R_session_info_", format(Sys.time(), "%Y%m%d.%H%M"), ".txt"))
 
 ### Generate Report
+##-------------------------------------
 system(paste('python3', scriptpath, str_input_path, output_path, number_of_groups, sep=' '), wait=FALSE)
