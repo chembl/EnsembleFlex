@@ -86,13 +86,17 @@ bsite.pos = atom.select(bsite.pdb, string="protein")
 resno_gr <- bsite.pdb$atom$resno[bsite.pos$atom]
 # mean rmsf value of all atoms of each residue
 rf_bsite <- rmsf(pdbs_allatoms$all[, bsite.pos$xyz], grpby=resno_gr)
+# PCA on all atoms of binding site residues
+pc_xyz_bsite_allatom <- pca(pdbs_allatoms$all[, bsite.pos$xyz], rm.gaps=TRUE, fit=F)
+pc_xyz_bsite_allatom
+
 #---------
 
-# check:
-unique(resno_gr) %>% length()
-sort(binding_residue_num) %>% length()
-rf_bsite %>% length()
-rmsf_bsite %>% length()
+# # check:
+# unique(resno_gr) %>% length()
+# sort(binding_residue_num) %>% length()
+# rf_bsite %>% length()
+# rmsf_bsite %>% length()
 
 #---------
 # Plotting
@@ -105,4 +109,42 @@ barplot(rmsf_bsite, names.arg=binding_residue_num,
         main="All-atom mean RMSF of residues implied in ligand binding",
         cex.names=0.8, ylab="All-atom mean RMSF per residue [Å]") #, ylim=c(0, 4.5)
 dev.off()
+
+png(filename="RMSF_bsite2.png", width=1200, height=750, units="px", res=120)
+par(las=2) # make label text perpendicular to axis
+par(mar=c(5,5,3,1)) # adjust margins.
+barplot(rf_bsite, names.arg=unique(resno_gr),
+        main="All-atom mean RMSF of residues implied in ligand binding",
+        cex.names=0.8, ylab="All-atom mean RMSF per residue [Å]") #, ylim=c(0, 4.5)
+dev.off()
+
+# Save reference structure with RMSF in B-factor column
+ca.bsite.pdb <- trim.pdb(bsite.pdb, "calpha")
+write.pdb(ca.bsite.pdb, b=rf_bsite, file="RMSF_onBsite_allatom.pdb")
+print("PDB saved to file RMSF_onBsite_allatom.pdb")
+
+
+# Plot PCs
+png("PCA_bsite_allatom.png", units="in", width=5, height=5, res=300)
+plot(pc_xyz_bsite_allatom) #, col=annotation[, "color"]
+dev.off()
+print("Plot saved to file PCA_bsite_allatom.png")
+
+## Atom contribution to all-atom bsite PCA
+png("PCA_atom_contribution_bsite_allatom.png", units="in", width=5, height=5, res=300)
+par(mfrow = c(3, 1), cex = 0.75, mar = c(3, 4, 1, 1))
+plot.bio3d(pc_xyz_bsite_allatom$au[,1], resno=pdb, sse=pdb, ylab="PC1")
+plot.bio3d(pc_xyz_bsite_allatom$au[,2], resno=pdb, sse=pdb, ylab="PC2")
+plot.bio3d(pc_xyz_bsite_allatom$au[,3], resno=pdb, sse=pdb, ylab="PC3")
+dev.off()
+
+## Interpolated structures along PC1/2/3 produced by the mktrj.pca() function
+mktrj.pca(pc_xyz_bsite_allatom, pc=1, file="PC1_bsite_allatom.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz_bsite_allatom, pc=2, file="PC2_bsite_allatom.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz_bsite_allatom, pc=3, file="PC3_bsite_allatom.pdb") #, mag = 1, step = 0.125
+
+# PC_bsite-allatom Vector field representation
+pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=1, as="wire", file="PC1vectors_bsite_allatom.pml", type="script")
+pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=2, as="wire", file="PC2vectors_bsite_allatom.pml", type="script")
+pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=3, as="wire", file="PC3vectors_bsite_allatom.pml", type="script")
 
