@@ -2,6 +2,7 @@
 args = commandArgs(trailingOnly=TRUE)
 
 library(optparse)
+library(R.utils) # for function "isAbsolutePath"
 library(bio3d)
 
 
