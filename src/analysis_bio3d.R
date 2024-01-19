@@ -17,6 +17,7 @@ projectdir = getwd()
 #install.packages("ggplot2")
 
 library("optparse")
+library("R.utils") # for function "isAbsolutePath"
 library("bio3d")
 library("msa")
 
@@ -34,21 +35,39 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
 
+## Check provided output directory <opt$outdir>
 
 if (opt$outdir == "Bio3D_Analysis"){
+  # output directory is supposed to be located in input directory
   outdir <- file.path(opt$indir, opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
+} else if (startsWith(opt$outdir, "./")){
+  # if only relative output foldername is provided use current working directory as basepath
+  sub_dir <- strsplit(opt$outdir, split='./', fixed=TRUE)
+  outdir <- file.path(getwd(), sub_dir)
+  dir.create(outdir, showWarnings = FALSE)
+} else if (length(strsplit(opt$outdir, split='/', fixed=TRUE)) == 1){
+  # if only output foldername is provided use current working directory as basepath
+  outdir <- file.path(getwd(), opt$outdir)
+  dir.create(outdir, showWarnings = FALSE)
 } else {
+  # full path is provided
   outdir <- file.path(opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
 }
 
-setwd(outdir)
-print(outdir)
+## Check provided input directory <opt$indir>
 
-if (!is.null(opt$indir)){
-  setwd(outdir)
-  files <- list.files(path = opt$indir, pattern = "*.pdb", full.names = T, recursive = F)
+if (dir.exists(file.path(opt$indir))){ #if (!is.null(opt$indir)){
+  if (isAbsolutePath(opt$indir)){
+    # full path to existing directory is provided
+    indir <- file.path(opt$indir)
+  } else {
+    # only subdirectory is provided, but full path exists
+    indir <- file.path(getwd(), opt$indir)
+  }
+  print(indir)
+  files <- list.files(path = indir, pattern = "*.pdb", full.names = T, recursive = F)
   # } else if (!is.null(opt$filenames)) {
   #   files <- as.list(strsplit(opt$filenames, ",")[[1]])
   #   #files <- opt$filenames
@@ -57,6 +76,11 @@ if (!is.null(opt$indir)){
     print_help(opt_parser)
     stop("At least one input argument must be supplied (input filepath or files).\n\n", call.=FALSE)
 }
+
+print(indir)
+setwd(outdir)
+print(outdir)
+
 
 
 ## The actual program...
