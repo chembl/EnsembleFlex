@@ -76,8 +76,8 @@ dir.create(file.path(outdir, "structures_without_ligand"))
 # create empty table to save binding site data for all structures
 pdb_table  <- data.frame(Filename = character(), Has_ligand = numeric(), Ligand_IDs = character(), Full_path = character(), stringsAsFactors = FALSE)
 
-for(i in 1:length(file_list)){
-  filename = file_list[[i]]
+for(i in 1:length(files)){
+  filename = files[[i]]
   #  pdbID <- tools::file_path_sans_ext(basename(filename))
   pdbID <- strsplit((basename(filename)), '[.]')[[1]][1]
   # read the pdb file
