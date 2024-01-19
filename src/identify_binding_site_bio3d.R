@@ -79,8 +79,8 @@ dir.create(file.path(outdir, "structures_labeled_binding_site"))
 # create empty table to save binding site data for all structures
 residue_table  <- data.frame(PDB_ID = character(), Amount = numeric(), ResNames = character(), stringsAsFactors = FALSE)
 
-for(i in 1:length(file_list)){
-  filename = file_list[[i]]
+for(i in 1:length(files)){
+  filename = files[[i]]
   #  pdbID <- tools::file_path_sans_ext(basename(filename))
   pdbID <- strsplit((basename(filename)), '[.]')[[1]][1]
 
@@ -126,9 +126,9 @@ binding_residue_list_unique <- residue_occurance_df$Residue
 # Bar plots / Histograms
 #----------
 
-number_of_structures <- as.character(length(file_list))
+number_of_structures <- as.character(length(files))
 
-residue_occurance_freq <- mutate(residue_occurance_df, Percentage=Freq/length(file_list)*100)
+residue_occurance_freq <- mutate(residue_occurance_df, Percentage=Freq/length(files)*100)
 # Safe dataframe
 write.csv(residue_occurance_freq, "binding_site_residue_occurance_frequency.csv", row.names=FALSE, quote=FALSE)
 
@@ -192,7 +192,7 @@ binding_residue_num <- gsub("[A-Z]", "", toString(binding_residue_list_unique)) 
 write.table(binding_residue_num, "binding_site_residue_numbers.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
 
 # read the reference pdb file (first file in filelist)
-pdb <- read.pdb(file_list[[1]])
+pdb <- read.pdb(files[[1]])
 
 #--------------
 ## Save residue occurance in b-factor column on reference structure
