@@ -154,12 +154,12 @@ plot.bio3d(rf, resno=ref_pdb, sse=ref_pdb, ylab="RMSF (Å)",
 dev.off()
 print("Plot saved to file RMSF.png")
 
-rf_gaps <- rmsf(pdbs$xyz)
-png("RMSF_gaps.png", units="in", width=5, height=5, res=300)
-plot.bio3d(rf_gaps, rm.gaps=FALSE, resno=pdb1, sse=pdb1, sse.min.length=0, ylab="RMSF (Å)",
+rf_withgaps <- rmsf(pdbs$xyz)
+png("RMSF_including_gaps.png", units="in", width=5, height=5, res=300)
+plot.bio3d(rf_withgaps, rm.gaps=FALSE, resno=pdb1, sse=pdb1, sse.min.length=0, ylab="RMSF (Å)",
            xlab="Residue No.", col="gray", main="RMSFs per Residue") #, typ="l"
 dev.off()
-print("Plot saved to file RMSF_gaps.png")
+print("Plot saved to file RMSF_including_gaps.png")
 
 # Save reference structure with RMSF in B-factor column
 ca.ref_pdb <- trim.pdb(ref_pdb, "calpha")
@@ -174,6 +174,7 @@ plot.bio3d(pdbs$b, rm.gaps=TRUE, resno=ref_pdb, sse=ref_pdb, ylab="B-factor",
            xlab="Residue No.", main="B-factors", col="gray") #, typ="l"
 dev.off()
 print("Plot saved to file B-factors.png")
+
 
 
 ## PCA
@@ -228,6 +229,25 @@ pymol(pdbs, col=grps_rmsd, as="cartoon", file="col_by_grps_RMSD.pml", type="scri
 # color by clustering (based on PCA)
 pymol(pdbs, col=grps_pc12, as="cartoon", file="col_by_grps_PC.pml", type="script")
 
+
+## Torsion/Dihedral analysis
+##-------------------------------------
+# Calculate torsion/dihedral angles
+# atm.inc: a numeric value indicating the number of atoms to increment by between successive torsion evaluations
+tor <- t(apply( pdbs$xyz[, gaps.pos$f.inds], 1, torsion.xyz, atm.inc=3))
+
+#-- PCA on torsion data
+pc_tor <- pca.tor(tor)
+
+png("PCA_on_Torsion.png", units="in", width=5, height=5, res=300)
+plot.pca(pc_tor)
+dev.off()
+print("Plot saved to file PCA_on_Torsion.png")
+
+png("PCA_on_Torsion_loadings.png", units="in", width=5, height=5, res=300)
+plot.pca.loadings(pc_tor)
+dev.off()
+print("Plot saved to file PCA_on_Torsion_loadings.png")
 
 
 # ## eNMA
@@ -330,7 +350,10 @@ print("PDB saved to file RMSFonReference_allatom.pdb")
 ## PCA on all-atom coordinates
 ##-------------------------------------
 # Perform PCA on all-atom coordinates
-pc_xyz_allatom <- pca(pdbs_allatoms$all, rm.gaps=TRUE, fit=FALSE)
+# In input xyz (MxN),  N > 3000 and M < N
+# Singular Value Decomposition (SVD) approach is faster and is recommended (set 'use.svd = TRUE')
+# Here (use.svd=TRUE) singular value decomposition (SVD) is called instead of eigenvalue decomposition
+pc_xyz_allatom <- pca(pdbs_allatoms$all, use.svd = TRUE, rm.gaps=TRUE, fit=FALSE)
 pc_xyz_allatom
 
 # ## Residue contribution to all-atom PCA - not possible to calculate straight away, as each residue has different number of atoms
@@ -394,23 +417,28 @@ pymol(pdbs, col="user", user.vec=vec_allatom, as="cartoon", file="col_by_average
 library(bio3d.eddm)
 # need to update the aligned structures to include all heavy atoms:
 #pdbs_allatoms <- read.all(pdbs) # This is already done at the beginning
+
 # Calculate distance matrices.
 # The option `all.atom=TRUE` tells that all heavy-atom coordinates will be used.
 dm <- dm(pdbs_allatoms, all.atom=TRUE)
 # Perform PCA of distance matrices.
 pc_dm <- pca.array(dm)
-# # Plot importance of PCs
-# png("PCA_on_allatom_DifferenceDistanceMatrix_PCimportance.png", units="in", width=5, height=5, res=300)
-# plot.pca.scree(pc_dm)
-# dev.off()
+
 # Perform structural clustering in the PC1-PC2 subspace.
 hc_dm_pc12 <- hclust(dist(pc_dm$z[, 1:2]))
 grps_dm_pc12 <- cutree(hc_dm_pc12, k=number_of_groups)
+
 # Plot PCs
 png("PCA_on_allatom_DifferenceDistanceMatrix.png", units="in", width=5, height=5, res=300)
 plot(pc_dm, col=grps_dm_pc12) # for only PC1-2 subplot add:, pc.axes=c(1,2)
 dev.off()
 print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix.png")
+# Plot PC loadings
+png("PCA_on_allatom_DifferenceDistanceMatrix_loadings.png", units="in", width=5, height=5, res=300)
+plot.pca.loadings(pc_dm)
+dev.off()
+print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix_loadings.png")
+
 # Calculating difference distance matrices between groups
 # the difference mean distance between groups for each residue pair are calculated and statistical significance assessed
 # using a two-sample Wilcoxon test. Long-distance pairs in all structures are omitted.
