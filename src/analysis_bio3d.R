@@ -87,7 +87,6 @@ print(outdir)
 #--------------------------------------------------------------------
 
 # loading pdb files
-# option 1.
 #pdbs <- pdbaln(files)
 pdbs <- pdbaln(files, exefile='msa')
 
@@ -97,14 +96,20 @@ ids <- sub("[.].*", "", basename(pdbs$id)) # get filenames and drop any extensio
 #ids <- unlist(substr(basename(pdbs$id), 1, 7))
 print(ids)
 
-# # option 2. if they are of identical composition and you only want xyz coordinates
-# xyz <- NULL
-# for(i in files) {
-#   xyz = rbind(xyz, read.pdb(files)$xyz)
-# }
+# Plot the Multiple Sequence Alignment
+png("alignment_overview.png", units="in", width=5, height=5, res=300)
+plot(pdbs)
+dev.off()
+print("Plot saved to file alignment_overview.png")
+
+
+resno = pdbs$resno[1, !is.gap(pdbs)]
+resid = aa123(pdbs$ali[1, !is.gap(pdbs)])
+
 
 ### Set number_of_groups for clustering
 number_of_groups <- opt$ngroups
+
 
 ## RMSD
 ##-------------------------------------
@@ -163,14 +168,25 @@ print("Plot saved to file RMSF_including_gaps.png")
 
 # Save reference structure with RMSF in B-factor column
 ca.ref_pdb <- trim.pdb(ref_pdb, "calpha")
-write.pdb(ca.ref_pdb, b=rf, file="RMSFonReference.pdb")
-print("PDB saved to file RMSFonReference.pdb")
+tryCatch(
+    #try to do this
+    {
+    write.pdb(ca.ref_pdb, b=rf, file="RMSFonReference.pdb")
+    print("PDB saved to file RMSFonReference.pdb")
+    },
+    #if an error occurs, tell me the error
+    error=function(e) {
+        message('An Error Occurred. This is probably related to the reference structure.')
+        print(e)
+    }
+)
+
 
 
 ## B-factors
 ##-------------------------------------
 png("B-factors.png", units="in", width=5, height=5, res=300)
-plot.bio3d(pdbs$b, rm.gaps=TRUE, resno=ref_pdb, sse=ref_pdb, ylab="B-factor",
+plot.bio3d(pdbs$b, rm.gaps=TRUE, ylab="B-factor", #, resno=ref_pdb, sse=ref_pdb
            xlab="Residue No.", main="B-factors", col="gray") #, typ="l"
 dev.off()
 print("Plot saved to file B-factors.png")
@@ -182,9 +198,6 @@ print("Plot saved to file B-factors.png")
 # PCA on coordinates (backbone)
 pc_xyz <- pca.xyz(pdbs$xyz[, gaps.pos$f.inds])
 pc_xyz
-
-resno = pdbs$resno[1, !is.gap(pdbs)]
-resid = aa123(pdbs$ali[1, !is.gap(pdbs)])
 
 ## Residue contribution to PCA
 png("PCA_residue_contribution.png", units="in", width=5, height=5, res=300)
@@ -289,9 +302,16 @@ pymol(modes_ref_pdb, mode=7, pdb=ref_pdb, file="NMA_reference_pdb_mode7.pml", ty
 
 
 # Construct a Contact Map for Structures
+##-------------------------------------
 # Calculate and color by averaged contact density around each residue
 # binary=FALSE: the raw matrix containing fraction of frames that two residues are in contact is returned
 cm <- cmap(pdbs, binary=FALSE, all.atom=FALSE)
+
+png(filename="contact_map.png", width=900, height=750, units="px", res=120)
+plot.cmap(cm)
+dev.off()
+print("Plot saved to file contact_map.png")
+
 vec <- rowSums(cm, na.rm=TRUE)
 pymol(pdbs, col="user", user.vec=vec, as="cartoon", file="col_by_averaged_contact_density.pml", type="script")
 
@@ -343,8 +363,18 @@ dev.off()
 print("Plot saved to file RMSF_allatom.png")
 
 # Save reference structure with RMSF in B-factor column
-write.pdb(ca.ref_pdb, b=rf_allatom, file="RMSFonReference_allatom.pdb")
-print("PDB saved to file RMSFonReference_allatom.pdb")
+tryCatch(
+    #try to do this
+    {
+    write.pdb(ca.ref_pdb, b=rf_allatom, file="RMSFonReference_allatom.pdb")
+    print("PDB saved to file RMSFonReference_allatom.pdb")
+    },
+    #if an error occurs, tell me the error
+    error=function(e) {
+        message('An Error Occurred. This is probably related to the reference structure.')
+        print(e)
+    }
+)
 
 
 ## PCA on all-atom coordinates
@@ -402,9 +432,14 @@ pymol(pdbs_allatoms, col=grps_pc12_allatom, as="cartoon", file="col_by_grps_PC_a
 # Calculate and color by averaged contact density around each residue
 # binary=FALSE: the raw matrix containing fraction of frames that two residues are in contact is returned
 cm_allatom <- cmap(pdbs_allatoms, binary=FALSE, all.atom=TRUE)
+
+png(filename="contact_map_allatom.png", width=900, height=750, units="px", res=120)
+plot.cmap(cm_allatom)
+dev.off()
+print("Plot saved to file contact_map_allatom.png")
+
 vec_allatom <- rowSums(cm_allatom, na.rm=TRUE)
 pymol(pdbs, col="user", user.vec=vec_allatom, as="cartoon", file="col_by_averaged_contact_density_allatom.pml", type="script")
-
 
 
 
