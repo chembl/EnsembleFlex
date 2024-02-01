@@ -129,11 +129,11 @@ print("Plot saved to file RMSD_heatmap.png")
 
 ## RMSD Hierarchical clustering
 hc_rmsd <- hclust(as.dist(rd))
-png("RMSD_clust.png", units="in", width=5, height=5, res=300)
+png("RMSD_dendrogram.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_rmsd, labels=ids, cex=0.5, k=number_of_groups,
            ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
-print("Plot saved to file RMSD_clust.png")
+print("Plot saved to file RMSD_dendrogram.png")
 
 
 ## RMSF
@@ -228,11 +228,11 @@ plot(pc_xyz, col=grps_pc12) #, col=annotation[, "color"]
 dev.off()
 print("Plot saved to file PCA.png")
 
-png("PCA_clust.png", units="in", width=5, height=5, res=300)
+png("PCA_dendrogram.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12, labels=ids, cex=0.5, k=number_of_groups,
            ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
-print("Plot saved to file PCA_clust.png")
+print("Plot saved to file PCA_dendrogram.png")
 
 
 # Save PyMOL scripts for coloring by group
@@ -252,8 +252,13 @@ tor <- t(apply( pdbs$xyz[, gaps.pos$f.inds], 1, torsion.xyz, atm.inc=3))
 #-- PCA on torsion data
 pc_tor <- pca.tor(tor)
 
+# Perform structural clustering in the PC1-PC2 subspace.
+hc_pc12_tor <- hclust(dist(pc_tor$z[, 1:2]))
+grps_pc12_tor <- cutree(hc_pc12_tor, k=number_of_groups)
+
+# Plot PCs
 png("PCA_on_Torsion.png", units="in", width=5, height=5, res=300)
-plot.pca(pc_tor)
+plot.pca(pc_tor, col=grps_pc12_tor)
 dev.off()
 print("Plot saved to file PCA_on_Torsion.png")
 
@@ -262,6 +267,11 @@ plot.pca.loadings(pc_tor)
 dev.off()
 print("Plot saved to file PCA_on_Torsion_loadings.png")
 
+png("PCA_on_Torsion_dendogram.png", units="in", width=5, height=5, res=300)
+hclustplot(hc_pc12_tor, labels=ids, cex=0.5, k=number_of_groups,
+           ylab="PC1-2 distance", main="PC Cluster Dendrogram (on Torsion)", fillbox=FALSE) #, colors=annotation[, "color"]
+dev.off()
+print("Plot saved to file PCA_on_Torsion_dendogram.png")
 
 # ## eNMA
 # ##-------------------------------------
@@ -346,11 +356,11 @@ print("Plot saved to file RMSD_heatmap_allatom.png")
 
 ## all-atom RMSD Hierarchical clustering
 hc_rmsd_allatom <- hclust(as.dist(rd_allatom))
-png("RMSD_clust_allatom.png", units="in", width=5, height=5, res=300)
+png("RMSD_dendrogram_allatom.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_rmsd_allatom, labels=ids, cex=0.5, k=number_of_groups,
            ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
-print("Plot saved to file RMSD_clust_allatom.png")
+print("Plot saved to file RMSD_dendrogram_allatom.png")
 
 
 # all-atom RMSF
@@ -413,11 +423,11 @@ plot(pc_xyz_allatom, col=grps_pc12_allatom)
 dev.off()
 print("Plot saved to file PCA_allatom.png")
 
-png("PCA_clust_allatom.png", units="in", width=5, height=5, res=300)
+png("PCA_dendrogram_allatom.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12_allatom, labels=ids, cex=0.5, k=number_of_groups,
            ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
-print("Plot saved to file PCA_clust_allatom.png")
+print("Plot saved to file PCA_dendrogram_allatom.png")
 
 # Save PyMOL scripts for coloring by group
 grps_rmsd_allatom <- cutree(hc_rmsd_allatom, k=number_of_groups)
@@ -549,8 +559,8 @@ if (length(keys)) {
 ## Cluster attributions for RMSD, PC, RMSD-allatom, PC-allatom
 ##-------------------------------------
 # store cluster attributions in dataframe
-clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_rmsd_allatom, grps_pc12_allatom),
-                             col.names = c("Structure", "RMSD Cluster", "PC1/2 Cluster", "RMSD-allatom Cluster", "PC1/2-allatom Cluster"))
+clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_pc12_tor, grps_rmsd_allatom, grps_pc12_allatom),
+                             col.names = c("Structure", "RMSD Cluster", "PC1/2 Cluster onCoords", "PC1/2 Cluster onTorsion", "RMSD-allatom Cluster", "PC1/2-allatom Cluster onCoords"))
 # safe dataframe
 write.csv(clusters_df, "cluster_attributions.csv", row.names=FALSE, quote=FALSE)
 
