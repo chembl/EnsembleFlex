@@ -77,7 +77,9 @@ print(outdir)
 dir.create(file.path(outdir, "structures_labeled_binding_site"))
 
 # create empty table to save binding site data for all structures
-residue_table  <- data.frame(PDB_ID = character(), Amount = numeric(), ResNames = character(), stringsAsFactors = FALSE)
+residue_table  <- data.frame(PDB_ID = character(), LigIDs = character(), Amount = numeric(), ResNames = character(), stringsAsFactors = FALSE)
+#residue_numbers_table  <- data.frame(ResNumbers = numeric(), stringsAsFactors = FALSE)
+residue_numbers_list  <- list()
 
 for(i in 1:length(files)){
   filename = files[[i]]
@@ -92,10 +94,17 @@ for(i in 1:length(files)){
   # be aware that everything that is not protein, nucleic acid or water will be considered as ligand.
   bs <- binding.site(one_pdb, cutoff = opt$distance)
 
+  # Get ligand IDs
+  # be aware that everything that is not protein, nucleic acid or water will be considered as ligand.
+  lig.inds <- atom.select(one_pdb, "ligand")
+  # Access the PDB data with the selected atom indices
+  ligIDs <- one_pdb$atom[ lig.inds$atom, "resid" ]
+
   # save residue names of identified binding site
   #  print(length(bs$resnames))
   #  print(bs$resnames)
-  residue_table[i,] <- list(pdbID, length(bs$resnames), toString(bs$resnames))
+  residue_table[i,] <- list(pdbID, paste(unique(ligIDs),collapse=' '), length(bs$resnames), toString(bs$resnames))
+  residue_numbers_list[[i]] <- bs$resno
 
   # use b-factor column to store interface in PDB file
   one_pdb$atom$b[ bs$inds$atom ] <- 1
@@ -106,8 +115,9 @@ for(i in 1:length(files)){
 }
 
 # safe dataframe
+# write.csv2() uses a comma (“,”) for the decimal point and a semicolon (“;”) for the separator.
 write.csv(residue_table, "binding_site_residues.csv", row.names=FALSE, quote=FALSE)
-
+write.table(residue_table, "binding_site_residues.tsv", row.names=FALSE, quote=FALSE, sep = "\t")
 
 # collapse results from all structures using "," -> split at "," -> unlist list of lists -> trim leading and trailing whitespace
 binding_residue_list_all <- residue_table$ResNames %>% paste(collapse = ",") %>% strsplit(",") %>% unlist() %>% trimws()
@@ -242,3 +252,26 @@ for(i in 1:length(binding_residue_num)){
 # write to file
 write.pdb(pdb_bindingsite_as_b_percent, file=paste(outdir,"/binding_site_interface_labelled_percentage.pdb",sep=''))
 
+
+
+# Construct Matrix of Ligand-Residue interactions
+# (with one row per structure and one column per residue)
+# transform list of residue numbers to sparse binary matrix with 1s at residue number indices
+l <- residue_numbers_list
+unlist_l <- unlist(l)
+M <- matrix(0, nrow = length(l), ncol = max(unique(unlist_l)))
+ij <- cbind(rep(1:length(l), lengths(l)), unlist_l)
+M[ij] <- 1
+# remove all columns with only 0s
+M <- M[, colSums(abs(M)) != 0]
+#M
+
+# Heatmap of Ligand-Protein interactions
+png("interaction_heatmap.png", units="in", width=9, height=9, res=300)
+heatmap(M, main="Ligand-Protein interactions",
+    labRow = residue_table$LigIDs,
+    labCol = sort(unique(unlist_l)),
+    xlab="Residue", ylab="Ligand",
+    Colv = NA, Rowv = NA, scale="none") # no clustering, no scaling
+dev.off()
+print("Plot saved to file interaction_heatmap.png")
