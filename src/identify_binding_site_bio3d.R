@@ -268,7 +268,7 @@ M <- M[, colSums(abs(M)) != 0]
 
 # Heatmap of Ligand-Protein interactions
 png("interaction_heatmap.png", units="in", width=9, height=9, res=300)
-heatmap(M, main="Ligand-Protein interactions",
+heatmap(M, main=sprintf("Ligand-Protein interactions in %s structures (cutoff=%sA)",number_of_structures,opt$distance),
     labRow = residue_table$LigIDs,
     labCol = sort(unique(unlist_l)),
     xlab="Residue", ylab="Ligand",
