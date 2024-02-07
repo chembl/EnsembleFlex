@@ -160,10 +160,10 @@ barplot(rf_bsite, names.arg=unique(resno_gr),
         cex.names=0.8, ylab="All-atom mean RMSF per residue [Å]") #, ylim=c(0, 4.5)
 dev.off()
 
-# Save reference structure with RMSF in B-factor column
-ca.bsite.pdb <- trim.pdb(bsite.pdb, "calpha")
-write.pdb(ca.bsite.pdb, b=rf_bsite, file="RMSF_onBsite_allatom.pdb")
-print("PDB saved to file RMSF_onBsite_allatom.pdb")
+# # Save reference structure with RMSF in B-factor column
+# ca.bsite.pdb <- trim.pdb(bsite.pdb, "calpha")
+# write.pdb(ca.bsite.pdb, b=rf_bsite, file="RMSF_onBsite_allatom.pdb")
+# print("PDB saved to file RMSF_onBsite_allatom.pdb")
 
 
 # Plot PCs
