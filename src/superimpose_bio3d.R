@@ -55,7 +55,6 @@ if (dir.exists(file.path(opt$indir))){ #if (!is.null(opt$indir)){
     # only subdirectory is provided, but full path exists
     indir <- file.path(getwd(), opt$indir)
   }
-  print(indir)
   files <- list.files(path = indir, pattern = "*.pdb", full.names = T, recursive = F)
   # } else if (!is.null(opt$filenames)) {
   #   files <- as.list(strsplit(opt$filenames, ",")[[1]])

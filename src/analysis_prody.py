@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import argparse
+import glob
 from prody import *
 import matplotlib.pylab as plt
 import numpy as np
