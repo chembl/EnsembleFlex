@@ -76,7 +76,7 @@ print(outdir)
 dir.create(file.path(outdir, "structures_labeled_binding_site"))
 
 # create empty table to save binding site data for all structures
-residue_table  <- data.frame(PDB_ID = character(), LigIDs = character(), Amount = numeric(), ResNames = character(), stringsAsFactors = FALSE)
+residue_table  <- data.frame(PDB_ID = character(), LigIDs = character(), Amount = numeric(), RGyr = numeric(), ResNames = character(), stringsAsFactors = FALSE)
 #residue_numbers_table  <- data.frame(ResNumbers = numeric(), stringsAsFactors = FALSE)
 residue_numbers_list  <- list()
 
@@ -99,10 +99,14 @@ for(i in 1:length(files)){
   # Access the PDB data with the selected atom indices
   ligIDs <- one_pdb$atom[ lig.inds$atom, "resid" ]
 
-  # save residue names of identified binding site
-  #  print(length(bs$resnames))
-  #  print(bs$resnames)
-  residue_table[i,] <- list(pdbID, paste(unique(ligIDs),collapse=' '), length(bs$resnames), toString(bs$resnames))
+  # Calculate radius of gyration on Calpha atoms of binding site residues
+  ca.inds <- atom.select(one_pdb, "calpha")
+  bs_ca.inds <- combine.select(ca.inds, bs$inds, operator="AND", verbose=FALSE)
+  bs_ca.xyz <- one_pdb$xyz[ bs_ca.inds$xyz ]
+  rg <- rgyr(bs_ca.xyz) # default mass==NULL, all atoms are assumed carbon
+
+  # save info in table: pdbID, ligIDs, number of residues, Ca radius of gyration, residue names of identified binding site
+  residue_table[i,] <- list(pdbID, paste(unique(ligIDs),collapse=' '), length(bs$resnames), rg, toString(bs$resnames))
   residue_numbers_list[[i]] <- bs$resno
 
   # use b-factor column to store interface in PDB file
@@ -115,8 +119,9 @@ for(i in 1:length(files)){
 
 # safe dataframe
 # write.csv2() uses a comma (“,”) for the decimal point and a semicolon (“;”) for the separator.
-write.csv(residue_table, "binding_site_residues.csv", row.names=FALSE, quote=FALSE)
+#write.csv(residue_table, "binding_site_residues.csv", row.names=FALSE, quote=FALSE)
 write.table(residue_table, "binding_site_residues.tsv", row.names=FALSE, quote=FALSE, sep = "\t")
+print("Table saved to file binding_site_residues.tsv")
 
 # collapse results from all structures using "," -> split at "," -> unlist list of lists -> trim leading and trailing whitespace
 binding_residue_list_all <- residue_table$ResNames %>% paste(collapse = ",") %>% strsplit(",") %>% unlist() %>% trimws()
@@ -140,11 +145,48 @@ number_of_structures <- as.character(length(files))
 residue_occurance_freq <- mutate(residue_occurance_df, Percentage=Freq/length(files)*100)
 # Safe dataframe
 write.csv(residue_occurance_freq, "binding_site_residue_occurance_frequency.csv", row.names=FALSE, quote=FALSE)
+print("Table saved to file binding_site_residue_occurance_frequency.csv")
 
 
-# # Fitting Labels
-#pdf(file="Histogram_binding_residues_frequency.pdf", width=8, height=5)
-png(filename="Histogram_binding_residues_frequency.png", width=8, height=5, units="in", res=150)
+# Histogram of numbers of binding site residues per structure
+
+#Make histogram object but don't draw it
+yhist <- hist(residue_table$Amount, breaks=((0:max(residue_table$Amount)+1)-0.5), plot=FALSE)
+#Find highest count, use it to set ylim of histograms of counts
+highestCount <- max(yhist$counts)
+png("histogram_binding_residues_count.png", units="in", width=8, height=6, res=300)
+hist(residue_table$Amount,
+    breaks=((0:max(residue_table$Amount)+1)-0.5), # bins
+    xaxp  = c(1, max(residue_table$Amount), max(residue_table$Amount)-1), # x-axis ticks
+    ylim=c(0,highestCount+10), # extend y-axis
+    labels = TRUE,
+    ylab="# of structures",
+    xlab="# of binding residues per structure",
+    main=sprintf("Histogram of binding residue count\n in %s structures (cutoff=%sA)",number_of_structures,opt$distance))
+dev.off()
+print("Plot saved to file histogram_binding_residues_count.png")
+
+
+# Histogram of binding site Calpha radius of gyration
+yhist_rg <- hist(residue_table$RGyr, breaks=40, plot=FALSE)
+highestCount_rg <- max(yhist_rg$counts)
+png("histogram_binding_residues_ca_rgyr.png", units="in", width=8, height=6, res=300)
+hist(residue_table$RGyr,
+    breaks=40, # bins
+    #xaxp  = c(1, max(residue_table$RGyr), max(residue_table$RGyr)-1), # x-axis ticks
+    ylim=c(0,highestCount_rg+10), # extend y-axis
+    labels = TRUE,
+    ylab="# of structures",
+    xlab="Ca radius of gyration",
+    main=sprintf("Histogram of binding site Ca radius of gyration\n in %s structures (bs cutoff=%sA)",number_of_structures,opt$distance))
+dev.off()
+print("Plot saved to file histogram_binding_residues_ca_rgyr.png")
+
+
+# Per residue plots
+
+#pdf(file="histogram_binding_residues_frequency.pdf", width=8, height=5)
+png(filename="histogram_binding_residues_frequency.png", width=8, height=5, units="in", res=150)
 par(las=2) # make label text perpendicular to axis
 #par(mar=c(5,5,3,1)) # adjust margins.
 barplot(residue_occurance_freq$Freq, names.arg=residue_occurance_freq$Residue,
@@ -152,9 +194,10 @@ barplot(residue_occurance_freq$Freq, names.arg=residue_occurance_freq$Residue,
         cex.names=0.8, ylab="# of structures", ylim=c(0, 1.1*max(residue_occurance_freq$Freq)))
 #barplot(rev(residue_occurance), main="Residues implied in ligand binding", horiz=TRUE, cex.names=0.8)
 dev.off()
+print("Plot saved to file histogram_binding_residues_frequency.png")
 
 #pdf(file="Histogram_binding_residues_percentage.pdf", width=8, height=5)
-png(filename="Histogram_binding_residues_percentage.png", width=8, height=5, units="in", res=150)
+png(filename="histogram_binding_residues_percentage.png", width=8, height=5, units="in", res=150)
 par(las=2) # make label text perpendicular to axis
 #par(mar=c(5,5,3,1)) # adjust margins.
 barplot(residue_occurance_freq$Percentage, names.arg=residue_occurance_freq$Residue,
@@ -162,9 +205,10 @@ barplot(residue_occurance_freq$Percentage, names.arg=residue_occurance_freq$Resi
         cex.names=0.8, ylab="Frequency [%]", ylim=c(0, 100))
 #barplot(rev(residue_occurance), main="Residues implied in ligand binding", horiz=TRUE, cex.names=0.8)
 dev.off()
+print("Plot saved to file histogram_binding_residues_percentage.png")
 
-#pdf(file="Histogram_binding_residues_frequency_colored.pdf", width=8, height=5)
-png(filename="Histogram_binding_residues_frequency_colored.png", width=8, height=5, units="in", res=150)
+#pdf(file="histogram_binding_residues_frequency_colored.pdf", width=8, height=5)
+png(filename="histogram_binding_residues_frequency_colored.png", width=8, height=5, units="in", res=150)
 ggplot(residue_occurance_freq, aes(x=Residue, y=Freq, fill=Freq)) +
   geom_bar(stat="identity") +
   ggtitle(sprintf("Residues implied in ligand binding in %s structures (cutoff=%sA)",number_of_structures,opt$distance)) +
@@ -175,9 +219,10 @@ ggplot(residue_occurance_freq, aes(x=Residue, y=Freq, fill=Freq)) +
   scale_fill_continuous()
 # , colors = c('firebrick','orange','green','lightblue','navy')
 dev.off()
+print("Plot saved to file histogram_binding_residues_frequency_colored.png")
 
-#pdf(file="Histogram_binding_residues_percentage_colored.pdf", width=8, height=5)
-png(filename="Histogram_binding_residues_percentage_colored.png", width=8, height=5, units="in", res=150)
+#pdf(file="histogram_binding_residues_percentage_colored.pdf", width=8, height=5)
+png(filename="histogram_binding_residues_percentage_colored.png", width=8, height=5, units="in", res=150)
 ggplot(residue_occurance_freq, aes(x=Residue, y=Percentage, fill=Percentage)) +
   geom_bar(stat="identity") +
   ggtitle(sprintf("Residues implied in ligand binding in %s structures (cutoff=%sA)",number_of_structures,opt$distance)) +
@@ -188,6 +233,7 @@ ggplot(residue_occurance_freq, aes(x=Residue, y=Percentage, fill=Percentage)) +
   scale_fill_continuous(limits=c(0, 100))
 # , colors = c('firebrick','orange','green','lightblue','navy')
 dev.off()
+print("Plot saved to file histogram_binding_residues_percentage_colored.png")
 
 
 #----------
@@ -199,6 +245,7 @@ binding_residue_num <- gsub("[A-Z]", "", toString(binding_residue_list_unique)) 
 # safe binding_residue_num to file
 # to be used for superimposing only on binding site residues
 write.table(binding_residue_num, "binding_site_residue_numbers.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
+print("Table saved to file binding_site_residue_numbers.txt")
 
 # read the reference pdb file (first file in filelist)
 pdb <- read.pdb(files[[1]])
@@ -215,6 +262,7 @@ pdb_bindingsite_as_b_occ$atom$b <- 0
 pdb_bindingsite_as_b_occ$atom$b[ binding.inds$atom ] <- 1
 # write to file
 write.pdb(pdb_bindingsite_as_b_occ, file=paste(outdir,"/binding_site_interface_labelled_occurance.pdb",sep=''))
+print("PDB saved to file binding_site_interface_labelled_occurance.pdb")
 
 #--------------
 ## Save residue occurance frequency in b-factor column on reference structure
@@ -233,6 +281,7 @@ for(i in 1:length(binding_residue_num)){
 }
 # write to file
 write.pdb(pdb_bindingsite_as_b_freq, file=paste(outdir,"/binding_site_interface_labelled_frequency.pdb",sep=''))
+print("PDB saved to file binding_site_interface_labelled_frequency.pdb")
 
 #--------------
 ## Save residue occurance frequency as percentage in b-factor column on reference structure
@@ -250,6 +299,7 @@ for(i in 1:length(binding_residue_num)){
 }
 # write to file
 write.pdb(pdb_bindingsite_as_b_percent, file=paste(outdir,"/binding_site_interface_labelled_percentage.pdb",sep=''))
+print("PDB saved to file binding_site_interface_labelled_percentage.pdb")
 
 
 
@@ -266,11 +316,12 @@ M <- M[, colSums(abs(M)) != 0]
 #M
 
 # Heatmap of Ligand-Protein interactions
-png("interaction_heatmap.png", units="in", width=9, height=9, res=300)
-heatmap(M, main=sprintf("Ligand-Protein interactions in %s structures (cutoff=%sA)",number_of_structures,opt$distance),
+png("interaction_heatmap.png", units="in", width=10, height=12, res=300)
+h <- heatmap(M, main=sprintf("Ligand-Protein interactions in %s structures (cutoff=%sA)",number_of_structures,opt$distance),
     labRow = residue_table$LigIDs,
     labCol = sort(unique(unlist_l)),
     xlab="Residue", ylab="Ligand",
-    Colv = NA, Rowv = NA, scale="none") # no clustering, no scaling
+    Colv = NA, scale="none", # no clustering on columns, no scaling
+    keep.dendro = TRUE)
 dev.off()
 print("Plot saved to file interaction_heatmap.png")
