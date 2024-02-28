@@ -254,7 +254,7 @@ class MainWindow(QMainWindow):
     def callSuperimposeBio3D(self):
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('Rscript',
-                           ['./superimpose_bio3d.R', '-i', str(self.inputdir), '-o', str(self.outputdir)])
+                           ['../superimpose_bio3d.R', '-i', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed = self.outputdir + '/superimposed'
         self.superimpose_response.setText("Superimposed structures are saved in " + self.superimposed)
         self.runBio3D_btn.setEnabled(True)
@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
     def callSuperimposeProDy(self):
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('python3',
-                           ['./superimpose_prody.py', '-i', str(self.inputdir), '-o', str(self.outputdir)])
+                           ['../superimpose_prody.py', '-i', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed = self.outputdir + '/superimposed/split_ensemble'
         self.superimpose_response.setText("Superimposed structures are saved separately in " + self.superimposed)
         self.runBio3D_btn.setEnabled(True)
@@ -349,14 +349,14 @@ class MainWindow(QMainWindow):
         self.outputdirBio3D = self.outputdir + '/Analysis_Bio3D'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('Rscript',
-                           ['./analysis_bio3d.R', '-i', str(self.superimposed), '-o', str(self.outputdirBio3D)])
+                           ['../analysis_bio3d.R', '-i', str(self.superimposed), '-o', str(self.outputdirBio3D)])
         self.Bio3d_response.setText("Results will be saved in " + self.outputdirBio3D)
 
     def callAnalysisProDy(self):
         self.outputdirProDy = self.outputdir + '/Analysis_ProDy'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('python3',
-                           ['./analysis_prody.py', '-i', str(self.superimposed), '-o', str(self.outputdirProDy)])
+                           ['../analysis_prody.py', '-i', str(self.superimposed), '-o', str(self.outputdirProDy)])
         self.ProDy_response.setText("Results will be saved in " + self.outputdirProDy)
 
 
@@ -470,14 +470,14 @@ class MainWindow(QMainWindow):
         self.outputdirPDBFlex = self.outputdir + '/Compare_PDBFlex'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('python3',
-                           ['./call_pdbflex.py', '-i', str(self.superimposed), '-o', str(self.outputdirPDBFlex)])
+                           ['../call_pdbflex.py', '-i', str(self.superimposed), '-o', str(self.outputdirPDBFlex)])
         self.PDBFlex_response.setText("Results will be saved in " + self.outputdirPDBFlex)
 
     def callAlphaFold(self):
         self.outputdirAlphaFold = self.outputdir + '/Compare_AlphaFold'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('python3',
-                           ['./call_.py', '-i', str(self.superimposed), '-o', str(self.outputdirAlphaFold)])
+                           ['../call_.py', '-i', str(self.superimposed), '-o', str(self.outputdirAlphaFold)])
         self.AlphaFold_response.setText("Results will be saved in " + self.outputdirAlphaFold)
 
 
@@ -645,7 +645,7 @@ class MainWindow(QMainWindow):
 
     def sortPDBs(self):
         self.process.start('Rscript',
-                           ['./pdb_sorter_has_ligand.R', '-i', str(self.superimposed), '-o', str(self.outputdir)])
+                           ['../pdb_sorter_has_ligand.R', '-i', str(self.superimposed), '-o', str(self.outputdir)])
         self.liganded = self.outputdir + '/structures_with_ligand'
         not_liganded = self.outputdir + '/structures_without_ligand'
 
@@ -656,7 +656,7 @@ class MainWindow(QMainWindow):
 
     def callBSIdentifyBio3D(self):
         self.process.start('Rscript',
-                           ['./identify_binding_site_bio3d.R', '-i', str(self.inputdir_bs), '-o', str(self.outputdir), '-d', str(self.cutoff)])
+                           ['../identify_binding_site_bio3d.R', '-i', str(self.inputdir_bs), '-o', str(self.outputdir), '-d', str(self.cutoff)])
         labeled_bs = self.outputdir + '/structures_labeled_binding_site'
         self.bs_residues_display.setText("Structures with labelled binding site are saved in " + labeled_bs)
         # loading textfile containing binding site residue information
@@ -775,7 +775,7 @@ class MainWindow(QMainWindow):
     def callSuperimposeBio3D_bs(self):
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('Rscript',
-                           ['./superimpose_binding_site_bio3d.R', '-i', str(self.inputdir), '-o', str(self.outputdir)])
+                           ['../superimpose_binding_site_bio3d.R', '-i', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed_bs = self.outputdir + '/superimposed_bs'
         self.superimpose_bs_response.setText("Superimposed structures are saved in " + self.superimposed_bs)
         self.runBio3D_bs_btn.setEnabled(True)
@@ -784,7 +784,7 @@ class MainWindow(QMainWindow):
     def callSuperimposeProDy_bs(self):
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('python3',
-                           ['./superimpose_prody_bs.py', '-i', str(self.inputdir), '-o', str(self.outputdir)])
+                           ['../superimpose_prody_bs.py', '-i', str(self.inputdir), '-o', str(self.outputdir)])
         self.superimposed_bs = self.outputdir + '/superimposed_bs'
         self.superimpose_bs_response.setText("Superimposed structures are saved in " + self.superimposed_bs)
         self.runBio3D_bs_btn.setEnabled(True)
@@ -964,7 +964,7 @@ if __name__ == "__main__":
     window.show()
 
     # Open the qss styles file and read in the css-alike styling code
-    with open('./styles.qss', 'r') as f:
+    with open('styles.qss', 'r') as f:
         # Set the stylesheet of the application
         app.setStyleSheet(f.read())
 
