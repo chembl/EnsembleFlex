@@ -19,8 +19,10 @@ parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
 
 args = parser.parse_args()
 if os.path.isdir(args.input_path) and os.path.isdir(args.output_dir):
+    input_path = os.path.abspath(args.input_path)
     output_path = os.path.abspath(args.output_dir)
 elif os.path.isdir(args.input_path) and not os.path.isdir(args.output_dir):
+    input_path = os.path.abspath(args.input_path)
     if os.path.isdir(os.path.dirname(args.output_dir)):
         output_path = args.output_dir
         os.mkdir(output_path)
@@ -55,7 +57,7 @@ sys.stdout = Logger()
 
 
 # list of input pdb files
-pdbfiles = glob.glob(args.input_path+"/*.pdb")
+pdbfiles = glob.glob(input_path+"/*.pdb")
 # parsing structures
 structures = parsePDB(pdbfiles, compressed=False)  #, subset='ca'
 reference_structure = structures[0] # by default first structure of ensemble is taken as reference structure and
