@@ -104,7 +104,7 @@ bsite.pdb = trim.pdb(pdb, inds=atom.select(pdb, resno=c(binding_residue_num)))
 #-------------------------------
 # RMSF of binding site residues including side chain contribution
 #-------------------------------
-# make shure that the residue is present in all structures
+# make sure that the residue is present in all structures
 
 rmsf_bsite <- list()
 for(i in 1:length(binding_residue_num)){
