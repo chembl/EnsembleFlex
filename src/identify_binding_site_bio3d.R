@@ -128,12 +128,12 @@ binding_residue_list_all <- residue_table$ResNames %>% paste(collapse = ",") %>%
 # cut the last 4 characters (the chain ID in brackets and a space)
 binding_residue_list_all <- gsub('.{4}$', '', binding_residue_list_all)
 # sort by frequency and store table
-residue_occurance <- rev(sort(table(binding_residue_list_all)))
+residue_occurrence <- rev(sort(table(binding_residue_list_all)))
 # store as data frame
-residue_occurance_df <- data.frame(residue_occurance)
-colnames(residue_occurance_df)[1] <- "Residue"
+residue_occurrence_df <- data.frame(residue_occurrence)
+colnames(residue_occurrence_df)[1] <- "Residue"
 
-binding_residue_list_unique <- residue_occurance_df$Residue
+binding_residue_list_unique <- residue_occurrence_df$Residue
 
 
 #----------
@@ -142,10 +142,10 @@ binding_residue_list_unique <- residue_occurance_df$Residue
 
 number_of_structures <- as.character(length(files))
 
-residue_occurance_freq <- mutate(residue_occurance_df, Percentage=Freq/length(files)*100)
+residue_occurrence_freq <- mutate(residue_occurrence_df, Percentage=Freq/length(files)*100)
 # Safe dataframe
-write.csv(residue_occurance_freq, "binding_site_residue_occurance_frequency.csv", row.names=FALSE, quote=FALSE)
-print("Table saved to file binding_site_residue_occurance_frequency.csv")
+write.csv(residue_occurrence_freq, "binding_site_residue_occurrence_frequency.csv", row.names=FALSE, quote=FALSE)
+print("Table saved to file binding_site_residue_occurrence_frequency.csv")
 
 
 # Histogram of numbers of binding site residues per structure
@@ -189,10 +189,10 @@ print("Plot saved to file histogram_binding_residues_ca_rgyr.png")
 png(filename="histogram_binding_residues_frequency.png", width=8, height=5, units="in", res=150)
 par(las=2) # make label text perpendicular to axis
 #par(mar=c(5,5,3,1)) # adjust margins.
-barplot(residue_occurance_freq$Freq, names.arg=residue_occurance_freq$Residue,
+barplot(residue_occurrence_freq$Freq, names.arg=residue_occurrence_freq$Residue,
         main=sprintf("Residues implied in ligand binding in %s structures (cutoff=%sA)",number_of_structures,opt$distance),
-        cex.names=0.8, ylab="# of structures", ylim=c(0, 1.1*max(residue_occurance_freq$Freq)))
-#barplot(rev(residue_occurance), main="Residues implied in ligand binding", horiz=TRUE, cex.names=0.8)
+        cex.names=0.8, ylab="# of structures", ylim=c(0, 1.1*max(residue_occurrence_freq$Freq)))
+#barplot(rev(residue_occurrence), main="Residues implied in ligand binding", horiz=TRUE, cex.names=0.8)
 dev.off()
 print("Plot saved to file histogram_binding_residues_frequency.png")
 
@@ -200,16 +200,16 @@ print("Plot saved to file histogram_binding_residues_frequency.png")
 png(filename="histogram_binding_residues_percentage.png", width=8, height=5, units="in", res=150)
 par(las=2) # make label text perpendicular to axis
 #par(mar=c(5,5,3,1)) # adjust margins.
-barplot(residue_occurance_freq$Percentage, names.arg=residue_occurance_freq$Residue,
+barplot(residue_occurrence_freq$Percentage, names.arg=residue_occurrence_freq$Residue,
         main=sprintf("Residues implied in ligand binding in %s structures (cutoff=%sA)",number_of_structures,opt$distance),
         cex.names=0.8, ylab="Frequency [%]", ylim=c(0, 100))
-#barplot(rev(residue_occurance), main="Residues implied in ligand binding", horiz=TRUE, cex.names=0.8)
+#barplot(rev(residue_occurrence), main="Residues implied in ligand binding", horiz=TRUE, cex.names=0.8)
 dev.off()
 print("Plot saved to file histogram_binding_residues_percentage.png")
 
 #pdf(file="histogram_binding_residues_frequency_colored.pdf", width=8, height=5)
 png(filename="histogram_binding_residues_frequency_colored.png", width=8, height=5, units="in", res=150)
-ggplot(residue_occurance_freq, aes(x=Residue, y=Freq, fill=Freq)) +
+ggplot(residue_occurrence_freq, aes(x=Residue, y=Freq, fill=Freq)) +
   geom_bar(stat="identity") +
   ggtitle(sprintf("Residues implied in ligand binding in %s structures (cutoff=%sA)",number_of_structures,opt$distance)) +
   ylab("Frequency [count]") +
@@ -223,7 +223,7 @@ print("Plot saved to file histogram_binding_residues_frequency_colored.png")
 
 #pdf(file="histogram_binding_residues_percentage_colored.pdf", width=8, height=5)
 png(filename="histogram_binding_residues_percentage_colored.png", width=8, height=5, units="in", res=150)
-ggplot(residue_occurance_freq, aes(x=Residue, y=Percentage, fill=Percentage)) +
+ggplot(residue_occurrence_freq, aes(x=Residue, y=Percentage, fill=Percentage)) +
   geom_bar(stat="identity") +
   ggtitle(sprintf("Residues implied in ligand binding in %s structures (cutoff=%sA)",number_of_structures,opt$distance)) +
   ylab("Frequency [%]") +
@@ -251,7 +251,7 @@ print("Table saved to file binding_site_residue_numbers.txt")
 pdb <- read.pdb(files[[1]])
 
 #--------------
-## Save residue occurance in b-factor column on reference structure
+## Save residue occurrence in b-factor column on reference structure
 
 pdb_bindingsite_as_b_occ <- pdb
 # get indices of all bindingsite residues
@@ -261,11 +261,11 @@ binding.inds <- atom.select(pdb_bindingsite_as_b_occ, resno=c(binding_residue_nu
 pdb_bindingsite_as_b_occ$atom$b <- 0
 pdb_bindingsite_as_b_occ$atom$b[ binding.inds$atom ] <- 1
 # write to file
-write.pdb(pdb_bindingsite_as_b_occ, file=paste(outdir,"/binding_site_interface_labelled_occurance.pdb",sep=''))
-print("PDB saved to file binding_site_interface_labelled_occurance.pdb")
+write.pdb(pdb_bindingsite_as_b_occ, file=paste(outdir,"/binding_site_interface_labelled_occurrence.pdb",sep=''))
+print("PDB saved to file binding_site_interface_labelled_occurrence.pdb")
 
 #--------------
-## Save residue occurance frequency in b-factor column on reference structure
+## Save residue occurrence frequency in b-factor column on reference structure
 
 pdb_bindingsite_as_b_freq <- pdb
 # get indices of all bindingsite residues
@@ -277,14 +277,14 @@ pdb_bindingsite_as_b_freq$atom$b <- 0
 for(i in 1:length(binding_residue_num)){
   resnum = binding_residue_num[i]
   resnum.inds <- atom.select(pdb_bindingsite_as_b_freq, resno=resnum)
-  pdb_bindingsite_as_b_freq$atom$b[ resnum.inds$atom ] <- as.numeric(residue_occurance_df$Freq[i])
+  pdb_bindingsite_as_b_freq$atom$b[ resnum.inds$atom ] <- as.numeric(residue_occurrence_df$Freq[i])
 }
 # write to file
 write.pdb(pdb_bindingsite_as_b_freq, file=paste(outdir,"/binding_site_interface_labelled_frequency.pdb",sep=''))
 print("PDB saved to file binding_site_interface_labelled_frequency.pdb")
 
 #--------------
-## Save residue occurance frequency as percentage in b-factor column on reference structure
+## Save residue occurrence frequency as percentage in b-factor column on reference structure
 
 pdb_bindingsite_as_b_percent <- pdb
 # get indices of all bindingsite residues
@@ -295,7 +295,7 @@ pdb_bindingsite_as_b_percent$atom$b <- 0
 for(i in 1:length(binding_residue_num)){
   resnum = binding_residue_num[i]
   resnum.inds <- atom.select(pdb_bindingsite_as_b_percent, resno=resnum)
-  pdb_bindingsite_as_b_percent$atom$b[ resnum.inds$atom ] <- as.numeric(residue_occurance_freq$Percentage[i])
+  pdb_bindingsite_as_b_percent$atom$b[ resnum.inds$atom ] <- as.numeric(residue_occurrence_freq$Percentage[i])
 }
 # write to file
 write.pdb(pdb_bindingsite_as_b_percent, file=paste(outdir,"/binding_site_interface_labelled_percentage.pdb",sep=''))
