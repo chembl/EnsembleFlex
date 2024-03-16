@@ -237,10 +237,10 @@ print("Plot saved to file histogram_binding_residues_percentage_colored.png")
 
 
 #----------
-# Save binding site occurence frequency in reference pdb structure b-factor column
+# Save binding site occurrence frequency in reference pdb structure b-factor column
 #----------
 
-# get residue numbers sorted by occurancy
+# get residue numbers sorted by occurrence
 binding_residue_num <- gsub("[A-Z]", "", toString(binding_residue_list_unique)) %>% strsplit(",") %>% unlist() %>% trimws() %>% as.integer()
 # safe binding_residue_num to file
 # to be used for superimposing only on binding site residues
