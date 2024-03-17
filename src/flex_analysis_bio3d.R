@@ -272,42 +272,6 @@ hclustplot(hc_pc12_tor, labels=ids, cex=0.5, k=number_of_groups,
 dev.off()
 print("Plot saved to file PCA_on_Torsion_dendogram.png")
 
-# ## eNMA
-# ##-------------------------------------
-# # NMA on all structures; use 'rm.gaps=FALSE' to keep the gap containing columns, but note that this is not compatible
-# # with mktrj
-# modes <- nma.pdbs(pdbs, rm.gaps=TRUE)
-#
-# # Make fluctuation plot
-# png("eNMA_fluctuations.png", units="in", width=5, height=5, res=300)
-# plot(modes, pdbs=pdbs, main="Normal Mode fluctuations") #, col=annotation[, "color"]
-# dev.off()
-#
-# ## Interpolated structures along eNMA modes produced by the mktrj() function
-# mktrj(enma = modes, pdbs = pdbs, mag = 10, step = 1.25, file = "eNMA.pdb", rock = TRUE)
-# # Vector field representation
-# #pymol(modes, pdb=ref_pdb, mode=7, file="eNMA_col_mode7.pml", type="script")
-
-
-# NMA for single reference structure
-##-------------------------------------
-modes_ref_pdb <- nma(ref_pdb)
-png(filename="NMA_fluctuations_reference_pdb.png", width=900, height=750, units="px", res=120)
-plot.nma(modes_ref_pdb, resno=ref_pdb, sse=ref_pdb, sse.min.length=3)#, main="NMA on reference structure"
-dev.off()
-print("Plot saved to file NMA_fluctuations_reference_pdb.png")
-# Make a PDB trajectory
-mktrj(modes_ref_pdb, mode=7, pdb=ref_pdb, file="NMA_reference_pdb_mode7_traj.pdb")
-print("Interpolated trajectory structures saved to file NMA_reference_pdb_mode7_traj.pdb")
-# Vector field representation
-pymol(modes_ref_pdb, mode=7, pdb=ref_pdb, file="NMA_reference_pdb_mode7.pml", type="script")
-
-# # Plot a heat map with clustering dendogram
-# ## The similarity of structural dynamics is calculated by RMSIP based on the 10 lowest frequency normal modes.
-# ## The RMSIP values are pre-calculated in the modes object and can be accessed through the attribute modes$rmsip
-# png("pair-wise_RMSIPs.png", units="in", width=5, height=5, res=300)
-# heatmap((1-modes$rmsip), labCol=ids, symm=TRUE, main="Pair-wise RMSIPs") #, labRow=annotation[, "state"]
-# dev.off()
 
 
 # Construct a Contact Map for Structures
