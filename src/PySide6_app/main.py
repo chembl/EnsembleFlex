@@ -349,14 +349,14 @@ class MainWindow(QMainWindow):
         self.outputdirBio3D = self.outputdir + '/Analysis_Bio3D'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('Rscript',
-                           ['../analysis_bio3d.R', '-i', str(self.superimposed), '-o', str(self.outputdirBio3D)])
+                           ['../flex_analysis_bio3d.R', '-i', str(self.superimposed), '-o', str(self.outputdirBio3D)])
         self.Bio3d_response.setText("Results will be saved in " + self.outputdirBio3D)
 
     def callAnalysisProDy(self):
         self.outputdirProDy = self.outputdir + '/Analysis_ProDy'
         # run the process # `start` takes the exec and a list of arguments
         self.process.start('python3',
-                           ['../analysis_prody.py', '-i', str(self.superimposed), '-o', str(self.outputdirProDy)])
+                           ['../flex_analysis_prody.py', '-i', str(self.superimposed), '-o', str(self.outputdirProDy)])
         self.ProDy_response.setText("Results will be saved in " + self.outputdirProDy)
 
 
