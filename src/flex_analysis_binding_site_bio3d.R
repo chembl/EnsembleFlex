@@ -104,7 +104,7 @@ bsite.pdb = trim.pdb(pdb, inds=atom.select(pdb, resno=c(binding_residue_num)))
 #-------------------------------
 # RMSF of binding site residues including side chain contribution
 #-------------------------------
-# make sure that the residue is present in all structures
+# before running make sure that the residue is present in all structures
 
 rmsf_bsite <- list()
 for(i in 1:length(binding_residue_num)){
@@ -120,13 +120,14 @@ rmsf_bsite <- unlist(rmsf_bsite)
 
 #---------
 # Same as above for all residues present in selection at once (instead of separate by residue)
-# Disadvantage: rmsf results are ordered by increasing residue number
+# Disadvantage: rmsf results are ordered by ascending residue number, NOT as in supplied residue file
 # Get indices for all atoms
 bsite.pos = atom.select(bsite.pdb, string="protein")
 # residue numbers to group by
 resno_gr <- bsite.pdb$atom$resno[bsite.pos$atom]
 # mean rmsf value of all atoms of each residue
-rf_bsite <- rmsf(pdbs_allatoms$all[, bsite.pos$xyz], grpby=resno_gr)
+rf_bsite_ascending <- rmsf(pdbs_allatoms$all[, bsite.pos$xyz], grpby=resno_gr)
+
 # PCA on all atoms of binding site residues
 pc_xyz_bsite_allatom <- pca(pdbs_allatoms$all[, bsite.pos$xyz], rm.gaps=TRUE, fit=F)
 pc_xyz_bsite_allatom
@@ -136,7 +137,7 @@ pc_xyz_bsite_allatom
 # # check:
 # unique(resno_gr) %>% length()
 # sort(binding_residue_num) %>% length()
-# rf_bsite %>% length()
+# rf_bsite_ascending %>% length()
 # rmsf_bsite %>% length()
 
 #---------
@@ -154,14 +155,14 @@ dev.off()
 png(filename="RMSF_bsite2.png", width=1200, height=750, units="px", res=120)
 par(las=2) # make label text perpendicular to axis
 par(mar=c(5,5,3,1)) # adjust margins.
-barplot(rf_bsite, names.arg=unique(resno_gr),
+barplot(rf_bsite_ascending, names.arg=unique(resno_gr),
         main="All-atom mean RMSF of residues implied in ligand binding",
         cex.names=0.8, ylab="All-atom mean RMSF per residue [Å]") #, ylim=c(0, 4.5)
 dev.off()
 
 # # Save reference structure with RMSF in B-factor column
 # ca.bsite.pdb <- trim.pdb(bsite.pdb, "calpha")
-# write.pdb(ca.bsite.pdb, b=rf_bsite, file="RMSF_onBsite_allatom.pdb")
+# write.pdb(ca.bsite.pdb, b=rf_bsite_ascending, file="RMSF_onBsite_allatom.pdb")
 # print("PDB saved to file RMSF_onBsite_allatom.pdb")
 
 
