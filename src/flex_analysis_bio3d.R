@@ -20,6 +20,8 @@ library("optparse")
 library("R.utils") # for function "isAbsolutePath"
 library("bio3d")
 library("msa")
+library(pheatmap)
+library("umap")
 
 option_list = list(
   make_option(c("-i", "--indir"), type="character", default=NULL, 
@@ -119,7 +121,6 @@ dev.off()
 print("Plot saved to file RMSD_hist.png")
 
 ## RMSD heatmap
-library(pheatmap)
 png("RMSD_heatmap.png", units="in", width=5, height=5, res=300)
 #heatmap(rd, labCol=ids, main="RMSD Heatmap")
 pheatmap(rd, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
@@ -266,11 +267,11 @@ plot.pca.loadings(pc_tor)
 dev.off()
 print("Plot saved to file PCA_on_Torsion_loadings.png")
 
-png("PCA_on_Torsion_dendogram.png", units="in", width=5, height=5, res=300)
+png("PCA_on_Torsion_dendrogram.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12_tor, labels=ids, cex=0.5, k=number_of_groups,
            ylab="PC1-2 distance", main="PC Cluster Dendrogram (on Torsion)", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
-print("Plot saved to file PCA_on_Torsion_dendogram.png")
+print("Plot saved to file PCA_on_Torsion_dendrogram.png")
 
 
 
@@ -287,6 +288,83 @@ print("Plot saved to file contact_map.png")
 
 vec <- rowSums(cm, na.rm=TRUE)
 pymol(pdbs, col="user", user.vec=vec, as="cartoon", file="col_by_averaged_contact_density.pml", type="script")
+
+
+
+# UMAP Analysis
+##-------------------------------------
+# UMAP, short for “Uniform Manifold Approximation and Projection” is a non-linear dimension reduction technique.
+# Important parameters are n_neighbors (15) and min_dist (0.1)
+# n_components defines the number of dimensions to project to, default is 2, as needed for 2D plots
+# umap configuration parameters: print(umap.defaults)
+#            n_neighbors: 15
+#           n_components: 2
+#                 metric: euclidean
+#               n_epochs: 200
+#                  input: data
+#                   init: spectral
+#               min_dist: 0.1
+#       set_op_mix_ratio: 1
+#     local_connectivity: 1
+#              bandwidth: 1
+#                  alpha: 1
+#                  gamma: 1
+#   negative_sample_rate: 5
+#                      a: NA
+#                      b: NA
+#                 spread: 1
+#           random_state: NA
+#        transform_state: NA
+#                    knn: NA
+#            knn_repeats: 1
+#                verbose: FALSE
+#        umap_learn_args: NA
+
+# create a new settings object with n_neighbors set to 3 to be able to run it with just 3 structures
+custom.settings = umap.defaults
+custom.settings$n_neighbors = 3
+custom.settings$random_state = 123 # for reproducibility
+
+# UMAP on coordinates (backbone)
+# returns: umap embedding of N items in 2 dimensions;
+# object components: layout, data, knn, config
+umap_fit <- umap(pdbs$xyz[, gaps.pos$f.inds], config=custom.settings)
+print(umap_fit)
+#print(umap_fit$layout) # contains the 2D projections
+#print(umap_fit$data) # contains the initially supplied data matrix
+#print(umap_fit$knn) # object components: indexes, distances
+#print(umap_fit$knn$indexes) # NxN matrix
+#print(umap_fit$knn$distances) # NxN matrix
+
+### Hierarchical clustering in UMAP space
+# Perform structural clustering in the UMAP1-2 space.
+hc_umap <- hclust(dist(umap_fit$layout))
+grps_umap <- cutree(hc_umap, k=number_of_groups)
+
+# Plot UMAP
+png("UMAP.png", units="in", width=5, height=5, res=300)
+plot(umap_fit$layout, col=grps_umap, xlab="UMAP1", ylab="UMAP2", main="UMAP plot") #, col=annotation[, "color"]
+dev.off()
+print("Plot saved to file UMAP.png")
+
+png("UMAP_dendrogram.png", units="in", width=5, height=5, res=300)
+hclustplot(hc_umap, labels=ids, cex=0.5, k=number_of_groups,
+           ylab="UMAP1-2 distance", main="UMAP Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+dev.off()
+print("Plot saved to file UMAP_dendrogram.png")
+
+# umap_df <- umap_fit$layout %>%
+#   as.data.frame()%>%
+#   rename(UMAP1="V1",
+#          UMAP2="V2")
+# umap_df %>%
+#   ggplot(aes(x = UMAP1,
+#              y = UMAP2))+
+#   geom_point()+
+#   labs(x = "UMAP1",
+#        y = "UMAP2",
+#       subtitle = "UMAP plot")
+# ggsave("UMAP_plot.png")
 
 
 
@@ -310,7 +388,6 @@ dev.off()
 print("Plot saved to file RMSD_hist_allatom.png")
 
 ## all-atom RMSD heatmap
-library(pheatmap)
 png("RMSD_heatmap_allatom.png", units="in", width=5, height=5, res=300)
 #heatmap(rd_allatom, labCol=ids, main="RMSD Heatmap")
 pheatmap(rd_allatom, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
@@ -415,6 +492,29 @@ vec_allatom <- rowSums(cm_allatom, na.rm=TRUE)
 pymol(pdbs, col="user", user.vec=vec_allatom, as="cartoon", file="col_by_averaged_contact_density_allatom.pml", type="script")
 
 
+# UMAP on all-atom coordinates
+##-------------------------------------
+umap_fit_allatom <- umap(pdbs_allatoms$all, config=custom.settings)
+print(umap_fit_allatom)
+
+### Hierarchical clustering in UMAP space
+# Perform structural clustering in the UMAP1-2 space.
+hc_umap_allatom <- hclust(dist(umap_fit_allatom$layout))
+grps_umap_allatom <- cutree(hc_umap_allatom, k=number_of_groups)
+
+# Plot UMAP
+png("UMAP_allatom.png", units="in", width=5, height=5, res=300)
+plot(umap_fit_allatom$layout, col=grps_umap_allatom, xlab="UMAP1", ylab="UMAP2", main="UMAP plot") #, col=annotation[, "color"]
+dev.off()
+print("Plot saved to file UMAP_allatom.png")
+
+png("UMAP_dendrogram_allatom.png", units="in", width=5, height=5, res=300)
+hclustplot(hc_umap_allatom, labels=ids, cex=0.5, k=number_of_groups,
+           ylab="UMAP1-2 distance", main="UMAP Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+dev.off()
+print("Plot saved to file UMAP_dendrogram_allatom.png")
+
+
 
 ## Ensemble Difference Distance Matrix (eDDM) Analysis
 ##-------------------------------------
@@ -468,8 +568,17 @@ if (length(keys)) {
     dev.off()
     print("Plot saved to file eDDM_significant.png")
     # Generate PyMol script to visualise all identified key residue pairs showing significant distance changes
-    pymol(keys, pdbs=pdbs_allatoms, grps=grps_dm_pc12, as="sticks", file="eDDM_significant.pml", type="script")
-    } else {print("No key switch residues identified.")}
+    tryCatch(
+        #try to do this
+        {
+        pymol(keys, pdbs=pdbs_allatoms, grps=grps_dm_pc12, as="sticks", file="eDDM_significant.pml", type="script")
+        },
+        #if an error occurs, tell me the error
+        error=function(e) {
+            print(e)
+        }
+    )
+} else {print("No key switch residues identified.")}
 
 
 # ### Two-structure comparisons
@@ -522,10 +631,34 @@ if (length(keys)) {
 ## Cluster attributions for RMSD, PC, RMSD-allatom, PC-allatom
 ##-------------------------------------
 # store cluster attributions in dataframe
-clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_pc12_tor, grps_rmsd_allatom, grps_pc12_allatom),
-                             col.names = c("Structure", "RMSD Cluster", "PC1/2 Cluster onCoords", "PC1/2 Cluster onTorsion", "RMSD-allatom Cluster", "PC1/2-allatom Cluster onCoords"))
+clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_umap, grps_pc12_tor, grps_rmsd_allatom, grps_pc12_allatom, grps_umap_allatom),
+                             col.names = c("Structure", "RMSD-backbone", "PC1/2-backbone_onCoords", "UMAP-backbone_onCoords", "PC1/2-backbone_onTorsion", "RMSD-allatom", "PC1/2-allatom_onCoords", "UMAP-allatom_onCoords"))
+# convert first column to rownames
+clusters_df <- data.frame(clusters_df, row.names = 1)
+# get consensus cluster attribution (most common) and add to df
+clusters_consensus_df <- clusters_df
+clusters_consensus_df["Consensus_Cluster"] <- apply(clusters_consensus_df, 1, function(x) names(which.max(table(x))))
 # safe dataframe
-write.csv(clusters_df, "cluster_attributions.csv", row.names=FALSE, quote=FALSE)
+write.csv(clusters_consensus_df, "cluster_attributions_with_consensus.csv", row.names=TRUE, quote=FALSE)
+
+# library(RColorBrewer)
+# default_color = colorRampPalette(rev(brewer.pal(n = 7, name ="RdYlBu")))#(100)
+# mycolors <- default_color(length(unique(clusters_consensus_df$Consensus_Cluster)))
+# names(mycolors) <- unique(clusters_consensus_df$Consensus_Cluster)
+# mycolors <- list(mycolors = mycolors)
+
+png("cluster_attributions_heatmap.png", units="in", width=5, height=5, res=300)
+pheatmap(clusters_df, main="Cluster Attributions",
+        fontsize = 6,
+        angle_col = 45,
+        cutree_rows = number_of_groups,
+        legend_breaks = c(1:number_of_groups),
+        #annotation_row = clusters_consensus_df["Consensus_Cluster"],
+        #annotation_colors = mycolors,
+        #annotation_legend = FALSE
+        )
+dev.off()
+print("Plot saved to file cluster_attributions_heatmap.png")
 
 
 ##-------------------------------------
