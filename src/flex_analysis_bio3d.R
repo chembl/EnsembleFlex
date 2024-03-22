@@ -628,11 +628,14 @@ if (length(keys)) {
 
 
 ##-------------------------------------
-## Cluster attributions for RMSD, PC, RMSD-allatom, PC-allatom
+## Cluster attributions
 ##-------------------------------------
 # store cluster attributions in dataframe
-clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_umap, grps_pc12_tor, grps_rmsd_allatom, grps_pc12_allatom, grps_umap_allatom),
-                             col.names = c("Structure", "RMSD-backbone", "PC1/2-backbone_onCoords", "UMAP-backbone_onCoords", "PC1/2-backbone_onTorsion", "RMSD-allatom", "PC1/2-allatom_onCoords", "UMAP-allatom_onCoords"))
+clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_umap, grps_pc12_tor,
+                             grps_rmsd_allatom, grps_pc12_allatom, grps_umap_allatom, grps_dm_pc12),
+                             col.names = c("Structure", "backbone_RMSD", "backbone_PCA_onCoords",
+                             "backbone_UMAP_onCoords", "backbone_PCA_onTorsion", "allatom_RMSD",
+                             "allatom_PCA_onCoords", "allatom_UMAP_onCoords", "allatom_PCA_onDist"))
 # convert first column to rownames
 clusters_df <- data.frame(clusters_df, row.names = 1)
 # get consensus cluster attribution (most common) and add to df
