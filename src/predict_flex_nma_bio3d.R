@@ -12,7 +12,7 @@ option_list = list(
   make_option(c("-o", "--outdir"), type="character", default="Bio3D_NMA",
               help="output directory [default=%default]", metavar="character"),
   make_option(c("-n", "--ngroups"), type="integer", default=3,
-              help="number of groups for clustering [default=%default]", metavar="integer")
+              help="number of groups for clustering [default=%default]", metavar="integer"),
   make_option(c("-e", "--eNMA"), type="logical", action="store_true", default=FALSE,
               help="if TRUE eNMA is computed on the whole ensemble [default=%default]", metavar="TRUE or FALSE")
 );
@@ -107,13 +107,14 @@ pc_xyz <- pca.xyz(pdbs$xyz[, gaps.pos$f.inds])
 r <- rmsip(modes_ref_pdb, pc_xyz, subset=10, row.name="NMA", col.name="PCA")
 # Plot pairwise overlap values
 png("RMSIP_ensemble_PC_NMA_reference_pdb.png", units="in", width=5, height=5, res=300)
-plot(r, xlab="NMA", ylab="PCA", main="RMSIP between ensemble PCs and NMA-modes of the reference structure")
+plot(r, xlab="NMA", ylab="PCA", main="RMSIP between ensemble PCs and \nNMA-modes of the reference structure")
 dev.off()
 
 
 # ## eNMA
 # ##-------------------------------------
 if (opt$eNMA==TRUE){
+    library("pheatmap")
     ## NMA on all structures;
     ## use 'rm.gaps=FALSE' to keep the gap containing columns, but note that this is not compatible with mktrj
     modes <- nma.pdbs(pdbs, fit=FALSE, rm.gaps=TRUE)
@@ -141,13 +142,15 @@ if (opt$eNMA==TRUE){
     ## The RMSIP values are pre-calculated in the modes object and can be accessed through the attribute modes$rmsip
     # Plot a heatmap with clustering dendrogram
     png("pair-wise_RMSIPs.png", units="in", width=5, height=5, res=300)
-    heatmap((1-modes$rmsip), labCol=ids, symm=TRUE, main="Pair-wise RMSIPs") #, labRow=annotation[, "state"]
+    #heatmap((1-modes$rmsip), labCol=ids, symm=TRUE, main="Pair-wise RMSIPs")
+    pheatmap(modes$rmsip, labels_col=ids, symm=TRUE, main="Pair-wise RMSIPs")
     dev.off()
 
     ## Bhattacharyya coefficient
     ## The Bhattacharyya coefficient is a measure of the amount of overlap between two statistical samples or populations.
     bc <- bhattacharyya(modes)
     png("pair-wise_bhattacharyya_coeffs.png", units="in", width=5, height=5, res=300)
-    heatmap((1-bc), labCol=ids, symm=TRUE, main="Pair-wise Bhattacharyya coefficients") #, labRow=annotation[, "state"]
-    dev.off()
+    #heatmap((1-bc), labCol=ids, symm=TRUE, main="Pair-wise Bhattacharyya coefficients")
+    pheatmap(bc, labels_col=ids, symm=TRUE, main="Pair-wise Bhattacharyya coefficients")
+dev.off()
 }
