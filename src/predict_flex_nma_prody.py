@@ -3,9 +3,10 @@
 import os
 import argparse
 import glob
+import numpy as np
 from prody import *
 import matplotlib.pylab as plt
-#from pylab import *  # Matplotlib package
+
 plt.ion()  # The matplotlib.pyplot.ion() function turns on the interactive mode
 
 
@@ -127,6 +128,20 @@ plt.savefig('Fluctuations_perResidue_ANM3.png')
 plt.close()
 print('\nGNM square fluctuations per residue plot of ANM3 is saved to Fluctuations_perResidue_ANM3.png.\n')
 
+## Comparison of MSFs with experimental B-factors (Debye-Waller factor)
+# rescale MSFs
+bfactors = reference_calphas.getBetas()
+anm_msfs = calcSqFlucts(anm)
+anm_msfs_rescaled = anm_msfs / np.mean(anm_msfs) * np.mean(bfactors)
+
+plt.figure(figsize=(9, 5), dpi=300)
+plt.plot(bfactors, 'orange', label='Experimental')
+plt.plot(anm_msfs_rescaled, 'g', lw=1., label='ANM')
+plt.grid()
+plt.legend()
+plt.tight_layout()
+plt.savefig('B-factors_vs_ANM-msfs.png')
+plt.close()
 
 # ## Protein structure bipartition # not working for ANM modes!
 # showProtein(reference_calphas, mode=anm[0])
@@ -134,6 +149,42 @@ print('\nGNM square fluctuations per residue plot of ANM3 is saved to Fluctuatio
 # plt.close()
 # print('\nProtein structure bipartition plot based on ANM1 is saved to ProteinStructureBipartition_ANM1.png.\n')
 
+
+## Writing protein structures
+# extend the ANM model based on Cα-atoms to all heavy atoms by the method extendModel
+anm_aa, atoms_all = extendModel(anm, reference_calphas, reference_structure)
+# write NMD (can be visualized with the VMD plugin NMWizard: VMD Main menu --> Analysis --> Normal Mode Wizard)
+writeNMD('ANM_model_aa', anm_aa, atoms_all)
+print("ANM model written to NMD file ANM_model_aa.nmd")
+# generate a trajectory by the method traverseMode
+# This takes steps in both directions starting from the provided structure to generate conformers along the chosen mode.
+anm1_traj_ca = traverseMode(anm[0], reference_calphas)  #, rmsd=1.5
+anm1_traj_ca.setAtoms(reference_calphas)
+# write PDB
+writePDB('ANM1_traj_ca.pdb', anm1_traj_ca)
+print("ANM1-Calpha trajectory saved as multimodel to ANM1_traj_ca.pdb")
+# generate trajectory for all-atom ANM1
+anm1_traj_aa = traverseMode(anm_aa[0], atoms_all)
+anm1_traj_aa.setAtoms(atoms_all)
+# write PDB
+writePDB('ANM1_traj_aa.pdb', anm1_traj_aa)
+print("ANM1-allatom trajectory saved as multimodel to ANM1_traj_aa.pdb")
+# generate trajectory for all-atom ANM2
+anm2_traj_aa = traverseMode(anm_aa[1], atoms_all)
+anm2_traj_aa.setAtoms(atoms_all)
+# write PDB
+writePDB('ANM2_traj_aa.pdb', anm2_traj_aa)
+print("ANM2-allatom trajectory saved as multimodel to ANM2_traj_aa.pdb")
+
+# Mean square fluctuations computed with sets of ANM modes stored in the B-factor column
+msf_all20 = calcSqFlucts(anm)  # mean square fluctuations based on all 20 ANM modes
+writePDB('ANM_msf_all20_on_bfactor.pdb', reference_calphas, beta=msf_all20)
+msf_first10 = calcSqFlucts(anm[:10])  # mean square fluctuations based on the first 10 ANM modes
+writePDB('ANM_msf_first10_on_bfactor.pdb', reference_calphas, beta=msf_first10)
+msf_first3 = calcSqFlucts(anm[:3])  # mean square fluctuations based on the first 3 ANM modes
+writePDB('ANM_msf_first3_on_bfactor.pdb', reference_calphas, beta=msf_first3)
+print("Mean square fluctuations computed with sets of ANM modes stored in the B-factor column:\n"
+      "ANM_msf_all20_on_bfactor.pdb, ANM_msf_first10_on_bfactor.pdb, ANM_msf_first3_on_bfactor.pdb")
 
 
 
@@ -226,14 +277,53 @@ plt.close()
 print('\nGNM square fluctuations per residue plot of GNM3 is saved to Fluctuations_perResidue_GNM3.png.\n')
 
 
+## Comparison of MSFs with experimental B-factors (Debye-Waller factor)
+# rescale MSFs
+bfactors = reference_calphas.getBetas()
+gnm_msfs = calcSqFlucts(gnm)
+gnm_msfs_rescaled = gnm_msfs / np.mean(gnm_msfs) * np.mean(bfactors)
+
+plt.figure(figsize=(9, 5), dpi=300)
+plt.plot(bfactors, 'orange', label='Experimental')
+plt.plot(gnm_msfs_rescaled, 'g', lw=1., label='GNM')
+plt.grid()
+plt.legend()
+plt.tight_layout()
+plt.savefig('B-factors_vs_GNM-msfs.png')
+plt.close()
+
+
 ## Protein structure bipartition
 showProtein(reference_calphas, mode=gnm[0])
 plt.savefig('ProteinStructureBipartition_GNM1.png')
 plt.close()
 print('\nProtein structure bipartition plot based on GNM1 is saved to ProteinStructureBipartition_GNM1.png.\n')
-# writePDB('ProteinStructureBipartition_GNM1.pdb', reference_calphas, beta=gnm[0])
-# print('\nProtein structure bipartition based on GNM1 is saved in B-factor column of ProteinStructureBipartition_GNM1.pdb.\n')
 
+
+## Writing protein structures
+# extend the GNM model based on Cα-atoms to all heavy atoms by the method extendModel
+gnm_aa, atoms_all = extendModel(gnm, reference_calphas, reference_structure)
+# write NMD (can be visualized with the VMD plugin NMWizard: VMD Main menu --> Analysis --> Normal Mode Wizard)
+writeNMD('GNM_model_aa', gnm_aa, atoms_all)
+print("GNM model written to NMD file GNM_model_aa.nmd")
+
+# Mean square fluctuations computed with sets of GNM modes stored in the B-factor column
+msf_all20 = calcSqFlucts(gnm)  # mean square fluctuations based on all 20 GNM modes
+writePDB('GNM_msf_all20_on_bfactor.pdb', reference_calphas, beta=msf_all20)
+msf_first10 = calcSqFlucts(gnm[:10])  # mean square fluctuations based on the first 10 GNM modes
+writePDB('GNM_msf_first10_on_bfactor.pdb', reference_calphas, beta=msf_first10)
+msf_first3 = calcSqFlucts(gnm[:3])  # mean square fluctuations based on the first 3 GNM modes
+writePDB('GNM_msf_first3_on_bfactor.pdb', reference_calphas, beta=msf_first3)
+print("Mean square fluctuations computed with sets of GNM modes stored in the B-factor column:\n"
+      "GNM_msf_all20_on_bfactor.pdb, GNM_msf_first10_on_bfactor.pdb, GNM_msf_first3_on_bfactor.pdb")
+
+# generate a trajectory by the method traverseMode
+# This takes steps in both directions starting from the provided structure to generate conformers along the chosen mode.
+# generate a trajectory for all-atom GNM1 (does not work as mode is not 3D)
+#gnm1_traj_aa = traverseMode(gnm_aa[0], atoms_all)
+#gnm1_traj_aa.setAtoms(atoms_all)
+# write PDB
+#writePDB('GNM1_traj_aa.pdb', gnm1_traj_aa)
 
 
 
@@ -246,6 +336,6 @@ domains = calcGNMDomains(ddd_gnm[:3])
 # assign this data to the AtomGroup:
 reference_structure.setData('domain', domains)
 # using the B-factor field for writing the domains
-writePDB('reference_structure_dynamic_domains_GNM.pdb', reference_structure, beta=domains)
-print('\nDynamical domains of reference structure are saved in B-factor column of reference_structure_dynamic_domains_GNM.pdb '
+writePDB('dynamic_domains_GNM_allatom.pdb', reference_structure, beta=domains)
+print('\nDynamical domains of reference structure are saved in B-factor column of dynamic_domains_GNM_allatom.pdb '
       'for visualisation.\n')
