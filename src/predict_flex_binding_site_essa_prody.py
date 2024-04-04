@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Essential Site Scanning Analysis (using ProDy)
+Essential Site Scanning Analysis (ESSA) - using ProDy
 '''
 # A ProDy tutorial on ESSA is provided here: http://prody.csb.pitt.edu/_static/ipynb/workshop2021/prody_essa.html
 
@@ -15,7 +15,7 @@ plt.ion()  # The matplotlib.pyplot.ion() function turns on the interactive mode
 
 
 #------- File Argument/Option Parser -------#
-parser = argparse.ArgumentParser(description="Perform NMA on a protein structure.")
+parser = argparse.ArgumentParser(description="Perform Essential Site Scanning Analysis (ESSA) on a protein structure.")
 parser.add_argument("-i", "--input", dest="input_path", required=True,
                     help="input dataset directory path", metavar="PATH")
 parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
