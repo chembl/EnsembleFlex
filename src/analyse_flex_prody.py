@@ -288,5 +288,5 @@ print('\nDynamical domains of reference structure are saved in B-factor column o
 
 
 ### Generate Report
-import flex_analysis_prody_reporting as reporting
+import analyse_flex_prody_reporting as reporting
 reporting.generate_report(str_input_path=args.input_path, output_path=output_path)
