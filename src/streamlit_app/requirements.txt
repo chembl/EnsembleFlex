@@ -1,0 +1,8 @@
+streamlit
+streamlit.report_thread
+#unidecode # for stoc.py
+re # for stoc.py
+pathlib # for directorypicker.py
+subprocess
+glob2
+#prody
