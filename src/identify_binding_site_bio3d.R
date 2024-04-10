@@ -5,7 +5,7 @@ library(optparse)
 library(R.utils) # for function "isAbsolutePath"
 library(dplyr) # for data wrangling
 library(ggplot2) # for plotting
-library(bio3d) # Bio3d - alignment, PCA, NMA
+library(bio3d)
 
 
 option_list = list(
@@ -32,7 +32,7 @@ if (opt$outdir == "outdir"){
   sub_dir <- strsplit(opt$outdir, split='./', fixed=TRUE)
   outdir <- file.path(getwd(), sub_dir)
   dir.create(outdir, showWarnings = FALSE)
-} else if (length(strsplit(opt$outdir, split='/', fixed=TRUE)) == 1){
+} else if (length(unlist(strsplit(opt$outdir, split='/', fixed=TRUE))) == 1){
   # if only output foldername is provided use current working directory as basepath
   outdir <- file.path(getwd(), opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
@@ -52,22 +52,20 @@ if (dir.exists(file.path(opt$indir))){ #if (!is.null(opt$indir)){
     # only subdirectory is provided, but full path exists
     indir <- file.path(getwd(), opt$indir)
   }
+  # get pdb files in list
   files <- list.files(path = indir, pattern = "*.pdb", full.names = T, recursive = F)
-  # } else if (!is.null(opt$filenames)) {
-  #   files <- as.list(strsplit(opt$filenames, ",")[[1]])
-  #   #files <- opt$filenames
-  #   setwd(paste(dirname(files[1]),opt$outdir))
 } else {
     print_help(opt_parser)
     stop("At least one input argument must be supplied (input filepath or files).\n\n", call.=FALSE)
 }
 
-print(indir)
+#print(indir)
+#print(outdir)
 setwd(outdir)
-print(outdir)
 
 
 ## program...
+#--------------------------------------------------------------------
 
 ## Binding site identification
 #---------

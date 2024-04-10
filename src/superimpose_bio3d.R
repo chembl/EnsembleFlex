@@ -1,23 +1,16 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 
-#install.packages("bio3d", dependencies=TRUE)
-#install.packages("optparse", dependencies=TRUE)
-# if (!require("BiocManager", quietly = TRUE))
-#   install.packages("BiocManager")
-# BiocManager::install("msa")
+library(optparse)
+library(R.utils) # for function "isAbsolutePath"
+library(bio3d)
+library(msa)
 
-library("optparse")
-library("R.utils") # for function "isAbsolutePath"
-library("bio3d")
-library("msa")
 
 option_list = list(
   make_option(c("-i", "--indir"), type="character", default=NULL, 
               help="input directory path", metavar="character"),
-  # make_option(c("-f", "--filenames"), type="character", default=NULL, 
-  #             help="dataset file names - example: [file1.pdb,file2.pdb]", metavar="character"),
-  make_option(c("-o", "--outdir"), type="character", default="outdir", 
+  make_option(c("-o", "--outdir"), type="character", default="outdir",
               help="output directory [default=%default]", metavar="character")
 ); 
 
@@ -35,7 +28,7 @@ if (opt$outdir == "outdir"){
   sub_dir <- strsplit(opt$outdir, split='./', fixed=TRUE)
   outdir <- file.path(getwd(), sub_dir)
   dir.create(outdir, showWarnings = FALSE)
-} else if (length(strsplit(opt$outdir, split='/', fixed=TRUE)) == 1){
+} else if (length(unlist(strsplit(opt$outdir, split='/', fixed=TRUE))) == 1){
   # if only output foldername is provided use current working directory as basepath
   outdir <- file.path(getwd(), opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
@@ -55,33 +48,23 @@ if (dir.exists(file.path(opt$indir))){ #if (!is.null(opt$indir)){
     # only subdirectory is provided, but full path exists
     indir <- file.path(getwd(), opt$indir)
   }
+  # get pdb files in list
   files <- list.files(path = indir, pattern = "*.pdb", full.names = T, recursive = F)
-  # } else if (!is.null(opt$filenames)) {
-  #   files <- as.list(strsplit(opt$filenames, ",")[[1]])
-  #   #files <- opt$filenames
-  #   setwd(paste(dirname(files[1]),opt$outdir))
 } else {
     print_help(opt_parser)
     stop("At least one input argument must be supplied (input filepath or files).\n\n", call.=FALSE)
 }
 
-print(indir)
+#print(indir)
+#print(outdir)
 setwd(outdir)
-print(outdir)
 
 
 ## program...
+#--------------------------------------------------------------------
 
 # loading pdb files
-# option 1.
-#pdbs <- pdbaln(files)
 pdbs <- pdbaln(files, exefile='msa')
-
-# # option 2. if they are of identical composition and you only want xyz coordinates
-# xyz <- NULL
-# for(i in files) {
-#   xyz = rbind(xyz, read.pdb(files)$xyz)
-# }
 
 # Rigid core identification and structural superposition
 core <- core.find(pdbs)
