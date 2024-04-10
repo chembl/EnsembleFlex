@@ -32,7 +32,7 @@ if (opt$outdir == "data_on_structure"){
   sub_dir <- strsplit(opt$outdir, split='./', fixed=TRUE)
   outdir <- file.path(getwd(), sub_dir)
   dir.create(outdir, showWarnings = FALSE)
-} else if (length(strsplit(opt$outdir, split='/', fixed=TRUE)) == 1){
+} else if (length(unlist(strsplit(opt$outdir, split='/', fixed=TRUE))) == 1){
   # if only output foldername is provided use current working directory as basepath
   outdir <- file.path(getwd(), opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
