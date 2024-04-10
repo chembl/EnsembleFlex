@@ -2,6 +2,8 @@
 import sys
 import os
 import subprocess
+
+import pandas as pd
 import streamlit as st
 from stoc import stoc
 #from directorypicker import st_directory_picker
@@ -46,12 +48,18 @@ if 'Bio3Danalysisdone' not in st.session_state:
     st.session_state.Bio3Danalysisdone = False
 if 'SASAanalysisdone' not in st.session_state:
     st.session_state.SASAanalysisdone = False
+if 'PDBhasLigandSortdone' not in st.session_state:
+    st.session_state.PDBhasLigandSortdone = False
 if 'BSidentifydone' not in st.session_state:
     st.session_state.BSidentifydone = False
 if 'superimposed_bs' not in st.session_state:
     st.session_state.superimposed_bs = ""
 if 'BSanalysisdone' not in st.session_state:
     st.session_state.BSanalysisdone = False
+if 'NMABio3Disdone' not in st.session_state:
+    st.session_state.NMABio3Disdone = False
+if 'NMAProDyisdone' not in st.session_state:
+    st.session_state.NMAProDyisdone = False
 if 'ESSAisdone' not in st.session_state:
     st.session_state.ESSAisdone = False
 
@@ -90,6 +98,27 @@ This webpage serves as a gateway into the fascinating field of protein structura
 automated manner, 
 where we unravel the dynamic tapestry of these molecular machines.
 ''')
+
+st.markdown('### Output')
+st.markdown('*The generated output directory will contain the following subdirectories:*\n  '
+            'Uppercase directory names contain analysis output files of diverse format and '
+            'lowercase directory names only contain .pdb structure files.')
+st.code('''
+EnsemblFlex  
+├── superimposed  
+├── Analysis_Bio3D  
+│   └── pymol_pdbs  
+├── Analysis_SASA_Biopython  
+├── structures_with_ligand  
+├── structures_without_ligand  
+├── BindingSite_ident_Bio3D  
+│   └── structures_labeled_binding_site  
+├── BindingSite_analysis_Bio3D  
+├── Prediction_NMA_Bio3D  
+├── Prediction_NMA_ProDy  
+└── Prediction_ESSA_ProDy  
+'''
+)
 
 st.divider()  # Draws a horizontal rule
 #######################################################################################################################
@@ -214,51 +243,61 @@ st.markdown("Results in form of images will be displayed below.  "
             "in the output folder.")
 
 if st.session_state.Bio3Danalysisdone == True:
-    with st.container(border=True):
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["First insights", "RMSF & RMSD analysis", "DDM analysis", "PCA", "UMAP analysis", "Clustering"])
+    with st.container(border=True, height=600):
+        st.subheader("Flexibility Analysis Results")
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Base info", "RMSF & RMSD analysis", "PCA", "UMAP analysis",
+                                                      "All-atom PCA & DDM analysis", "Clustering"])
         with tab1:
-            st.header("First insights: alignment overview, B-factors of reference")
-            st.image(outputdirBio3D + 'alignment_overview.png', caption='alignment overview')
-            st.image(outputdirBio3D + 'B-factors.png', caption='B-factors of reference structure')
+            st.markdown("#### Base info: Alignment overview and B-factors of reference")
+            st.image(outputdirBio3D + '/alignment_overview.png', caption='alignment overview')
+            st.image(outputdirBio3D + '/B-factors.png', caption='B-factors of reference structure')
             #st.image("https://static.streamlit.io/examples/cat.jpg", width=200)
         with tab2:
-            st.header("RMSF and RMSD analysis")
-            st.image(outputdirBio3D + 'RMSF.png', caption='RMSF')
-            st.image(outputdirBio3D + 'RMSD_hist.png', caption='RMSD histogram')
-            st.image(outputdirBio3D + 'RMSD_heatmap.png', caption='RMSD heatmap')
+            st.markdown("#### RMSF and RMSD analysis")
+            st.markdown("#### - on backbone coordinates")
+            st.image(outputdirBio3D + '/RMSF.png', caption='RMSF')
+            st.image(outputdirBio3D + '/RMSD_hist.png', caption='RMSD histogram')
+            st.image(outputdirBio3D + '/RMSD_heatmap.png', caption='RMSD heatmap')
+            st.markdown("#### - on all-atom coordinates (including side chains)")
+            st.image(outputdirBio3D + '/RMSF_allatom.png', caption='All-atom RMSF')
+            st.image(outputdirBio3D + '/RMSD_hist_allatom.png', caption='All-atom RMSD histogram')
+            st.image(outputdirBio3D + '/RMSD_heatmap_allatom.png', caption='All-atom RMSD heatmap')
         with tab3:
-            st.header("Difference Distance Matrix (DDM) analysis between structures (only all-atom)")
-            st.image(outputdirBio3D + 'eDDM_complete.png', caption='Ensemble Difference Distance Matrix')
-            st.image(outputdirBio3D + 'RMSF.png', caption='RMSF')
+            st.markdown("#### Principal Component Analysis (PCA) on coordinates and on torsion data")
+            st.markdown("#### - on coordinates (backbone)")
+            st.image(outputdirBio3D + '/PCA.png', caption='PCA overall info')
+            st.image(outputdirBio3D + '/PCA_residue_contribution.png', caption='PCA residue contribution')
+            st.image(outputdirBio3D + '/PCA_dendrogram.png', caption='PCA dendrogram')
+            st.markdown("#### - on torsion data (backbone)")
+            st.image(outputdirBio3D + '/PCA_on_Torsion.png', caption='PCA overall info')
+            st.image(outputdirBio3D + '/PCA_on_Torsion_loadings.png', caption='PCA loadings')
+            st.image(outputdirBio3D + '/PCA_on_Torsion_dendrogram.png', caption='PCA dendrogram')
         with tab4:
-            st.header("PCA on coordinates, on torsion data, and on difference distance matrices")
-            st.subheader("on coordinates (backbone)")
-            st.image(outputdirBio3D + 'PCA.png', caption='PCA overall info')
-            st.image(outputdirBio3D + 'PCA_residue_contribution.png', caption='PCA residue contribution')
-            st.image(outputdirBio3D + 'PCA_dendrogram.png', caption='PCA dendrogram')
-            st.subheader("on torsion data (backbone)")
-            st.image(outputdirBio3D + 'PCA_on_Torsion.png', caption='PCA overall info')
-            st.image(outputdirBio3D + 'PCA_on_Torsion_loadings.png', caption='PCA loadings')
-            st.image(outputdirBio3D + 'PCA_on_Torsion_dendrogram.png', caption='PCA dendrogram')
-            st.subheader("on coordinates (all-atom)")
-            st.image(outputdirBio3D + 'PCA_allatom.png', caption='PCA overall info')
-            st.image(outputdirBio3D + 'PCA_allatom_loadings.png', caption='PCA loadings')
-            st.image(outputdirBio3D + 'PCA_allatom_dendrogram.png', caption='PCA dendrogram')
-            st.subheader("on difference distance matrices (all-atom)")
-            st.image(outputdirBio3D + 'PCA_on_allatom_DifferenceDistanceMatrix.png', caption='PCA overall info')
-            st.image(outputdirBio3D + 'PCA_on_allatom_DifferenceDistanceMatrix_loadings.png', caption='PCA loadings')
-            st.image(outputdirBio3D + 'PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png', caption='PCA dendrogram')
+            st.markdown("#### Uniform Manifold Approximation and Projection (UMAP) analysis")
+            st.markdown("#### - on coordinates (backbone)")
+            st.image(outputdirBio3D + '/UMAP.png', caption='2D UMAP plot')
+            st.image(outputdirBio3D + '/UMAP_dendrogram.png', caption='2D UMAP dendrogram')
         with tab5:
-            st.header("Uniform Manifold Approximation and Projection (UMAP) analysis")
-            st.subheader("on coordinates (backbone)")
-            st.image(outputdirBio3D + 'UMAP.png', caption='2D UMAP plot')
-            st.image(outputdirBio3D + 'UMAP_dendrogram.png', caption='2D UMAP dendrogram')
-            st.subheader("on coordinates (all-atom)")
-            st.image(outputdirBio3D + 'UMAP_allatom.png', caption='2D UMAP plot')
-            st.image(outputdirBio3D + 'UMAP_dendrogram_allatom.png', caption='2D UMAP dendrogram')
+            st.markdown("#### All-atom PCA")
+            st.markdown("#### - on coordinates (all-atom)")
+            st.image(outputdirBio3D + '/PCA_allatom.png', caption='PCA overall info')
+            st.image(outputdirBio3D + '/PCA_loadings_allatom.png', caption='PCA loadings')
+            st.image(outputdirBio3D + '/PCA_dendrogram_allatom.png', caption='PCA dendrogram')
+            st.markdown("#### - on difference distance matrices (all-atom)")
+            st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix.png', caption='PCA overall info')
+            st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix_loadings.png', caption='PCA loadings')
+            st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png', caption='PCA dendrogram')
+            # st.markdown("#### All-atom Uniform Manifold Approximation and Projection (UMAP) analysis")
+            # st.markdown("#### - on coordinates (all-atom)")
+            # st.image(outputdirBio3D + '/UMAP_allatom.png', caption='2D UMAP plot')
+            # st.image(outputdirBio3D + '/UMAP_dendrogram_allatom.png', caption='2D UMAP dendrogram')
+            st.markdown("#### Difference Distance Matrix (DDM) analysis between structures (only all-atom)")
+            try:
+                st.image(outputdirBio3D + '/eDDM_complete.png', caption='Ensemble Difference Distance Matrix')
+            except: pass
         with tab6:
-            st.header("Overall clustering results")
-            st.image(outputdirBio3D + 'cluster_attributions_heatmap.png', caption='Cluster attributions')
+            st.markdown("#### Overall clustering results")
+            st.image(outputdirBio3D + '/cluster_attributions_heatmap.png', caption='Cluster attributions')
 
 
     show_report(parentpath=outputdirBio3D, filename="/analysis_bio3d_html_report.html")
@@ -303,11 +342,13 @@ if st.button('Run', key="Subset_clusters"):
 toc.subheader("B) SASA Difference Analysis")
 st.markdown("[Used package/tool: Biopython (Python)]")
 st.markdown('''
-_Investigate Solvent Accessible Surface Area (SASA) of protein residues across the whole ensemble._  
+_Investigate differences in Solvent Accessible Surface Area (SASA) of protein residues across the whole ensemble._  
 _This highlights residues that experience differences in solvent accessibility across the ensemble._  
 ''')
+
+outputdirSASA = str(output_directory) + '/Analysis_SASA_Biopython'
+
 def run_analysis_SASA():
-    outputdirSASA = str(output_directory) + '/Analysis_sasa_biopython'
     result = subprocess.run(
         [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython.py", '-i', superimposed, '-o', outputdirSASA])
     st.write("Superimposed structures are taken from ", superimposed)
@@ -322,11 +363,14 @@ def run_analysis_SASA():
 st.button('Run', key="Analyse_SASA_btn", on_click=run_analysis_SASA)
 
 if st.session_state.SASAanalysisdone == True:
-    with st.container(border=True):
-        st.write("Data is provided in structural and table format in the output directory.")
+    with st.container(border=True, height=600):
+        st.markdown("#### SASA difference analysis result")
+        st.write("More data is provided in structural and table format in the output directory.")
+        st.image(outputdirSASA + '/SASA_sd.png', caption='SASA standard deviation per residue')
 
 st.divider()
 #######################################################################################################################
+
 
 toc.header(":four: Binding Site Analysis")
 #st.header(":four: Binding Site Analysis")
@@ -343,15 +387,22 @@ st.markdown('''##### Helper Tool: Sort liganded structures''')
 st.markdown("[Used package/tool: Bio3D (R)]")
 st.write('This tool automatically sorts copies of your superimposed structures into the subfolders "structures_with_ligand" and "structures_without_ligand".')
 
-def sortPDBs(self):
+def sortPDBs():
     result = subprocess.run(
         ['Rscript', str(parentfilepath) + '/tools/pdb_sorter_has_ligand.R', '-i', superimposed, '-o', output_directory])
-    liganded = output_directory + '/structures_with_ligand'
-    not_liganded = output_directory + '/structures_without_ligand'
+    liganded = str(output_directory) + '/structures_with_ligand'
+    not_liganded = str(output_directory) + '/structures_without_ligand'
     st.write("The subfolders are located in ", output_directory)
-
+    st.session_state.PDBhasLigandSortdone = True
 
 st.button('Sort structures', key='sort_btn', on_click=sortPDBs)
+if st.session_state.PDBhasLigandSortdone == True:
+    with st.container(border=True, height=300):
+        st.write('Structures have been sorted into respective subfolders '
+                 '"structures_with_ligand" and "structures_without_ligand" based on the following '
+                 'list of identified ligands per structure:')
+        df = pd.read_csv(str(output_directory) + '/pdbs_have_ligands.csv')
+        st.table(df)
 
 
 st.markdown('''##### Liganded Structures - Input Directory''')
@@ -368,7 +419,7 @@ outputdir_BindingSite_ident = str(output_directory) + '/BindingSite_ident_Bio3D'
 
 def run_bs_ident_Bio3D():
     result = subprocess.run(
-        ['Rscript', str(parentfilepath) + '/identify_binding_site_bio3d.R', '-i', input_directory_liganded, '-o', outputdir_BindingSite_ident, '-d', cutoff])
+        ['Rscript', str(parentfilepath) + '/identify_binding_site_bio3d.R', '-i', input_directory_liganded, '-o', outputdir_BindingSite_ident, '-d', str(cutoff)])
     st.write("Structures are taken from ", input_directory_liganded)
     st.write("Bio3D calculations are running...")
     st.write("Files are saved in: ", outputdir_BindingSite_ident)
@@ -403,17 +454,17 @@ st.markdown("##### Calculation and outputs:\n"
 st.button('Run Binding Site Identification', key='BS_ident_btn', on_click=run_bs_ident_Bio3D)
 
 if st.session_state.BSidentifydone == True:
-    with st.container(border=True):
-        st.header("Binding Site identification results")
+    with st.container(border=True, height=600):
+        st.subheader("Binding Site Identification Results")
         st.write("More data is provided in structural and table format in the output directory.")
         st.write("How many residues are involved in ligand binding per structure?")
-        st.image(outputdir_BindingSite_ident + 'histogram_binding_residues_count.png', caption='binding residues counts')
+        st.image(outputdir_BindingSite_ident + '/histogram_binding_residues_count.png', caption='binding residues counts')
         st.write("Which residues are are most frequently involved in ligand binding?")
-        st.image(outputdir_BindingSite_ident + 'histogram_binding_residues_frequency.png', caption='binding residues frequency')
+        st.image(outputdir_BindingSite_ident + '/histogram_binding_residues_frequency.png', caption='binding residues frequency')
         st.write("Which ligands share the same residue binding pattern?")
-        st.image(outputdir_BindingSite_ident + 'interaction_heatmap.png', caption='ligand-residue interactions')
+        st.image(outputdir_BindingSite_ident + '/interaction_heatmap.png', caption='ligand-residue interactions')
         st.write("How extended are binding sites (approximated through radius of gyration of binding residues C-alphas)?")
-        st.image(outputdir_BindingSite_ident + 'histogram_binding_residues_ca_rgyr.png', caption='Ca radius of gyration')
+        st.image(outputdir_BindingSite_ident + '/histogram_binding_residues_ca_rgyr.png', caption='Ca radius of gyration')
 
 st.divider()
 #######################################################################################################################
@@ -464,7 +515,7 @@ _Investigate structural flexibility/variability locally._
 st.markdown('''#### A) Focused variability analysis''')
 st.markdown("[Used package/tool: Bio3D (R)]")
 st.markdown(" - Root Mean Square Fluctuations (RMSF)\n"
-            " - Principal Component Analysis (PCA)")
+            " - Principal Component Analysis (PCA) on coordinates (all-atom)")
 
 outputdir_BindingSite_analysis_Bio3D = str(output_directory) + '/BindingSite_analysis_Bio3D'
 
@@ -483,14 +534,14 @@ def run_analysis_BindingSite_Bio3D():
 st.button('Run', key="Analyse_BindingSite_Bio3D_btn", on_click=run_analysis_BindingSite_Bio3D)
 
 if st.session_state.BSanalysisdone == True:
-    with st.container(border=True):
-        st.header("Binding Site analysis results")
+    with st.container(border=True, height=600):
+        st.subheader("Binding Site Analysis Results")
         st.write("More data is provided in structural format in the output directory.")
-        st.write("RMSF analysis")
-        st.image(outputdir_BindingSite_analysis_Bio3D + 'RMSF_bsite2.png', caption='binding residues RMSFs')
-        st.write("PCA (all-atom)")
-        st.image(outputdir_BindingSite_analysis_Bio3D + 'PCA_bsite_allatom.png', caption='binding residues PCA')
-        st.image(outputdir_BindingSite_analysis_Bio3D + 'PCA_atom_contribution_bsite_allatom.png', caption='PCA loadings')
+        st.markdown("#### - RMSF analysis")
+        st.image(outputdir_BindingSite_analysis_Bio3D + '/RMSF_bsite2.png', caption='binding residues RMSFs')
+        st.markdown("#### - PCA on coordinates (all-atom)")
+        st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_bsite_allatom.png', caption='binding residues PCA')
+        st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_atom_contribution_bsite_allatom.png', caption='PCA loadings')
 
 # toc.subheader("4 - SASA Analysis of Binding Site Residues")
 # st.markdown('''
@@ -525,12 +576,27 @@ if st.button('Run', key="NMA_bio3d_btn"):
     if eNMA:
         result = subprocess.run(
             ["Rscript", str(parentfilepath) + "/predict_flex_nma_bio3d.R", '-i', str(input_directory), '-o',
-             str(outputdir_NMA_Bio3D), '-e', 'TRUE'])
+             str(outputdir_NMA_Bio3D), '-e'])
     else:
         result = subprocess.run(
             ["Rscript", str(parentfilepath) + "/predict_flex_nma_bio3d.R", '-i', str(input_directory), '-o',
              str(outputdir_NMA_Bio3D)])
     st.write("Output files are saved in: ", outputdir_NMA_Bio3D)
+    st.session_state.NMABio3Disdone = True
+
+if st.session_state.NMABio3Disdone == True:
+    with st.container(border=True, height=600):
+        st.subheader("Normal Mode Analysis (NMA) results")
+        st.write("More data is provided in structural format in the output directory.")
+        st.markdown("#### - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NMA) for reference structure")
+        st.image(outputdir_NMA_Bio3D + '/ANM_NMA_reference_pdb.png', caption='ANM NMA')
+        st.image(outputdir_NMA_Bio3D + '/ANM_NMA_dynamic_cross_correlations_reference_pdb.png',
+                 caption='ANM NMA residue cross correlations')
+        st.markdown("#### - Gaussian Network Model (GNM) C-alpha Normal Mode Analysis (NMA) for reference structure")
+        st.image(outputdir_NMA_Bio3D + '/GNM_NMA_reference_pdb.png', caption='GNM NMA')
+        st.image(outputdir_NMA_Bio3D + '/GNM_NMA_dynamic_cross_correlations_reference_pdb.png',
+                 caption='GNM NMA residue cross correlations')
+
 
 
 st.markdown("##### b) with ProDy")
@@ -546,6 +612,20 @@ if st.button('Run', key="NMA_prody_btn"):
         [f"{sys.executable}", str(parentfilepath) + "/predict_flex_nma_prody.py", '-i', str(input_directory), '-o',
          str(outputdir_NMA_ProDy)])
     st.write("Output files are saved in: ", outputdir_NMA_ProDy)
+    st.session_state.NMAProDyisdone = True
+
+if st.session_state.NMAProDyisdone == True:
+    with st.container(border=True, height=600):
+        st.subheader("Normal Mode Analysis (NMA) results")
+        st.write("More data is provided in structural format in the output directory.")
+        st.markdown("#### - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NMA) for reference structure")
+        st.image(outputdir_NMA_ProDy + '/B-factors_vs_ANM-msfs.png', caption='ANM NMA RMSFs vs B-factors')
+        st.image(outputdir_NMA_ProDy + '/CrossCorrelations_ANM.png', caption='ANM NMA residue cross correlations')
+        st.image(outputdir_NMA_ProDy + '/ContactMap_ANM.png', caption='ANM NMA residue contact map')
+        st.markdown("#### - Gaussian Network Model (GNM) C-alpha Normal Mode Analysis (NMA) for reference structure")
+        st.image(outputdir_NMA_ProDy + '/B-factors_vs_GNM-msfs.png', caption='GNM NMA RMSFs vs B-factors')
+        st.image(outputdir_NMA_ProDy + '/CrossCorrelations_GNM.png', caption='GNM NMA residue cross correlations')
+        st.image(outputdir_NMA_ProDy + '/ContactMap_GNM.png', caption='GNM NMA residue contact map')
 
 
 toc.subheader("B) Essential Site Scanning Analysis")
@@ -570,10 +650,10 @@ if st.button('Run', key="ESSA_prody_btn"):
     st.session_state.ESSAisdone = True
 
 if st.session_state.ESSAisdone == True:
-    with st.container(border=True):
-        st.header("Essential Site Scanning Analysis (ESSA) results")
+    with st.container(border=True, height=600):
+        st.subheader("Essential Site Scanning Analysis (ESSA) results")
         st.write("More data is provided in structural format in the output directory.")
-        st.image(outputdir_BindingSite_analysis_Bio3D + 'ESSA_profile_of_reference_structure.png',
+        st.image(outputdir_ESSA_ProDy + '/ESSA_profile_of_reference_structure.png',
                  caption='ESSA profile with annotated binding residues')
 
 # toc.subheader("B) Monte-Carlo Sampling")
