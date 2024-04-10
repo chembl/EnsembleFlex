@@ -6,6 +6,7 @@ import glob
 from Bio.PDB import PDBParser
 from Bio.PDB.SASA import ShrakeRupley
 import pandas as pd
+import matplotlib.pylab as plt
 
 #------- File Argument/Option Parser -------#
 parser = argparse.ArgumentParser(description="Perform SASA calculations on protein structures.")
@@ -92,3 +93,11 @@ sasa_global_df.to_csv('SASA_global.csv', index=False)
 print('\nSASA global metrics per residue are saved to SASA_global.csv.\n')
 # save only sd to file
 #sasa_global_df['sd'].to_csv('SASA_sd_global.csv', index=False, header=False)
+
+plt.plot(sasa_global_df['sd']);
+plt.title('Solvent Accessible Surface Area (SASA) differences');
+plt.xlabel('Residue index');
+plt.ylabel('SASA Standard Deviation');
+plt.savefig('SASA_sd.png')
+plt.close()
+print('\nSASA Standard Deviation plot saved to SASA_sd.png.\n')
