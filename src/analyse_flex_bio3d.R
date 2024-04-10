@@ -225,6 +225,7 @@ plot(pc_xyz, col=grps_pc12) #, col=annotation[, "color"]
 dev.off()
 print("Plot saved to file PCA.png")
 
+# Plot PCA dendrogram
 png("PCA_dendrogram.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12, labels=ids, cex=0.5, k=number_of_groups,
            ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
@@ -285,6 +286,12 @@ print("Plot saved to file contact_map.png")
 
 vec <- rowSums(cm, na.rm=TRUE)
 pymol(pdbs, col="user", user.vec=vec, as="cartoon", file="col_by_averaged_contact_density.pml", type="script")
+
+png(filename="averaged_contact_density.png", width=900, height=750, units="px", res=120)
+plot.bio3d(vec, resno=ref_pdb, sse=ref_pdb, ylab="Averaged Contact Density",
+           xlab="Residue No.", col="gray", main="Averaged Contact Density per Residue") #, typ="l"
+dev.off()
+print("Plot saved to file averaged_contact_density.png")
 
 
 
@@ -455,11 +462,19 @@ pymol(pc_xyz_allatom, pdb=pdbs_allatoms[1]$all, pc=1, as="lines", file="PC1vecto
 hc_pc12_allatom <- hclust(dist(pc_xyz_allatom$z[, 1:2]))
 grps_pc12_allatom <- cutree(hc_pc12_allatom, k=number_of_groups)
 
+# Plot PCA
 png("PCA_allatom.png", units="in", width=5, height=5, res=300)
 plot(pc_xyz_allatom, col=grps_pc12_allatom)
 dev.off()
 print("Plot saved to file PCA_allatom.png")
 
+# Plot PC loadings
+png("PCA_loadings_allatom.png", units="in", width=5, height=5, res=300)
+plot.pca.loadings(pc_xyz_allatom)
+dev.off()
+print("Plot saved to file PCA_loadings_allatom.png")
+
+# Plot PCA dendrogram
 png("PCA_dendrogram_allatom.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12_allatom, labels=ids, cex=0.5, k=number_of_groups,
            ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
@@ -488,28 +503,34 @@ print("Plot saved to file contact_map_allatom.png")
 vec_allatom <- rowSums(cm_allatom, na.rm=TRUE)
 pymol(pdbs, col="user", user.vec=vec_allatom, as="cartoon", file="col_by_averaged_contact_density_allatom.pml", type="script")
 
-
-# UMAP on all-atom coordinates
-##-------------------------------------
-umap_fit_allatom <- umap(pdbs_allatoms$all, config=custom.settings)
-print(umap_fit_allatom)
-
-### Hierarchical clustering in UMAP space
-# Perform structural clustering in the UMAP1-2 space.
-hc_umap_allatom <- hclust(dist(umap_fit_allatom$layout))
-grps_umap_allatom <- cutree(hc_umap_allatom, k=number_of_groups)
-
-# Plot UMAP
-png("UMAP_allatom.png", units="in", width=5, height=5, res=300)
-plot(umap_fit_allatom$layout, col=grps_umap_allatom, xlab="UMAP1", ylab="UMAP2", main="UMAP plot") #, col=annotation[, "color"]
+png(filename="averaged_contact_density_allatom.png", width=900, height=750, units="px", res=120)
+plot.bio3d(vec_allatom, resno=ref_pdb, sse=ref_pdb, ylab="Averaged Contact Density",
+           xlab="Residue No.", col="gray", main="All-atom Averaged Contact Density per Residue") #, typ="l"
 dev.off()
-print("Plot saved to file UMAP_allatom.png")
+print("Plot saved to file averaged_contact_density_allatom.png")
 
-png("UMAP_dendrogram_allatom.png", units="in", width=5, height=5, res=300)
-hclustplot(hc_umap_allatom, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="UMAP1-2 distance", main="UMAP Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
-dev.off()
-print("Plot saved to file UMAP_dendrogram_allatom.png")
+
+# # UMAP on all-atom coordinates - NOT working!
+# ##-------------------------------------
+# umap_fit_allatom <- umap(pdbs_allatoms$all, config=custom.settings)
+# print(umap_fit_allatom)
+#
+# ### Hierarchical clustering in UMAP space
+# # Perform structural clustering in the UMAP1-2 space.
+# hc_umap_allatom <- hclust(dist(umap_fit_allatom$layout))
+# grps_umap_allatom <- cutree(hc_umap_allatom, k=number_of_groups)
+#
+# # Plot UMAP
+# png("UMAP_allatom.png", units="in", width=5, height=5, res=300)
+# plot(umap_fit_allatom$layout, col=grps_umap_allatom, xlab="UMAP1", ylab="UMAP2", main="UMAP plot") #, col=annotation[, "color"]
+# dev.off()
+# print("Plot saved to file UMAP_allatom.png")
+#
+# png("UMAP_dendrogram_allatom.png", units="in", width=5, height=5, res=300)
+# hclustplot(hc_umap_allatom, labels=ids, cex=0.5, k=number_of_groups,
+#            ylab="UMAP1-2 distance", main="UMAP Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+# dev.off()
+# print("Plot saved to file UMAP_dendrogram_allatom.png")
 
 
 
@@ -543,6 +564,12 @@ png("PCA_on_allatom_DifferenceDistanceMatrix_loadings.png", units="in", width=5,
 plot.pca.loadings(pc_dm)
 dev.off()
 print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix_loadings.png")
+# Plot PCA dendrogram
+png("PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png", units="in", width=5, height=5, res=300)
+hclustplot(hc_dm_pc12, labels=ids, cex=0.5, k=number_of_groups,
+           ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+dev.off()
+print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png")
 
 # Calculating difference distance matrices between groups
 # the difference mean distance between groups for each residue pair are calculated and statistical significance assessed
@@ -629,10 +656,10 @@ if (length(keys)) {
 ##-------------------------------------
 # store cluster attributions in dataframe
 clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_umap, grps_pc12_tor,
-                             grps_rmsd_allatom, grps_pc12_allatom, grps_umap_allatom, grps_dm_pc12),
+                             grps_rmsd_allatom, grps_pc12_allatom, grps_dm_pc12), #, grps_umap_allatom
                              col.names = c("Structure", "backbone_RMSD", "backbone_PCA_onCoords",
                              "backbone_UMAP_onCoords", "backbone_PCA_onTorsion", "allatom_RMSD",
-                             "allatom_PCA_onCoords", "allatom_UMAP_onCoords", "allatom_PCA_onDist"))
+                             "allatom_PCA_onCoords", "allatom_PCA_onDist")) #, "allatom_UMAP_onCoords"
 # convert first column to rownames
 clusters_df <- data.frame(clusters_df, row.names = 1)
 # get consensus cluster attribution (most common) and add to df
