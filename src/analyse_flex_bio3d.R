@@ -1,4 +1,15 @@
 #!/usr/bin/env Rscript
+
+"""
+Ensemble flexibility analysis using mainly the R package Bio3D.
+
+Usage:
+    Rscript analyse_flex_bio3d.R -i <input_directory> -o <output_directory>
+
+Example:
+    Rscript analyse_flex_bio3d.R -i EnsemblFlex/superimposed -o EnsemblFlex/Analysis_Bio3D
+"""
+
 args = commandArgs(trailingOnly=TRUE)
 
 projectdir = getwd()

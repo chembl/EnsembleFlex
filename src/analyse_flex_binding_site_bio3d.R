@@ -1,4 +1,17 @@
 #!/usr/bin/env Rscript
+
+"""
+Ensemble flexibility analysis dedicated to the binding site using mainly the R package Bio3D.
+
+Usage:
+    Rscript analyse_flex_binding_site_bio3d.R -i <input_directory> -o <output_directory> -b <binding_site_residue_file>
+
+Example:
+    Rscript analyse_flex_binding_site_bio3d.R -i EnsemblFlex/structures_with_ligand
+            -o EnsemblFlex/EnsemblFlex/BindingSite_analysis_Bio3D
+            -b EnsemblFlex/BindingSite_ident_Bio3D/binding_site_residue_numbers.txt
+"""
+
 args = commandArgs(trailingOnly=TRUE)
 
 library(optparse)

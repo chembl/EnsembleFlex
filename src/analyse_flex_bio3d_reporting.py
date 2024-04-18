@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+"""
+Generate HTML report file of Bio3D Flexibility Analysis.
+
+Usage:
+    python3 analysis_flex_bio3d_reporting.py <input_directory> <output_directory> <clustering_groups>
+
+Example:
+    python3 analysis_flex_bio3d_reporting.py EnsemblFlex/superimposed EnsemblFlex/Analysis_Bio3D 3
+"""
+
 import glob
 import os
 import sys

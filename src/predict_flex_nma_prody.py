@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+"""
+Flexibility prediction with Normal Mode Analysis (NMA) of elastic network models
+using mainly the python package ProDy.
+
+Usage:
+    python3 predict_flex_nma_prody.py -i <input_directory> -o <output_directory>
+
+Example:
+    python3 predict_flex_nma_prody.py -i EnsemblFlex/superimposed -o EnsemblFlex/Prediction_NMA_ProDy
+"""
+
 import os
 import argparse
 import glob

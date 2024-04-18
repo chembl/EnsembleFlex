@@ -1,7 +1,15 @@
 #!/usr/bin/env python
-'''
-Essential Site Scanning Analysis (ESSA) - using ProDy
-'''
+
+"""
+Essential Site Scanning Analysis (ESSA)
+Focused flexibility prediction with Essential Site Scanning Analysis (ESSA) using mainly the python package ProDy.
+
+Usage:
+    python3 predict_flex_nma_prody.py -i <input_directory> -o <output_directory>
+
+Example:
+    python3 predict_flex_nma_prody.py -i EnsemblFlex/superimposed -o EnsemblFlex/Prediction_NMA_ProDy
+"""
 # A ProDy tutorial on ESSA is provided here: http://prody.csb.pitt.edu/_static/ipynb/workshop2021/prody_essa.html
 
 import os

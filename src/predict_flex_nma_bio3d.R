@@ -1,4 +1,16 @@
 #!/usr/bin/env Rscript
+
+"""
+Flexibility prediction with Normal Mode Analysis (NMA) of elastic network models
+using mainly the R package Bio3D.
+
+Usage:
+    Rscript predict_flex_nma_bio3d.R -i <input_directory> -o <output_directory> [optional: -e]
+
+Example:
+    Rscript predict_flex_nma_bio3d.R -i EnsemblFlex/superimposed -o EnsemblFlex/Prediction_NMA_Bio3D -e
+"""
+
 args = commandArgs(trailingOnly=TRUE)
 
 library(optparse)

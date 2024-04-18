@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+
+"""
+Ensemble structural superpositioning using the Python package ProDy.
+
+Usage:
+    python3 superimpose_prody.py -i <input_directory> -o <output_directory>
+
+Example:
+    python3 superimpose_prody.py -i pdbs -o EnsemblFlex
+"""
 
 import glob
 import os

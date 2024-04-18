@@ -1,5 +1,4 @@
 #!/usr/bin/env Rscript
-args = commandArgs(trailingOnly=TRUE)
 
 """
 Splits all PDB files contained in the input directory by chain ID and multi-model records
@@ -11,6 +10,8 @@ Usage:
 Example:
     Rscript split_pdbs_bio3d.R -i pdbs -o split_pdbs
 """
+
+args = commandArgs(trailingOnly=TRUE)
 
 library("optparse")
 library("R.utils") # for function "isAbsolutePath"

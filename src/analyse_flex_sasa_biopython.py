@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+"""
+Ensemble flexibility analysis through Solvent Accessibility Surface Area (SASA) differences
+using the Python package biopython.
+
+Usage:
+    python3 analyse_flex_sasa_biopython.py -i <input_directory> -o <output_directory>
+
+Example:
+    python3 analyse_flex_sasa_biopython.py -i EnsemblFlex/superimposed -o EnsemblFlex/Analysis_SASA_Biopython
+"""
+
 import os
 import argparse
 import glob
@@ -57,7 +68,7 @@ for fileName in pdbfiles:
             if residue.id[0] == 'W':
                 chain.detach_child(residue.id)
 
-    # Calculate surface accessibility surface area for an entity
+    # Calculate solvent accessibility surface area for an entity
     # Level options: “A” (Atom), “R” (Residue), “C” (Chain), “M” (Model), or “S” (Structure)
     # if level=”R”, all residues will have a .sasa attribute.
     sr.compute(structure[0], level="R")

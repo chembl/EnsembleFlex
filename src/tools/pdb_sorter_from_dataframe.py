@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
-'''
-This script copies .pdb files from the input directory to specific output subdirectories that are created
+"""
+Sorts/copies PDB files from the input directory to specific output subdirectories that are created
 based on a provided column in a provided dataframe.
 
-Usage: python pdb_sorter_from_dataframe.py -i input_directory -o output_directory -d dataframe.csv -c your_column_name
-'''
+Usage:
+    python3 pdb_sorter_from_dataframe.py -i <input_directory> -o <output_directory> -d <dataframe.csv> -c <column_name>
+
+Example:
+    python3 pdb_sorter_from_dataframe.py -i EnsemblFlex/superimposed -o EnsemblFlex/Analysis_Bio3D/Consensus_Clusters
+            -d EnsemblFlex/Analysis_Bio3D/cluster_attributions_with_consensus.csv -c Consensus_Cluster
+"""
 
 import os
 import shutil

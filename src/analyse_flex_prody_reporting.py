@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+"""
+Generate HTML report file of ProDy Flexibility Analysis.
+
+Usage:
+    python3 analysis_flex_prody_reporting.py <input_directory> <output_directory> <clustering_groups>
+
+Example:
+    python3 analysis_flex_prody_reporting.py EnsemblFlex/superimposed EnsemblFlex/Analysis_ProDy 3
+"""
+
 import glob
 import os
 

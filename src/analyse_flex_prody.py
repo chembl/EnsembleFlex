@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+"""
+Ensemble flexibility analysis using mainly the Python package ProDy.
+
+Usage:
+    python3 analyse_flex_prody.py -i <input_directory> -o <output_directory>
+
+Example:
+    python3 analyse_flex_prody.py -i EnsemblFlex/superimposed -o EnsemblFlex/Analysis_ProDy
+"""
+
 import os
 import sys
 import argparse
