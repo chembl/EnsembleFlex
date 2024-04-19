@@ -316,7 +316,7 @@ if st.button('Run', key="Subset_clusters"):
     outputdirBio3D_clusters = str(output_directory) + '/Analysis_Bio3D/' + cluster_option
     cluster_dataframe = str(output_directory) + '/Analysis_Bio3D/cluster_attributions_with_consensus.csv'
     result = subprocess.run(
-        [f"{sys.executable}", str(parentfilepath) + "/tools/pdb_sorter_from_dataframe.py", '-i', superimposed, '-o',
+        [f"{sys.executable}", str(parentfilepath) + "/tools/sort_pdbs_from_dataframe.py", '-i', superimposed, '-o',
          outputdirBio3D_clusters, '-d', cluster_dataframe, '-c', cluster_option])
     st.write("PDB files are copied to: ", outputdirBio3D_clusters)
 
@@ -389,7 +389,7 @@ st.write('This tool automatically sorts copies of your superimposed structures i
 
 def sortPDBs():
     result = subprocess.run(
-        ['Rscript', str(parentfilepath) + '/tools/pdb_sorter_has_ligand.R', '-i', superimposed, '-o', output_directory])
+        ['Rscript', str(parentfilepath) + '/tools/sort_pdbs_has_ligand.R', '-i', superimposed, '-o', output_directory])
     liganded = str(output_directory) + '/structures_with_ligand'
     not_liganded = str(output_directory) + '/structures_without_ligand'
     st.write("The subfolders are located in ", output_directory)

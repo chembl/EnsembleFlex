@@ -645,7 +645,7 @@ class MainWindow(QMainWindow):
 
     def sortPDBs(self):
         self.process.start('Rscript',
-                           ['../pdb_sorter_has_ligand.R', '-i', str(self.superimposed), '-o', str(self.outputdir)])
+                           ['../sort_pdbs_has_ligand.R', '-i', str(self.superimposed), '-o', str(self.outputdir)])
         self.liganded = self.outputdir + '/structures_with_ligand'
         not_liganded = self.outputdir + '/structures_without_ligand'
 
