@@ -12,39 +12,45 @@ Example:
 
 import glob
 import os
-from optparse import OptionParser
+import argparse
 import subprocess
 from prody import *
 
-parser = OptionParser()
-parser.add_option("-i", "--in", dest="input_path",
-                  help="input dataset directory path", metavar="PATH")
-parser.add_option("-o", "--out", dest="output_dir", default="outdir",
-                  help="output directory name", metavar="STRING")
+#------- File Argument/Option Parser -------#
+parser = argparse.ArgumentParser(description="Perform global iterative superpositioning of protein structures.")
+parser.add_argument("-i", "--input", dest="input_path", required=True,
+                    help="input dataset directory path", metavar="PATH")
+parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
+                    help="output directory name", metavar="STRING")
 
-(opts, args) = parser.parse_args()
-if os.path.isdir(opts.input_path) and os.path.isdir(opts.output_dir):
-    output_path = os.path.abspath(opts.output_dir)
-elif os.path.isdir(opts.input_path) and not os.path.isdir(opts.output_dir):
-    if os.path.isdir(os.path.dirname(opts.output_dir)):
-        output_path = opts.output_dir
+args = parser.parse_args()
+if os.path.isdir(args.input_path) and os.path.isdir(args.output_dir):
+    input_path = os.path.abspath(args.input_path)
+    output_path = os.path.abspath(args.output_dir)
+elif os.path.isdir(args.input_path) and not os.path.isdir(args.output_dir):
+    input_path = os.path.abspath(args.input_path)
+    if os.path.isdir(os.path.dirname(args.output_dir)):
+        output_path = args.output_dir
         os.mkdir(output_path)
     else:
-        output_path = opts.input_path+"/"+opts.output_dir
+        output_path = args.input_path+"/"+args.output_dir
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 else:
     print("Please specify a valid input directory path to your structure files.\n")
+#-------------------------------------------#
 
 toolsdir = os.path.dirname(os.path.realpath(__file__))+"/tools"
 
+# change working directory to output_path
 os.chdir(output_path)
+
 if not os.path.exists(output_path+"/superimposed"):
     os.mkdir('superimposed')
 os.chdir('superimposed')
 
-# list of pdb files
-pdbfiles = glob.glob(opts.input_path+"/*.pdb")
+# list of input pdb files
+pdbfiles = glob.glob(input_path+"/*.pdb")
 
 # parsing structures
 structures = parsePDB(pdbfiles, compressed=False) #, subset='ca'
