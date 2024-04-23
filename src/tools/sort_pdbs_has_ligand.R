@@ -1,16 +1,16 @@
 #! /usr/bin/env Rscript
 
-"""
-Sorts/copies pdb structure files into the two subdirectories 'structures_with_ligand' and 'structures_without_ligand'
-based on ligand content using the R package Bio3D.
-Be aware that everything that is not protein, nucleic acid or water will be considered as ligand.
-
-Usage:
-    Rscript pdb_sorter_has_ligand.R -i <input_directory> -o <output_directory>
-
-Example:
-    Rscript pdb_sorter_has_ligand.R -i EnsemblFlex/superimposed -o EnsemblFlex
-"""
+# """
+# Sorts/copies pdb structure files into the two subdirectories 'structures_with_ligand' and 'structures_without_ligand'
+# based on ligand content using the R package Bio3D.
+# Be aware that everything that is not protein, nucleic acid or water will be considered as ligand.
+#
+# Usage:
+#     Rscript pdb_sorter_has_ligand.R -i <input_directory> -o <output_directory>
+#
+# Example:
+#     Rscript pdb_sorter_has_ligand.R -i EnsemblFlex/superimposed -o EnsemblFlex
+# """
 
 args = commandArgs(trailingOnly=TRUE)
 

@@ -1,16 +1,16 @@
 #!/usr/bin/env Rscript
 
-"""
-Ensemble structural superpositioning using a selection of provided residues with the R package Bio3D.
-
-Usage:
-    Rscript superimpose_binding_site_bio3d.R -i <input_directory> -o <output_directory> -b <binding_site_residue_file>
-
-Example:
-    Rscript superimpose_binding_site_bio3d.R -i EnsembleFlex/superimposed
-            -o EnsembleFlex/superimposed_only_on_BindingSite
-            -b EnsembleFlex/BindingSite_ident_Bio3D/binding_site_residue_numbers.txt
-"""
+# """
+# Ensemble structural superpositioning using a selection of provided residues with the R package Bio3D.
+#
+# Usage:
+#     Rscript superimpose_binding_site_bio3d.R -i <input_directory> -o <output_directory> -b <binding_site_residue_file>
+#
+# Example:
+#     Rscript superimpose_binding_site_bio3d.R -i EnsembleFlex/superimposed
+#             -o EnsembleFlex/superimposed_only_on_BindingSite
+#             -b EnsembleFlex/BindingSite_ident_Bio3D/binding_site_residue_numbers.txt
+# """
 
 args = commandArgs(trailingOnly=TRUE)
 

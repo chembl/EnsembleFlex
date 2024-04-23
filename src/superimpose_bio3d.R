@@ -1,14 +1,14 @@
 #!/usr/bin/env Rscript
 
-"""
-Ensemble structural superpositioning using the R package Bio3D.
-
-Usage:
-    Rscript superimpose_bio3d.R -i <input_directory> -o <output_directory>
-
-Example:
-    Rscript superimpose_bio3d.R -i pdbs -o EnsemblFlex
-"""
+# """
+# Ensemble structural superpositioning using the R package Bio3D.
+#
+# Usage:
+#     Rscript superimpose_bio3d.R -i <input_directory> -o <output_directory>
+#
+# Example:
+#     Rscript superimpose_bio3d.R -i pdbs -o EnsemblFlex
+# """
 
 args = commandArgs(trailingOnly=TRUE)
 

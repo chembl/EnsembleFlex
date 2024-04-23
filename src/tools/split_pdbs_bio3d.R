@@ -1,15 +1,15 @@
 #!/usr/bin/env Rscript
 
-"""
-Splits all PDB files contained in the input directory by chain ID and multi-model records
-and saves the separated pdb files in the output directory.
-
-Usage:
-    Rscript split_pdbs_bio3d.R -i <input_directory> -o <output_directory>
-
-Example:
-    Rscript split_pdbs_bio3d.R -i pdbs -o split_pdbs
-"""
+# """
+# Splits all PDB files contained in the input directory by chain ID and multi-model records
+# and saves the separated pdb files in the output directory.
+#
+# Usage:
+#     Rscript split_pdbs_bio3d.R -i <input_directory> -o <output_directory>
+#
+# Example:
+#     Rscript split_pdbs_bio3d.R -i pdbs -o split_pdbs
+# """
 
 args = commandArgs(trailingOnly=TRUE)
 

@@ -1,15 +1,15 @@
 #! /usr/bin/env Rscript
 
-"""
-Binding site identification and analysis using mainly the R package Bio3D.
-
-Usage:
-    Rscript identify_binding_site_bio3d.R -i <input_directory> -o <output_directory> -d <distance>
-
-Example:
-    Rscript identify_binding_site_bio3d.R -i EnsemblFlex/structures_with_ligand
-            -o EnsemblFlex/BindingSite_ident_Bio3D -d 4.0
-"""
+# """
+# Binding site identification and analysis using mainly the R package Bio3D.
+#
+# Usage:
+#     Rscript identify_binding_site_bio3d.R -i <input_directory> -o <output_directory> -d <distance>
+#
+# Example:
+#     Rscript identify_binding_site_bio3d.R -i EnsemblFlex/structures_with_ligand
+#             -o EnsemblFlex/BindingSite_ident_Bio3D -d 4.0
+# """
 
 args = commandArgs(trailingOnly=TRUE)
 

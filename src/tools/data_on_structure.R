@@ -1,17 +1,17 @@
 #!/usr/bin/env Rscript
 
-"""
-Store data from data table in b-factor column of PDB structure using mainly the R package Bio3D.
-The residue number has to be provided in the first column of the data table and the name of the data column to be used
-has to be provided as argument.
-
-Usage:
-    Rscript data_on_structure.R -i <input_directory> -o <output_directory> -d <datafile> -c <column_name>
-
-Example:
-    Rscript data_on_structure.R -i EnsemblFlex/superimposed -o EnsemblFlex/Analysis_SASA_Biopython
-            -d EnsemblFlex/Analysis_SASA_Biopython/SASA_global.csv -c sd
-"""
+# """
+# Store data from data table in b-factor column of PDB structure using mainly the R package Bio3D.
+# The residue number has to be provided in the first column of the data table and the name of the data column to be used
+# has to be provided as argument.
+#
+# Usage:
+#     Rscript data_on_structure.R -i <input_directory> -o <output_directory> -d <datafile> -c <column_name>
+#
+# Example:
+#     Rscript data_on_structure.R -i EnsemblFlex/superimposed -o EnsemblFlex/Analysis_SASA_Biopython
+#             -d EnsemblFlex/Analysis_SASA_Biopython/SASA_global.csv -c sd
+# """
 
 args = commandArgs(trailingOnly=TRUE)
 
