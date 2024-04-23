@@ -1,14 +1,14 @@
 #!/usr/bin/env Rscript
 
-"""
-Ensemble flexibility analysis using mainly the R package Bio3D.
-
-Usage:
-    Rscript analyse_flex_bio3d.R -i <input_directory> -o <output_directory>
-
-Example:
-    Rscript analyse_flex_bio3d.R -i EnsemblFlex/superimposed -o EnsemblFlex/Analysis_Bio3D
-"""
+# """
+# Ensemble flexibility analysis using mainly the R package Bio3D.
+#
+# Usage:
+#     Rscript analyse_flex_bio3d.R -i <input_directory> -o <output_directory>
+#
+# Example:
+#     Rscript analyse_flex_bio3d.R -i EnsemblFlex/superimposed -o EnsemblFlex/Analysis_Bio3D
+# """
 
 args = commandArgs(trailingOnly=TRUE)
 
@@ -33,7 +33,9 @@ library(R.utils) # for function "isAbsolutePath"
 library(bio3d)
 library(msa)
 library(pheatmap)
-library(umap)
+library(umap) # UMAP dimension reduction
+library(cluster) # clustering
+library(clValid) # cluster validation
 
 
 option_list = list(
@@ -89,7 +91,14 @@ if (dir.exists(file.path(opt$indir))){ #if (!is.null(opt$indir)){
 #print(indir)
 #print(outdir)
 setwd(outdir)
+abs_output_path = getAbsolutePath(".")
+#print(abs_output_path)
 
+##-------------------------------------
+# Protect spaces in path names with gsub(" ","\\\\ ",pathname)
+scriptpath = gsub(" ","\\\\ ",paste(projectdir,'/src/analysis_bio3d_reporting.py', sep=''))
+str_input_path = gsub(" ","\\\\ ",opt$indir)
+output_path = gsub(" ","\\\\ ",abs_output_path)
 
 
 ## The actual program...
@@ -142,6 +151,42 @@ hclustplot(hc_rmsd, labels=ids, cex=0.5, k=number_of_groups,
            ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
 print("Plot saved to file RMSD_dendrogram.png")
+
+## k-means clustering in RMSD space
+#---------
+# Choice of number_of_groups - Elbow method
+if (length(files)>=5) {
+    wss <- NULL
+    # kmeans clustering
+    for (i in 1:5) wss[i] <- sum(kmeans(rd, centers=i)$withinss)
+    png(filename="cluster_number_elbow_plot_kmeans_onRMSD.png", width=750, height=750, units="px", res=120)
+    plot(1:5, wss, type="b", xlab="Number of Clusters", ylab="Within-clusters sum of squares",
+        main="Within-cluster dissimilarity based on k-means clustering")
+    dev.off()
+}
+set.seed(11)
+kmeans_rmsd <- kmeans(rd, centers=number_of_groups, nstart=5) # use the nstart argument for kmeans() to force it make a number of random starts and pick the best clustering in the end:
+# Visualization of clusters
+#plotting them in the 2D space of the scaled distance matrix
+ddim_rmsd <- cmdscale(dist(rd), k=2)
+# clusplot(ddim_rmsd, kmeans_rmsd$cluster, color=T, labels=4, lines=0, plotchar=T, shade=T,
+#          main="Bivariate k-means cluster plot\nof the scaled RMSD matrix")
+png(filename="RMSD_bivariate_kmeans_cluster_plot.png", width=750, height=750, units="px", res=120)
+clusplot(ddim_rmsd, kmeans_rmsd$cluster, color=T, labels=4, lines=0, plotchar=T, shade=T,
+         main="Bivariate k-means cluster plot\nof the scaled RMSD matrix (on backbone coordinates)", sub = NA)
+dev.off()
+# shade: the ellipses are shaded in relation to their density. The density is the number of points in the cluster divided by the area of the ellipse.
+
+## Cluster validation metrics
+if (length(files)>=5) {
+    cluster_validation_test_rmsd <- clValid(rd, c(2:5), # cluster sizes 2,3,4,5
+                      clMethods = c("hierarchical", "kmeans",  "pam" ),
+                      validation = c("internal") # "stability"
+    )
+    summary(cluster_validation_test_rmsd)
+    writeLines(capture.output(summary(cluster_validation_test_rmsd)), paste0(output_path, "/cluster_validation_RMSD.txt"))
+    print(paste0("Cluster validation statistics saved to file cluster_validation_RMSD.txt"))
+}
 
 
 ## RMSF
@@ -251,6 +296,41 @@ pymol(pdbs, col=grps_rmsd, as="cartoon", file="col_by_grps_RMSD.pml", type="scri
 # color by clustering (based on PCA)
 pymol(pdbs, col=grps_pc12, as="cartoon", file="col_by_grps_PC.pml", type="script")
 
+
+## k-means clustering in PC space
+#---------
+if (length(files)>=5) {
+    wss <- NULL
+    # kmeans clustering
+    for (i in 1:5) wss[i] <- sum(kmeans(pc_xyz$z[,1:2], centers=i)$withinss)
+    png(filename="cluster_number_elbow_plot_kmeans_onPCA.png", width=750, height=750, units="px", res=120)
+    plot(1:5, wss, type="b", xlab="Number of Clusters", ylab="Within-clusters sum of squares",
+        main="Within-cluster dissimilarity based on k-means clustering")
+    dev.off()
+}
+set.seed(11)
+kmeans_pc_xyz <- kmeans(pc_xyz$z[,1:2], centers=number_of_groups, nstart=5) # use the nstart argument for kmeans() to force it make a number of random starts and pick the best clustering in the end:
+# Visualization of clusters
+#plotting them in the 2D space of the scaled distance matrix
+# ddim_pc_xyz <- cmdscale(dist(pc_xyz$z[,1:2]), k=2)
+# png(filename="PCA_bivariate_kmeans_cluster_plot.png", width=750, height=750, units="px", res=120)
+# clusplot(ddim_pc_xyz, kmeans_pc_xyz$cluster, color=T, labels=4, lines=0, plotchar=T, shade=T,
+#          main="Bivariate k-means cluster plot\nin scaled PC1-2 space (based on backbone coordinates)")
+png(filename="PCA_kmeans_cluster_plot.png", width=750, height=750, units="px", res=120)
+clusplot(pc_xyz$z[,1:2], kmeans_pc_xyz$cluster, color=T, labels=4, lines=0, plotchar=T, shade=T,
+         main="Bivariate k-means cluster plot\nin PC1-2 space (based on backbone coordinates)")
+dev.off()
+
+## Cluster validation metrics
+if (length(files)>=5) {
+    cluster_validation_test_pc_xyz <- clValid(pc_xyz$z[,1:2], c(2:5), # cluster sizes 2,3,4,5
+                          clMethods = c("hierarchical", "kmeans",  "pam" ),
+                          validation = c("internal") # "stability"
+    )
+    summary(cluster_validation_test_pc_xyz)
+    writeLines(capture.output(summary(cluster_validation_test_pc_xyz)), paste0(output_path, "/cluster_validation_PCA.txt"))
+    print(paste0("Cluster validation statistics saved to file cluster_validation_PCA.txt"))
+}
 
 ## Torsion/Dihedral analysis
 ##-------------------------------------
@@ -380,6 +460,41 @@ print("Plot saved to file UMAP_dendrogram.png")
 #        y = "UMAP2",
 #       subtitle = "UMAP plot")
 # ggsave("UMAP_plot.png")
+
+## k-means clustering in UMAP space
+#---------
+if (length(files)>=5) {
+    wss <- NULL
+    # kmeans clustering
+    for (i in 1:5) wss[i] <- sum(kmeans(umap_fit$layout, centers=i)$withinss)
+    png(filename="cluster_number_elbow_plot_kmeans_onUMAP.png", width=750, height=750, units="px", res=120)
+    plot(1:5, wss, type="b", xlab="Number of Clusters", ylab="Within-clusters sum of squares",
+        main="Within-cluster dissimilarity based on k-means clustering")
+    dev.off()
+}
+set.seed(11)
+kmeans_umap_xyz <- kmeans(umap_fit$layout, centers=number_of_groups, nstart=5) # use the nstart argument for kmeans() to force it make a number of random starts and pick the best clustering in the end:
+# Visualization of clusters
+#plotting them in the 2D space of the scaled distance matrix
+# ddim_umap_xyz <- cmdscale(dist(umap_fit$layout), k=2)
+# png(filename="UMAP_bivariate_kmeans_cluster_plot.png", width=750, height=750, units="px", res=120)
+# clusplot(ddim_umap_xyz, kmeans_umap_xyz$cluster, color=T, labels=4, lines=0, plotchar=T, shade=T,
+#          main="Bivariate k-means cluster plot\nin scaled 2D UMAP space (based on backbone coordinates)")
+png(filename="UMAP_kmeans_cluster_plot.png", width=750, height=750, units="px", res=120)
+clusplot(umap_fit$layout, kmeans_umap_xyz$cluster, color=T, labels=4, lines=0, plotchar=T, shade=T,
+         main="Bivariate k-means cluster plot\nin 2D UMAP space (based on backbone coordinates)")
+dev.off()
+
+## Cluster validation metrics
+if (length(files)>=5) {
+    cluster_validation_test_umap_xyz <- clValid(umap_fit$layout, c(2:5), # cluster sizes 2,3,4,5
+                          clMethods = c("hierarchical", "kmeans",  "pam" ),
+                          validation = c("internal") # "stability"
+    )
+    summary(cluster_validation_test_umap_xyz)
+    writeLines(capture.output(summary(cluster_validation_test_umap_xyz)), paste0(output_path, "/cluster_validation_UMAP.txt"))
+    print(paste0("Cluster validation statistics saved to file cluster_validation_UMAP.txt"))
+}
 
 
 
@@ -699,11 +814,6 @@ dev.off()
 print("Plot saved to file cluster_attributions_heatmap.png")
 
 
-##-------------------------------------
-# Protect spaces in path names with gsub(" ","\\\\ ",pathname)
-scriptpath = gsub(" ","\\\\ ",paste(projectdir,'/src/analysis_bio3d_reporting.py', sep=''))
-str_input_path = gsub(" ","\\\\ ",opt$indir)
-output_path = gsub(" ","\\\\ ",outdir)
 
 ### Save R session info
 ##-------------------------------------
