@@ -9,7 +9,7 @@ from stoc import stoc
 #from directorypicker import st_directory_picker
 from directorypicker import st_directory_picker_input, st_directory_picker_output, st_directory_picker_input_liganded
 from pathlib import Path
-from PIL import Image
+#from PIL import Image
 #from pdf2image import convert_from_path
 #import pypdfium2 as pdfium
 
@@ -428,8 +428,8 @@ def run_bs_ident_Bio3D():
     #csvfile = pd.read_csv(outputdir_BindingSite_ident+"/binding_site_residues.csv")  # path folder of the data file
     #st.write(csvfile)
     # show binding frequency plot
-    image = Image.open(outputdir_BindingSite_ident+'/Histogram_binding_residues_percentage_colored.png')
-    st.image(image, caption='Histogram of binding residues')
+    st.image(outputdir_BindingSite_ident+'/Histogram_binding_residues_percentage_colored.png',
+             caption='Histogram of binding residues')
     #show_report(parentpath=outputdir_BindingSite_ident, filename="/analysis_bio3d_html_report.html")
 
 st.markdown("##### Calculation and outputs:\n"
