@@ -143,6 +143,25 @@ output_directory = st_directory_picker_output(key="output_directory")
 st.divider()
 #######################################################################################################################
 
+st.markdown('''#### Display previous analysis results''')
+st.write('In case you have already performed the analysis using this interface and you just want to re-display the '
+         'results, use this button (after having set the correct output directory above).')
+st.write('Be aware that pushing any further downstream button may overwrite your previous results.')
+if st.button('Display previous analysis results', key="display_previous_btn"):
+    st.session_state.superimposed = str(output_directory)+'/superimposed'
+    st.session_state.Bio3Danalysisdone = True
+    st.session_state.SASAanalysisdone = True
+    st.session_state.PDBhasLigandSortdone = True
+    st.session_state.BSidentifydone = True
+    st.session_state.superimposed_bs = ""
+    st.session_state.BSanalysisdone = True
+    st.session_state.NMABio3Disdone = True
+    st.session_state.NMAProDyisdone = True
+    st.session_state.ESSAisdone = True
+
+st.divider()
+#######################################################################################################################
+
 toc.header(":two: Superimpose (global)")
 st.markdown('''
 _Superimpose your structures globally with one of the provided methods._
@@ -365,7 +384,7 @@ st.button('Run', key="Analyse_SASA_btn", on_click=run_analysis_SASA)
 if st.session_state.SASAanalysisdone == True:
     with st.container(border=True, height=600):
         st.markdown("#### SASA difference analysis result")
-        st.write("More data is provided in structural and table format in the output directory.")
+        st.write("More data is provided in structural and table format in the output directory: ", outputdirSASA)
         st.image(outputdirSASA + '/SASA_sd.png', caption='SASA standard deviation per residue')
 
 st.divider()
@@ -389,7 +408,7 @@ st.write('This tool automatically sorts copies of your superimposed structures i
 st.write('Additionally, you have the option to remove unwanted small molecules before sorting in order to exclude them from the analysis.')
 
 removeIons = st.toggle('Remove all ions from all structures.')
-removeLigs = st.toggle('Remove special ligands (such as crystallisation factors) from all structures.')
+removeLigs = st.toggle('Remove specific ligands (such as crystallisation factors) from all structures.')
 if removeLigs:
     ligs_to_remove = st.text_input('Ligand IDs to remove', key='rem_ligs_input', placeholder='DMS,PEG',
                                    help='Please specify the ligand ID codes as used in the pdb files.')
@@ -408,6 +427,7 @@ def sortPDBs():
             ['Rscript', str(parentfilepath)+'/tools/sort_pdbs_has_ligand.R',
              '-i', str(output_directory)+'/superimposed_no_ions',
              '-o', output_directory])
+        st.write("Ions are removed and structures are saved in: ", str(output_directory)+'/superimposed_no_ions')
     elif removeIons and removeLigs:
         result = subprocess.run(
             ['sh', str(parentfilepath)+'/tools/run_pdb_del_on_directory.sh',
@@ -421,12 +441,14 @@ def sortPDBs():
             ['Rscript', str(parentfilepath) + '/tools/sort_pdbs_has_ligand.R',
              '-i', str(output_directory)+'/superimposed_no_ions_'+str(ligs_to_remove),
              '-o', output_directory])
+        st.write("Ions and specified molecules are removed and structures are saved in: ", str(output_directory)+'/superimposed_no_ions_'+str(ligs_to_remove))
     liganded = str(output_directory) + '/structures_with_ligand'
     not_liganded = str(output_directory) + '/structures_without_ligand'
     st.write("The subfolders are located in ", output_directory)
     st.session_state.PDBhasLigandSortdone = True
 
 st.button('Sort structures', key='sort_btn', on_click=sortPDBs)
+
 if st.session_state.PDBhasLigandSortdone == True:
     with st.container(border=True, height=300):
         st.write('Structures have been sorted into respective subfolders '
@@ -453,7 +475,7 @@ def run_bs_ident_Bio3D():
         ['Rscript', str(parentfilepath) + '/identify_binding_site_bio3d.R', '-i', input_directory_liganded, '-o', outputdir_BindingSite_ident, '-d', str(cutoff)])
     st.write("Structures are taken from ", input_directory_liganded)
     st.write("Bio3D calculations are running...")
-    st.write("Files are saved in: ", outputdir_BindingSite_ident)
+    st.write("Output files are saved in: ", outputdir_BindingSite_ident)
     st.session_state.BSidentifydone = True
     # show binding site csv file
     #csvfile = pd.read_csv(outputdir_BindingSite_ident+"/binding_site_residues.csv")  # path folder of the data file
@@ -557,7 +579,7 @@ def run_analysis_BindingSite_Bio3D():
          '-b', outputdir_BindingSite_ident+'/binding_site_residue_numbers.txt'])
     st.write("Superimposed structures are taken from ", superimposed_bs)
     st.write("Bio3D calculations are running...")
-    st.write("Files are saved in: ", outputdir_BindingSite_analysis_Bio3D)
+    st.write("Output files are saved in: ", outputdir_BindingSite_analysis_Bio3D)
     st.session_state.BSanalysisdone = True
     #show_report(parentpath=outputdir_BindingSite_analysis, filename="/bindingsite_analysis_bio3d_html_report.html")
 
