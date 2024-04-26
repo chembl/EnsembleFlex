@@ -383,13 +383,44 @@ _Be aware that any molecule that is not protein, nucleic acid or water will be c
 ''')
 
 
-st.markdown('''##### Helper Tool: Sort liganded structures''')
+st.markdown('''##### Helper Tool: Sort liganded structures and remove unwanted molecules''')
 st.markdown("[Used package/tool: Bio3D (R)]")
 st.write('This tool automatically sorts copies of your superimposed structures into the subfolders "structures_with_ligand" and "structures_without_ligand".')
+st.write('Additionally, you have the option to remove unwanted small molecules before sorting in order to exclude them from the analysis.')
+
+removeIons = st.toggle('Remove all ions from all structures.')
+removeLigs = st.toggle('Remove special ligands (such as crystallisation factors) from all structures.')
+if removeLigs:
+    ligs_to_remove = st.text_input('Ligand IDs to remove', key='rem_ligs_input', placeholder='DMS,PEG',
+                                   help='Please specify the ligand ID codes as used in the pdb files.')
 
 def sortPDBs():
-    result = subprocess.run(
-        ['Rscript', str(parentfilepath) + '/tools/sort_pdbs_has_ligand.R', '-i', superimposed, '-o', output_directory])
+    if not removeIons and not removeLigs:
+        result = subprocess.run(
+            ['Rscript', str(parentfilepath)+'/tools/sort_pdbs_has_ligand.R', '-i', superimposed,
+             '-o', output_directory])
+    elif removeIons and not removeLigs:
+        result = subprocess.run(
+            ['sh', str(parentfilepath)+'/tools/run_pdb_del_on_directory.sh',
+             str(parentfilepath)+'/tools/pdb_delhetatm_ions.py',
+             superimposed, 'ions', str(output_directory)+'/superimposed_no_ions'])
+        result = subprocess.run(
+            ['Rscript', str(parentfilepath)+'/tools/sort_pdbs_has_ligand.R',
+             '-i', str(output_directory)+'/superimposed_no_ions',
+             '-o', output_directory])
+    elif removeIons and removeLigs:
+        result = subprocess.run(
+            ['sh', str(parentfilepath)+'/tools/run_pdb_del_on_directory.sh',
+             str(parentfilepath)+'/tools/pdb_delhetatm_ions.py',
+             superimposed, 'ions', str(output_directory)+'/superimposed_no_ions'])
+        result = subprocess.run(
+            ['sh', str(parentfilepath)+'/tools/run_pdb_del_on_directory.sh',
+             str(parentfilepath)+'/tools/pdb_delresname.py',
+             str(output_directory)+'/superimposed_no_ions', str(ligs_to_remove), str(output_directory)+'/superimposed_no_ions_'+str(ligs_to_remove)])
+        result = subprocess.run(
+            ['Rscript', str(parentfilepath) + '/tools/sort_pdbs_has_ligand.R',
+             '-i', str(output_directory)+'/superimposed_no_ions_'+str(ligs_to_remove),
+             '-o', output_directory])
     liganded = str(output_directory) + '/structures_with_ligand'
     not_liganded = str(output_directory) + '/structures_without_ligand'
     st.write("The subfolders are located in ", output_directory)
@@ -538,10 +569,16 @@ if st.session_state.BSanalysisdone == True:
         st.subheader("Binding Site Analysis Results")
         st.write("More data is provided in structural format in the output directory.")
         st.markdown("#### - RMSF analysis")
-        st.image(outputdir_BindingSite_analysis_Bio3D + '/RMSF_bsite2.png', caption='binding residues RMSFs')
+        try:
+            st.image(outputdir_BindingSite_analysis_Bio3D + '/RMSF_bsite2.png', caption='binding residues RMSFs')
+        except:
+            st.write("ERROR: No output available.")
         st.markdown("#### - PCA on coordinates (all-atom)")
-        st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_bsite_allatom.png', caption='binding residues PCA')
-        st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_atom_contribution_bsite_allatom.png', caption='PCA loadings')
+        try:
+            st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_bsite_allatom.png', caption='binding residues PCA')
+            st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_atom_contribution_bsite_allatom.png', caption='PCA loadings')
+        except:
+            st.write("ERROR: No output available.")
 
 # toc.subheader("4 - SASA Analysis of Binding Site Residues")
 # st.markdown('''
