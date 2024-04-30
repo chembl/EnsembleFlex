@@ -215,8 +215,8 @@ _Investigate structural flexibility globally using the provided methods._
 
 st.markdown('''##### Variables''')
 number_of_groups = st.number_input("Desired number of clusters\n\n"
-                                   "(You may want to run it first with the default and adjust the value based on "
-                                   "the output in subsequent runs.)", value=3)
+                                   "(You may want to run it first with the default and adjust the value in subsequent "
+                                   "runs based on the output - see 'Overall clustering results'.)", value=3)
 
 
 # st.subheader("A) Structural variability analysis")
@@ -317,6 +317,33 @@ if st.session_state.Bio3Danalysisdone == True:
         with tab6:
             st.markdown("#### Overall clustering results")
             st.image(outputdirBio3D + '/cluster_attributions_heatmap.png', caption='Cluster attributions')
+            st.markdown("#### Clustering validation metrics")
+            st.write("""
+            INTERNAL VALIDATION MEASURES rely on information in the data only, that is the characteristics of the 
+            clusters themselves, such as compactness and separation. Ideally one would want the clusters to be as 
+            compact and separated as possible. This can be measured using the following metrics:  
+            - CONNECTIVITY:  
+            This measure reflects the extent to which items that are placed in the same cluster are also considered 
+            their nearest neighbors in the data space - or, in other words, the degree of connectedness of the clusters.
+            [It should be minimised.]  
+            - DUNN INDEX:  
+            Dunn Index represents the ratio of the smallest distance between observations not in the same cluster to 
+            the largest intra-cluster distance. [The nominator should be maximised and the denomitor minimised, 
+            therefore the index should be maximized.]  
+            - SILHOUETTE INDEX:  
+            This index defines compactness based on the pairwise distances between all elements in the cluster, and 
+            separation based on pairwise distances between all points in the cluster and all points in the closest other 
+            cluster (Van Craenendonck & Blockeel 2015) [The values as close to (+) 1 as possible are most desirable.]  
+            """)
+            st.markdown("##### - on backbone RMSD data")
+            with open(outputdirBio3D + '/cluster_validation_RMSD.txt') as f:
+                st.write(f.readlines())
+            st.markdown("##### - on backbone coordinate PCA results")
+            with open(outputdirBio3D + '/cluster_validation_PCA.txt') as f:
+                st.write(f.readlines())
+            st.markdown("##### - on backbone coordinate UMAP results")
+            with open(outputdirBio3D + '/cluster_validation_UMAP.txt') as f:
+                st.write(f.readlines())
 
 
     show_report(parentpath=outputdirBio3D, filename="/analysis_bio3d_html_report.html")
