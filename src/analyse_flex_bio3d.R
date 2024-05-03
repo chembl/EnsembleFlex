@@ -204,6 +204,34 @@ pdb2$id <- files[length(files)]
 
 ref_pdb <- trim.pdb(pdb1, inds = atom.select(pdb1, resno = pdbs$resno[pdb1$id, gaps.res$f.inds]))
 
+residue_vec <- pdbs$resno[pdb1$id, gaps.res$f.inds]
+residue_vec_with_gaps <- pdbs$resno[pdb1$id]
+
+data_on_structure <- function(pdbX, residue_vec, data_vec, dataname){
+    dataframe <- cbind(data.frame(residue_vec), data_vec)
+    #pdbX <- read.pdb(pdbfile)
+    # set all b-factors to 0
+    pdbX$atom$b <- 0
+
+    for(i in 1:length(dataframe[,1])){
+        # get residue number from first column in dataframe
+        residue_num <- dataframe[i,1]
+        #print(residue_num)
+        # get data value from provided column in dataframe
+        value <- dataframe[i,2]
+        #print(value)
+        # get indices of residue
+        residue_inds <- atom.select(pdb1, resno=c(residue_num))
+        #print(residue_inds)
+        # store data value in b-factor column for each residue in PDB file
+        #print(pdb1$atom$b[ residue_inds$atom ])
+        pdbX$atom$b[ residue_inds$atom ] <- value
+    }
+
+    # write to file
+    write.pdb(pdbX, file=paste0(dataname,"_data_on_structure.pdb"))
+}
+
 ## Plot RMSF with SSE annotation and labeled with residue numbers
 rf <- rmsf(pdbs$xyz[, gaps.pos$f.inds])
 png("RMSF.png", units="in", width=5, height=5, res=300)
@@ -234,6 +262,8 @@ tryCatch(
     }
 )
 
+# save data in b-factor column on structure
+data_on_structure(pdb1, residue_vec, rf, "RMSF")
 
 
 ## B-factors
@@ -384,6 +414,8 @@ plot.bio3d(vec, resno=ref_pdb, sse=ref_pdb, ylab="Averaged Contact Density",
 dev.off()
 print("Plot saved to file averaged_contact_density.png")
 
+# save data in b-factor column on structure
+data_on_structure(pdb1, residue_vec_with_gaps, vec, "averaged_contact_density")
 
 
 # UMAP Analysis
@@ -556,6 +588,9 @@ tryCatch(
     }
 )
 
+# save data in b-factor column on structure
+data_on_structure(pdb1, residue_vec, rf_allatom, "RMSF_allatom")
+
 
 ## PCA on all-atom coordinates
 ##-------------------------------------
@@ -635,6 +670,8 @@ plot.bio3d(vec_allatom, resno=ref_pdb, sse=ref_pdb, ylab="Averaged Contact Densi
 dev.off()
 print("Plot saved to file averaged_contact_density_allatom.png")
 
+# save data in b-factor column on structure
+data_on_structure(pdb1, residue_vec_with_gaps, vec_allatom, "averaged_contact_density_allatom")
 
 # # UMAP on all-atom coordinates - NOT working!
 # ##-------------------------------------
