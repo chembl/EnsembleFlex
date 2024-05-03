@@ -63,7 +63,7 @@ os.chdir(output_path)
 pdbfiles = glob.glob(input_path+"/*.pdb")
 # parsing only reference structure
 # by default first structure of ensemble is taken as reference structure
-reference_structure = parsePDB(pdbfiles[0], compressed=False)  #, subset='ca'
+reference_structure = parsePDB(pdbfiles[0], compressed=False, title='reference_structure')  #, subset='ca'
 # select C-alphas of reference structure
 reference_calphas = reference_structure.select('calpha')
 
