@@ -5,6 +5,9 @@ pathlib
 subprocess
 glob2
 re # for stoc.py
+#py3Dmol==2.0.0.post2 # only via pip
+#stmol==0.0.9 # only via pip
+#ipython_genutils
 #unidecode # for stoc.py
 # for script computations
 argparse
