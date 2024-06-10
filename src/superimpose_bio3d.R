@@ -69,6 +69,7 @@ if (dir.exists(file.path(opt$indir))){ #if (!is.null(opt$indir)){
 #print(indir)
 #print(outdir)
 setwd(outdir)
+outdir <- getwd() # to get absolute path in variable
 
 
 ## program...
