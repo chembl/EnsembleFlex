@@ -1,0 +1,35 @@
+name: ensembleflex
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # Python dependencies
+  - python=3.11
+  # -for script functionality
+  - glob2
+  - prody
+  - biopython
+  - matplotlib
+  # -for streamlit GUI
+  - streamlit
+  - pathlib
+  - unidecode # for stoc.py
+  - pip
+  - pip:
+    - py3Dmol==2.0.0.post2 # only via pip
+    - stmol==0.0.9 # only via pip
+    - ipython_genutils
+  # R dependencies (for script functionality)
+  - r-base #=4.3.1   #- r-essentials
+  - r-biocmanager
+  - r-bio3d
+  - r-optparse
+  - r-r.utils
+  - r-pheatmap
+  - r-ggplot2
+  - r-umap
+  - r-cluster
+  - r-clvalid
+  - r-remotes # for direct installation from bitbucket
+  - bioconductor-msa
+
