@@ -36,7 +36,7 @@ in an ***automated*** manner, where tools are ***streamlined*** and analysis is 
 (Tools to do this are provided - see below.)
 
 
-## Comand-line usage of analysis scripts explained
+## Command-line usage of analysis scripts explained
 
 The following analysis scripts can be used independently from the browser-based interface.  
 Note that script usage follows a general common rule (`[Rscript/python3] path/to/script -i <input> -o <output> <more options>`)
@@ -102,13 +102,13 @@ create an output directory called `EnsembleFlex` besides your input folder where
 
       Rscript ~/path/to/EnsembleFlex/src/superimpose_bio3d.R -i pdbs -o EnsembleFlex
 
-      python3 ~/path/to/EnsembleFlex/src/superimpose_prody.py -i pdbs/ -o EnsembleFlex/
+      [OR] python3 ~/path/to/EnsembleFlex/src/superimpose_prody.py -i pdbs/ -o EnsembleFlex/
 
 - Analysis
     
       Rscript ~/path/to/EnsembleFlex/src/analyse_flex_bio3d.R -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_Bio3D -n 3
         
-      python3 ~/path/to/EnsembleFlex/src/analyse_flex_prody.py -i EnsembleFlex/superimposed -o EnsemblFlex/Analysis_ProDy
+      [optional] python3 ~/path/to/EnsembleFlex/src/analyse_flex_prody.py -i EnsembleFlex/superimposed -o EnsemblFlex/Analysis_ProDy
       
       python3 ~/path/to/EnsembleFlex/src/analyse_flex_sasa_biopython.py -i EnsembleFlex/superimposed/ -o EnsemblFlex/Analysis_SASA_Biopython
 

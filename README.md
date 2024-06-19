@@ -5,57 +5,80 @@
 
 This program provides flexibility analysis tools for protein structure ensembles via a graphical user interface (GUI).
 Nevertheless, all tools are provided as separately executable Python or R scripts and can therefore be integrated in 
-custom in-house pipelines, without using the GUI.
-The program and tools are particularly designed to work with heterogeneous pdb ensembles (non-identical number of atoms 
+custom in-house pipelines, without using the GUI. 
+For more details, please see section 'Operating instructions' below, as well as the additional `user_guide.md` file.  
+
+**Input**: The program and tools are particularly designed to work with heterogeneous pdb ensembles (non-identical number of atoms 
 or residues), but can also be used for homogenous ensembles (originating e.g. from molecular dynamics simulations).
 The analysis will be performed for a single chain (monomeric) protein. If your protein of interest contains several 
-chains, they need to be split first (e.g. using the provided tool `pdb_splitchain` from the 
-[pdb-tools](http://www.bonvinlab.org/pdb-tools/) utility suit) and the equivalent chains of the ensemble need to be placed together into one folder for 
-analysis. 
+chains, they need to be split first (e.g. using the provided tool `split_pdbs_bio3d.R`) and the equivalent chains of the 
+ensemble need to be placed together into one folder for analysis. 
 
 ### Version
 v1.0.0 2024.0
 
-### Installation
+### Installation \& launch with CONDA/MAMBA
 
-Using ANACONDA:
-can be installed by cloning this repository and setting up an environment using your favourite environment manager 
-(I recommend [mamba](https://github.com/conda-forge/miniforge#mambaforge)).
+EnsembleFlex can be installed by cloning this repository and setting up an environment using your favourite environment manager 
+(I recommend [`mamba` through miniforge](https://github.com/conda-forge/miniforge#mambaforge)).
 
-* Installation:
+[//]: # (* Installation:)
+Clone the repository and go to the EnsembleFlex folder:
 
-      git clone https://github.com/EnsembleFlex.git
+      git clone https://gitlab.ebi.ac.uk/melanie/ensembleflex.git
       cd EnsembleFlex
+  
+* install with `mamba` (if you prefer `conda`, just replace 'mamba' with 'conda'):
+  
       mamba env create -f environment.yml
 
-  OR with conda (instead of mamba):
+* OR: For an exact environment reproduction, to make sure that there are no package version inconsistencies, you can use 
+the provided 'conda-lock' file (only on Linux or macOS). Be aware that this needs to be installed with the 
+`conda-lock install` or `micromamba install` commands, as `mamba/conda create` will ignore the pip package dependencies.
+  - using ['conda-lock'](https://conda.github.io/conda-lock/) (to be installed):
 
-      conda env create -f environment.yml
+        mamba install -c conda-forge conda-lock
+        conda-lock install --name ensembleflex --file conda-lock.yml
+  - OR using ['micromamba'](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) (to be installed):
+  
+        micromamba install --name ensembleflex --file conda-lock.yml
 
-* Usage: With conda/mamba installation EnsemblFlex can be used with the 
+
+**Launch**:  
+With conda/mamba installation EnsemblFlex can be used with the 
 [Graphical User Interface (GUI) documentation](https://ensembleflex.readthedocs.io/en/latest/modules.html) and the 
-[Command Line documentation](https://ensembleflex.readthedocs.io/en/latest/command_line.html)
+[Command Line documentation](https://ensembleflex.readthedocs.io/en/latest/command_line.html).  
+First, activate the environment:
       
       mamba activate ensembleflex
 
-  For the webapp GUI:
+  For the browser-based graphical user interface run:
 
       streamlit run path/to/EnsembleFlex/src/streamlit_app/streamlit_app.py
 
+  The user interface should automatically open in a new tab of your default browser.
 
 
-Using DOCKER:
+### Installation \& launch with DOCKER:
 
-* Installation:
+**Installation**:
 
-        docker pull quay.io/...
+        git clone https://gitlab.ebi.ac.uk/melanie/ensembleflex.git
+        cd EnsembleFlex
+        docker build -t ensembleflex-image .
+        docker run -d -it --name ensembleflex -p 8501:8501 -p 80:80 --volume ./docker-data:/app/docker-data ensembleflex-image
 
-* Usage:
+**Launch**:  
 
-        docker run quay.io/... <command>
-...
+        docker run -d -it --name ensembleflex -p 8501:8501 -p 80:80 --volume ./docker-data:/app/docker-data ensembleflex-image
+
+Then open your browser and navigate to `localhost:8501`. There you should see the graphical user interface.
+Note that your input pdb files need to be put into `EnsembleFlex/docker-data/` (or subdirectories), 
+as this is a mounted directory in the docker image and will therefore be accessible from within the interface.
+
 
 ### Operating instructions  
+
 #### Input files
 After launching the GUI the user needs to provide an input directory containing all (monomeric) ensemble structure 
 files that shall be analysed. Example input data is provided in the folder `example_input_data`.
@@ -100,6 +123,7 @@ Additionally, there is the option to perform flexibility prediction based on ela
 EnsembleFlex  
 ├── LICENSE  
 ├── README.md  
+├── docker-data
 ├── documentation  
 │   └── OutputDirectoryStructure.rtf
 ├── environment.yml
@@ -142,10 +166,27 @@ EnsembleFlex
 └── tests
 ```
 
+### Compliance with FAIR principles for research software
+- **F**indable: The EnsembleFlex code is available on GitHub, the Docker image is also available on Docker Hub 
+and the tool is listed at Elixir [bio.tools](https://bio.tools/).
+- **A**ccessible: All code is available on GitHub and can be installed via Conda environment manager or simply 
+executed as Docker image. 
+Documentation is provided via this `README.md` and an additional `user_guide.md` file.
+- **I**nteroperable: The code is constructed in a building block manner, where all steps of the workflow can be 
+executed by hand through scripts having the same execution syntax (see `user_guide.md`), ensuring for customizability 
+and interoperability. 
+- **R**eusable: The provided scripts are wrapped into a complete workflow, executable through a user interface. 
+Environment reproducibility is achieved through installation with a conda-lock file and a docker image.
 
 ### Copyright and licensing information  
-This program is distributed under a permissive open source licence 
-(GNU General Public License, version 3 (GPL-3.0)). A copy is provided in file `LICENSE_GPL-3.txt`.
+This program is distributed under a permissive open source licence
+(MIT). A copy is provided in file `LICENSE`.
+
+[//]: # (&#40;GNU General Public License, version 3 &#40;GPL-3.0&#41;&#41;. A copy is provided in file `LICENSE_GPL-3.txt`.)
 
 ### Contact information  
 The author Melanie Schneider can be contacted at melanie@ebi.ac.uk.
+
+### Funding
+Funding was provided to Melanie Schneider as ARISE Fellowship from the European Union’s Horizon 2020 research and 
+innovation programme under the Marie Skłodowska-Curie grant agreement No 945405.
