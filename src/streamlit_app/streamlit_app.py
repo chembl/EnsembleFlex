@@ -12,6 +12,8 @@ from pathlib import Path
 import py3Dmol
 from stmol import showmol, makeobj, speck_plot
 import Bio.PDB # to get b-factor values for display
+# import tkinter as tk
+# from tkinter import filedialog
 #from PIL import Image
 #from pdf2image import convert_from_path
 #import pypdfium2 as pdfium
@@ -43,6 +45,18 @@ toc = stoc()
 #     css = f.read()
 # st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
 #st.markdown('<link rel="stylesheet" type="text/css" href="https://www.example.com/style.css">', unsafe_allow_html=True)
+
+# def select_folder():
+#     '''
+#     Uses tkinter to open a GUI window, allowing users to select a directory
+#     :return: folder_path
+#     '''
+#     root = tk.Tk()
+#     root.withdraw()
+#     root.wm_attributes('-topmost', 1) # Make folder picker dialog appear on top of other windows
+#     folder_path = str(filedialog.askdirectory(master=root))
+#     root.destroy()
+#     return folder_path
 
 def b_fac_on_structure_vis(pdbfilepath):
     '''
@@ -141,7 +155,7 @@ _An interactive tool for analysing structure ensembles._
 
 toc.header("Introduction")
 st.markdown(":rainbow[Welcome to an exploration of the dynamics within protein structure ensembles!]")
-st.markdown('''This webpage serves as a exploration gateway into the fascinating field of protein structural flexibility 
+st.markdown('''This interface serves as exploration gateway into the fascinating field of protein structural flexibility 
     in an ***automated*** manner, where tools are ***streamlined*** and analysis is easily ***reproducible*** and 
     ***fast***.''')
 with st.expander("**Why investigating protein flexibility?**"):
@@ -470,6 +484,15 @@ _Here is the place for data input and output and additional variable settings._
 # st.write(structureFiles)
 
 st.markdown('''#### Input Directory''')
+
+# selected_input_path = st.session_state.get("input_path", None)
+# input_folder_select_button = st.button("Select Folder")
+# if input_folder_select_button:
+#     selected_input_path = select_folder()
+#     st.session_state.input_path = selected_input_path
+# if selected_input_path:
+#     st.write("Selected input folder path:", selected_input_path)
+
 st.write('Please select your input directory (where your structure files are located):')
 input_directory = st_directory_picker_input(key="input_directory")
 
@@ -656,15 +679,17 @@ if st.session_state.Bio3Danalysisdone == True:
             multimodel_animation(outputdirBio3D + '/PC2_allatom.pdb')
             st.write("PC3")
             multimodel_animation(outputdirBio3D + '/PC3_allatom.pdb')
-            st.markdown("#### - on difference distance matrices (all-atom)")
-            st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix.png', caption='PCA overall info')
-            st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix_loadings.png', caption='PCA loadings')
-            st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png', caption='PCA dendrogram')
-            # st.markdown("#### All-atom Uniform Manifold Approximation and Projection (UMAP) analysis")
-            # st.markdown("#### - on coordinates (all-atom)")
-            # st.image(outputdirBio3D + '/UMAP_allatom.png', caption='2D UMAP plot')
-            # st.image(outputdirBio3D + '/UMAP_dendrogram_allatom.png', caption='2D UMAP dendrogram')
-            st.markdown("#### Difference Distance Matrix (DDM) analysis between structures (only all-atom)")
+            try:
+                st.markdown("#### - on difference distance matrices (all-atom)")
+                st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix.png', caption='PCA overall info')
+                st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix_loadings.png', caption='PCA loadings')
+                st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png', caption='PCA dendrogram')
+                # st.markdown("#### All-atom Uniform Manifold Approximation and Projection (UMAP) analysis")
+                # st.markdown("#### - on coordinates (all-atom)")
+                # st.image(outputdirBio3D + '/UMAP_allatom.png', caption='2D UMAP plot')
+                # st.image(outputdirBio3D + '/UMAP_dendrogram_allatom.png', caption='2D UMAP dendrogram')
+                st.markdown("#### Difference Distance Matrix (DDM) analysis between structures (only all-atom)")
+            except: pass
             try:
                 st.image(outputdirBio3D + '/eDDM_complete.png', caption='Ensemble Difference Distance Matrix')
             except: pass
