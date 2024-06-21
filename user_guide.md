@@ -6,6 +6,10 @@
 
 Welcome to an exploration of the dynamics within protein structure ensembles!
 
+EnsembleFlex serves as a exploration gateway into the field of protein structural flexibility 
+in an ***automated*** manner, where tools are ***streamlined*** and analysis is easily ***reproducible*** and 
+***fast***.
+
 **Why investigating protein flexibility?**
 
     Proteins, the fundamental molecular machines exhibit a remarkable diversity in structure and function. 
@@ -23,10 +27,6 @@ Welcome to an exploration of the dynamics within protein structure ensembles!
     Understanding protein structural flexibility is not just about unraveling molecular intricacies; 
     it holds the key to deciphering diseases, designing targeted therapies, and engineering proteins 
     with tailored functionalities.
-
-EnsembleFlex serves as a exploration gateway into the fascinating field of protein structural flexibility 
-in an ***automated*** manner, where tools are ***streamlined*** and analysis is easily ***reproducible*** and 
-***fast***.
 
 ## Input
 
