@@ -94,9 +94,14 @@ b) to your input and output directory:
 The following commands assume that your input structure files are located in a folder called `pdbs` and you want to 
 create an output directory called `EnsembleFlex` besides your input folder where all outputs will be located. 
 
-- [optional] PDB splitting on whole directory (if multiple chains are present in your PDB files)
+- [optional] Tool: PDB splitting on whole directory (if multiple chains are present in your PDB files)
 
       Rscript ~/path/to/EnsembleFlex/src/tools/split_pdbs_bio3d.R -i pdbs -o split_pdbs
+
+- [optional] Tool: subset PDBs based on gap occurrence (if you want to analyse "structures_with_gaps" and 
+"structures_without_gaps" separately)
+
+      python3 ~/path/to/EnsembleFlex/src/tools/sort_pdbs_has_gap_in_pdb_seq.py -i pdbs/ -o .
 
 - Superimpositioning  
 

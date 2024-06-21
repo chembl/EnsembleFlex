@@ -522,6 +522,37 @@ if st.button('Display previous analysis results', key="display_previous_btn"):
 
 st.divider()
 #######################################################################################################################
+st.markdown('''#### Optional Preparation Tools''')
+st.write('After running any of the preparation tools, don\'t forget to reset your Input (and Output) '
+         'Directory to the correct one and verify that your new Input Directory contains only the structures you want '
+         'to include in the analysis.')
+
+st.write('##### - Split PDBs (in case they contain multiple chains or are multi-model files)')
+st.write('This is an additional optional tool that might help you with preparing you pdb ensemble.  '
+         'In case your PDB structure files contain multiple chains or are multi-model files you need to split them '
+         'before running the analysis.')
+if st.button('Split PDBs', key="split_pdbs_btn"):
+    result = subprocess.run(
+        ["Rscript", str(parentfilepath) + "/tools/split_pdbs_bio3d.R",
+         '-i', str(input_directory),
+         '-o', str(output_directory) + "/split_pdbs"])
+    st.write('PDB files are split and saved in: ', str(output_directory) + '/split_pdbs')
+
+st.write('##### - Sort/subset your pdb files based on gap occurrence')
+st.write('This is an additional optional tool that might help you with sorting/subsetting you pdb ensemble.  '
+         'In case some of your structures have a missing loop region, you may want to consider subsetting your '
+         'ensemble and analyse the two subsets "structures_with_gaps" and "structures_without_gaps" separately '
+         '(in a second run), as the missing residues may hide some movement that is present in the structures with '
+         'full sequences.')
+if st.button('Subset gap structures', key="subset_gap_pdbs_btn"):
+    result = subprocess.run(
+        [f"{sys.executable}", str(parentfilepath) + "/tools/sort_pdbs_has_gap_in_pdb_seq.py",
+         '-i', str(input_directory),
+         '-o', str(output_directory)])
+    st.write('PDB files are sorted into subfolders "structures_with_gaps" and "structures_without_gaps" in: ', output_directory)
+
+st.divider()
+#######################################################################################################################
 
 toc.header(":two: Superimpose (global)")
 st.markdown('''
