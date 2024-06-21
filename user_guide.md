@@ -87,8 +87,7 @@ Don't forget to activate the conda environment:
 
 Now you can run the scripts as in the example below!  
 Just make sure that you use the correct paths in your system  
-a) to the scripts:  
-You can run the scripts from your output directory by specifying the correct path to the EnsembleFlex scripts 
+a) to the scripts: You can run the scripts from your output directory by specifying the correct path to the EnsembleFlex scripts 
 (replace `~/path/to` with the correct path on your system).  
 b) to your input and output directory:
 The following commands assume that your input structure files are located in a folder called `pdbs` and you want to 
