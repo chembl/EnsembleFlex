@@ -26,6 +26,8 @@ ENV PATH="/env/bin:${PATH}"
 # copy scripts to the working directory
 # (as last steps so that when there are changes to the scripts the above steps don't need to be repeated as they are cached)
 COPY . /app
+# copy configuration files from .streamlit folder (e.g. config.toml)
+COPY ./src/streamlit_app/.streamlit/ /app/.streamlit/
 
 # expose Streamlit’s (default) network port
 EXPOSE 8501
