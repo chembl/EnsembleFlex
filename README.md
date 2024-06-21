@@ -8,19 +8,19 @@ Nevertheless, all tools are provided as separately executable Python or R script
 custom in-house pipelines, without using the GUI. 
 For more details, please see section 'Operating instructions' below, as well as the additional `user_guide.md` file.  
 
-**Input**: The program and tools are particularly designed to work with heterogeneous pdb ensembles (non-identical number of atoms 
-or residues), but can also be used for homogenous ensembles (originating e.g. from molecular dynamics simulations).
-The analysis will be performed for a single chain (monomeric) protein. If your protein of interest contains several 
-chains, they need to be split first (e.g. using the provided tool `split_pdbs_bio3d.R`) and the equivalent chains of the 
-ensemble need to be placed together into one folder for analysis. 
+**Input**: The program and tools are particularly designed to work with heterogeneous pdb ensembles (non-identical 
+number of atoms or residues), but can also be used for homogenous ensembles (originating e.g. from molecular dynamics 
+simulations). The analysis will be performed for a single chain (monomeric) protein. If your protein of interest 
+contains several chains, they need to be split first (e.g. using the provided tool `split_pdbs_bio3d.R`) and the 
+equivalent chains of the ensemble need to be placed together into one folder for analysis. 
 
 ### Version
-v1.0.0 2024.0
+v1.0.0 (2024.07)
 
 ### Installation \& launch with CONDA/MAMBA
 
-EnsembleFlex can be installed by cloning this repository and setting up an environment using your favourite environment manager 
-(I recommend [`mamba` through miniforge](https://github.com/conda-forge/miniforge#mambaforge)).
+EnsembleFlex can be installed by cloning this repository and setting up an environment using your favourite environment 
+manager. (I recommend [`mamba` through miniforge](https://github.com/conda-forge/miniforge#mambaforge)).
 
 [//]: # (* Installation:)
 Clone the repository and go to the EnsembleFlex folder:
@@ -46,8 +46,9 @@ the provided 'conda-lock' file (only on Linux or macOS). Be aware that this need
 
 **Launch**:  
 With conda/mamba installation EnsemblFlex can be used with the 
-[Graphical User Interface (GUI) documentation](https://ensembleflex.readthedocs.io/en/latest/modules.html) and the 
-[Command Line documentation](https://ensembleflex.readthedocs.io/en/latest/command_line.html).  
+browser based Graphical User Interface (GUI) and the 
+Command Line (see detailed documentation in `user_guide.md`).  
+
 First, activate the environment:
       
       mamba activate ensembleflex
@@ -72,9 +73,10 @@ First, activate the environment:
 
         docker run -d -it --name ensembleflex -p 8501:8501 -p 80:80 --volume ./docker-data:/app/docker-data ensembleflex-image
 
-Then open your browser and navigate to `localhost:8501`. There you should see the graphical user interface.
+Then open your browser and navigate to `http://localhost:8501/`. There you should see the graphical user interface.
 Note that your input pdb files need to be put into `EnsembleFlex/docker-data/` (or subdirectories), 
-as this is a mounted directory in the docker image and will therefore be accessible from within the interface.
+as this is a mounted directory in the Docker image and will therefore be accessible from within the Docker container 
+and the user interface.
 
 
 ### Operating instructions  
@@ -92,30 +94,45 @@ The execution of provided tools will produce the following types of output files
 
 The user is free to use any convenient structure visualisation tool to examine the structural output (except for the 
 PyMol scripts, which are only executable with PyMol).
-Example output data is provided in the folder `example_results`.
+Example output data is provided in the folder `example_results`.  
+
+When using the graphical user interface analysis results are presented in a scrollable container which will appear when 
+analysis is finished.  
 
 #### Analysis
 Please look into `user_guide.md` for a detailed interpretation help and description of methods.  
 
-- Workflow description:  
+Primary tools and packages used in the workflow are:
+- [Bio3D](http://thegrantlab.org/bio3d/) (R package) - main flexibility analysis & prediction
+- [ProDy](http://www.bahargroup.org/prody/) (Python package) - alternative main flexibility analysis & prediction
+- [Biopython](https://biopython.org) (Python package) - SASA & radius of gyration analysis, data handling tools
+- [umap](https://github.com/tkonopka/umap) (R package) - UMAP projection
+- [cluster](https://cran.r-project.org/web/packages/cluster/index.html) and [clvalid](https://cran.r-project.org/web/packages/clValid/index.html) - clustering and cluster validation
 
-The analysis result is in many cases (when coordinates are used) dependent on the relative superposition of the 
+for the user interface:
+- [Streamlit](https://streamlit.io) - main interface
+- [py3Dmol](https://pypi.org/project/py3Dmol/) - molecular visualisations
+
+##### Workflow description:  
+
+1. **Settings**: The user needs to provide input and output directories.
+
+2. **Structural superposing**: The analysis result is in many cases (when coordinates are used) dependent on the relative superposition of the 
 structures contained in the ensemble. Therefore, structural superposing (also known as structural alignment) needs to 
 be performed prior to analysis. 
 The user can directly supply a superposed ensemble, or choose one of the two provided superposing methods - 
 from Bio3D (recommended) or ProDy. 
-Upon superposing the ensemble can be analysed using Bio3D tools. 
+
+3. **Flexibility Analysis**: Upon superposing the ensemble can be analysed using Bio3D tools (RMSD, RMSF, dimension reduction and projection with 
+PCA and UMAP, ...) and Biopython tools (). 
 (Additionally, equivalent ProDy tools are provided via a command line script.).  
 
-When using the user interface analysis results are presented in a scrollable container which will appear when analysis 
-is finished.  
-
-For binding site analysis the user has the option to perform a superposing on binding site residues only (recommended 
+4. **Binding Site Analysis**: For binding site analysis the user has the option to perform a superposing on binding site residues only (recommended 
 when there is domain movement shifting the binding site). 
 Again this is possible with Bio3D or ProDy. The user can also opt for using the globally superimposed structures 
 (recommended in most minor-movement cases).
 
-Additionally, there is the option to perform flexibility prediction based on elastic network model Normal Mode Analysis
+5. **Flexibility Prediction**: Additionally, there is the option to perform flexibility prediction based on elastic network model Normal Mode Analysis
 (NMA), as well as Essential Site Scanning Analysis (ESSA) on the reference structure.
 
 ### File manifest  
@@ -173,16 +190,16 @@ and the tool is listed at Elixir [bio.tools](https://bio.tools/).
 executed as Docker image. 
 Documentation is provided via this `README.md` and an additional `user_guide.md` file.
 - **I**nteroperable: The code is constructed in a building block manner, where all steps of the workflow can be 
-executed by hand through scripts having the same execution syntax (see `user_guide.md`), ensuring for customizability 
-and interoperability. 
-- **R**eusable: The provided scripts are wrapped into a complete workflow, executable through a user interface. 
-Environment reproducibility is achieved through installation with a conda-lock file and a docker image.
+executed independently via command line execution of scripts having a consistent execution syntax (see `user_guide.md`), 
+ensuring for customizability and interoperability. 
+- **R**eusable: All provided scripts are well documented with execution information in the file headers. 
+The provided scripts are wrapped into a complete workflow, executable through a browser-based graphical user interface, 
+that does not require any coding experience. 
+Environment reproducibility is achieved through installation with a conda-lock file and full isolation through Docker.
 
 ### Copyright and licensing information  
 This program is distributed under a permissive open source licence
 (MIT). A copy is provided in file `LICENSE`.
-
-[//]: # (&#40;GNU General Public License, version 3 &#40;GPL-3.0&#41;&#41;. A copy is provided in file `LICENSE_GPL-3.txt`.)
 
 ### Contact information  
 The author Melanie Schneider can be contacted at melanie@ebi.ac.uk.
