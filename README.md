@@ -31,10 +31,14 @@ Clone the repository and go to the EnsembleFlex folder:
 * install with `mamba` (if you prefer `conda`, just replace 'mamba' with 'conda'):
   
       mamba env create -f environment.yml
+  
+  **Troubleshooting**: If you encounter package incompatibilities try the next installation suggestion, which is the recommended way. 
+  If you are on Windows, replace `environment.yml` with `environment_versioned.yml` in the previous command.
 
-* OR: For an exact environment reproduction, to make sure that there are no package version inconsistencies, you can use 
-the provided 'conda-lock' file (only on Linux or macOS). Be aware that this needs to be installed with the 
-`conda-lock install` or `micromamba install` commands, as `mamba/conda create` will ignore the pip package dependencies.
+* OR (recommended): On **Linux** or **macOS**: For an exact environment reproduction, to make sure that there are no 
+package version inconsistencies, you can use the provided 'conda-lock' file (only on Linux or macOS). Be aware that 
+this needs to be installed with the `conda-lock install` or `micromamba install` commands, as `mamba/conda create` will 
+ignore the pip package dependencies.
   - using ['conda-lock'](https://conda.github.io/conda-lock/) (to be installed):
 
         mamba install -c conda-forge conda-lock
@@ -75,7 +79,6 @@ First, activate the environment:
         git clone https://gitlab.ebi.ac.uk/melanie/ensembleflex.git
         cd EnsembleFlex
         docker build -t ensembleflex-image .
-        docker run -d -it --name ensembleflex -p 8501:8501 -p 80:80 --volume ./docker-data:/app/docker-data ensembleflex-image
 
 **Launch**:  
 
