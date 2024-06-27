@@ -71,6 +71,22 @@ if (dir.exists(file.path(opt$indir))){ #if (!is.null(opt$indir)){
     stop("At least one input argument must be supplied (input filepath or files).\n\n", call.=FALSE)
 }
 
+## Check provided binding site residue file
+
+if (file.exists(file.path(opt$bsresidues))){ #if (!is.null(opt$indir)){
+  if (isAbsolutePath(opt$bsresidues)){
+    # full path to existing directory is provided
+    bsitefile <- file.path(opt$bsresidues)
+  } else {
+    # only subdirectory is provided, but full path exists
+    bsitefile <- file.path(getwd(), opt$bsresidues)
+  }
+} else {
+    print_help(opt_parser)
+    stop("Binding site residue file must be provided.\n\n", call.=FALSE)
+}
+
+
 #print(indir)
 #print(outdir)
 setwd(outdir)
@@ -90,7 +106,7 @@ pdb <- read.pdb(files[[1]])
 # Read in the binding_site_residue_numbers file
 # binding_residue_num <- read.table(file = opt$bsresidues, header = F, stringsAsFactors = F)
 # binding_residue_num <- as.vector(binding_residue_num)
-binding_residue_num <- scan(opt$bsresidues, sep="\n")
+binding_residue_num <- scan(bsitefile, sep="\n")
 print(binding_residue_num)
 
 # get indices of all bindingsite residue backbone atoms
