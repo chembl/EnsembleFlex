@@ -696,77 +696,88 @@ data_on_structure(pdb1, residue_vec_with_gaps, vec_allatom, "averaged_contact_de
 # print("Plot saved to file UMAP_dendrogram_allatom.png")
 
 
+tryCatch(
+    #try to do this
+    {
+    ## Ensemble Difference Distance Matrix (eDDM) Analysis
+    ##-------------------------------------
+    # The eDDM analysis compares structural ensembles under distinct ligation, activation, etc. conditions.
+    # At least two groups of structures are required.
+    # we use PCA of the distance matrices (through the bio3d function, pca.array()) followed by a conventional hierarchical
+    # clustering in the PC1-PC2 subspace to get the intrinsic grouping of the structures.
+    library(bio3d.eddm)
+    eDDM_analysis <- TRUE
+    # need to update the aligned structures to include all heavy atoms:
+    #pdbs_allatoms <- read.all(pdbs) # This is already done at the beginning
 
-## Ensemble Difference Distance Matrix (eDDM) Analysis
-##-------------------------------------
-# The eDDM analysis compares structural ensembles under distinct ligation, activation, etc. conditions.
-# At least two groups of structures are required.
-# we use PCA of the distance matrices (through the bio3d function, pca.array()) followed by a conventional hierarchical
-# clustering in the PC1-PC2 subspace to get the intrinsic grouping of the structures.
-library(bio3d.eddm)
-# need to update the aligned structures to include all heavy atoms:
-#pdbs_allatoms <- read.all(pdbs) # This is already done at the beginning
+    # Calculate distance matrices.
+    # The option `all.atom=TRUE` tells that all heavy-atom coordinates will be used.
+    dm <- dm(pdbs_allatoms, all.atom=TRUE)
+    # Perform PCA of distance matrices.
+    pc_dm <- pca.array(dm)
 
-# Calculate distance matrices.
-# The option `all.atom=TRUE` tells that all heavy-atom coordinates will be used.
-dm <- dm(pdbs_allatoms, all.atom=TRUE)
-# Perform PCA of distance matrices.
-pc_dm <- pca.array(dm)
+    # Perform structural clustering in the PC1-PC2 subspace.
+    hc_dm_pc12 <- hclust(dist(pc_dm$z[, 1:2]))
+    grps_dm_pc12 <- cutree(hc_dm_pc12, k=number_of_groups)
 
-# Perform structural clustering in the PC1-PC2 subspace.
-hc_dm_pc12 <- hclust(dist(pc_dm$z[, 1:2]))
-grps_dm_pc12 <- cutree(hc_dm_pc12, k=number_of_groups)
-
-# Plot PCs
-png("PCA_on_allatom_DifferenceDistanceMatrix.png", units="in", width=5, height=5, res=300)
-plot(pc_dm, col=grps_dm_pc12) # for only PC1-2 subplot add:, pc.axes=c(1,2)
-dev.off()
-print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix.png")
-# Plot PC loadings
-png("PCA_on_allatom_DifferenceDistanceMatrix_loadings.png", units="in", width=5, height=5, res=300)
-plot.pca.loadings(pc_dm)
-dev.off()
-print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix_loadings.png")
-# Plot PCA dendrogram
-png("PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png", units="in", width=5, height=5, res=300)
-hclustplot(hc_dm_pc12, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
-dev.off()
-print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png")
-
-# Calculating difference distance matrices between groups
-# the difference mean distance between groups for each residue pair are calculated and statistical significance assessed
-# using a two-sample Wilcoxon test. Long-distance pairs in all structures are omitted.
-tbl <- eddm(pdbs_allatoms, grps=grps_dm_pc12, dm=dm, mask="cmap")
-# Plot
-png("eDDM_complete.png", units="in", width=5, height=5, res=300)
-plot(tbl, pdbs=pdbs_allatoms, full=TRUE, resno=NULL, sse=pdbs$sse[1, ], type="tile") #,labels=TRUE, labels.ind=c(1:3, 17:19)
-dev.off()
-print("Plot saved to file eDDM_complete.png")
-# Generate PyMol script to visualise all residue pairs showing any distance changes
-pymol(tbl, pdbs=pdbs_allatoms, grps=grps_dm_pc12, as="sticks", file="eDDM_any.pml", type="script")
-# Identifying significant distance changes
-#keys <- subset.eddm(tbl, alpha=0.005, beta=1.0, switch.only=TRUE)
-keys <- subset.eddm(tbl, alpha=0.005, beta=0.8, switch.only=FALSE)
-if (length(keys)) {
-    # Plot
-    png("eDDM_significant.png", units="in", width=5, height=5, res=300)
-    plot(keys, pdbs=pdbs_allatoms, full=TRUE, resno=NULL, sse=pdbs$sse[1, ], type="tile") #,labels=TRUE, labels.ind=c(1:3, 17:19)
+    # Plot PCs
+    png("PCA_on_allatom_DifferenceDistanceMatrix.png", units="in", width=5, height=5, res=300)
+    plot(pc_dm, col=grps_dm_pc12) # for only PC1-2 subplot add:, pc.axes=c(1,2)
     dev.off()
-    print("Plot saved to file eDDM_significant.png")
-    # Generate PyMol script to visualise all identified key residue pairs showing significant distance changes
-    tryCatch(
-        #try to do this
-        {
-        pymol(keys, pdbs=pdbs_allatoms, grps=grps_dm_pc12, as="sticks", file="eDDM_significant.pml", type="script")
-        },
-        #if an error occurs, tell me the error
-        error=function(e) {
-            print(e)
-        }
-    )
-} else {print("No key switch residues identified.")}
+    print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix.png")
+    # Plot PC loadings
+    png("PCA_on_allatom_DifferenceDistanceMatrix_loadings.png", units="in", width=5, height=5, res=300)
+    plot.pca.loadings(pc_dm)
+    dev.off()
+    print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix_loadings.png")
+    # Plot PCA dendrogram
+    png("PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png", units="in", width=5, height=5, res=300)
+    hclustplot(hc_dm_pc12, labels=ids, cex=0.5, k=number_of_groups,
+               ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+    dev.off()
+    print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png")
 
+    # Calculating difference distance matrices between groups
+    # the difference mean distance between groups for each residue pair are calculated and statistical significance assessed
+    # using a two-sample Wilcoxon test. Long-distance pairs in all structures are omitted.
+    tbl <- eddm(pdbs_allatoms, grps=grps_dm_pc12, dm=dm, mask="cmap")
+    # Plot
+    png("eDDM_complete.png", units="in", width=5, height=5, res=300)
+    plot(tbl, pdbs=pdbs_allatoms, full=TRUE, resno=NULL, sse=pdbs$sse[1, ], type="tile") #,labels=TRUE, labels.ind=c(1:3, 17:19)
+    dev.off()
+    print("Plot saved to file eDDM_complete.png")
+    # Generate PyMol script to visualise all residue pairs showing any distance changes
+    pymol(tbl, pdbs=pdbs_allatoms, grps=grps_dm_pc12, as="sticks", file="eDDM_any.pml", type="script")
+    # Identifying significant distance changes
+    #keys <- subset.eddm(tbl, alpha=0.005, beta=1.0, switch.only=TRUE)
+    keys <- subset.eddm(tbl, alpha=0.005, beta=0.8, switch.only=FALSE)
+    if (length(keys)) {
+        # Plot
+        png("eDDM_significant.png", units="in", width=5, height=5, res=300)
+        plot(keys, pdbs=pdbs_allatoms, full=TRUE, resno=NULL, sse=pdbs$sse[1, ], type="tile") #,labels=TRUE, labels.ind=c(1:3, 17:19)
+        dev.off()
+        print("Plot saved to file eDDM_significant.png")
+        # Generate PyMol script to visualise all identified key residue pairs showing significant distance changes
+        tryCatch(
+            #try to do this
+            {
+            pymol(keys, pdbs=pdbs_allatoms, grps=grps_dm_pc12, as="sticks", file="eDDM_significant.pml", type="script")
+            },
+            #if an error occurs, tell me the error
+            error=function(e) {
+                print(e)
+            }
+        )
+    } else {print("No key switch residues identified.")}
+
+    },
+    #if an error occurs, tell me the error
+    error=function(e) {
+        message('R package "bio3d.eddm" is not installed. Proceeding without eDDM analysis.')
+        print(e)
+        eDDM_analysis <<- FALSE
+    }
+)
 
 # ### Two-structure comparisons
 # ###-------------------------------------
@@ -818,11 +829,20 @@ if (length(keys)) {
 ## Cluster attributions
 ##-------------------------------------
 # store cluster attributions in dataframe
-clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_umap, grps_pc12_tor,
-                             grps_rmsd_allatom, grps_pc12_allatom, grps_dm_pc12), #, grps_umap_allatom
-                             col.names = c("Structure", "backbone_RMSD", "backbone_PCA_onCoords",
-                             "backbone_UMAP_onCoords", "backbone_PCA_onTorsion", "allatom_RMSD",
-                             "allatom_PCA_onCoords", "allatom_PCA_onDist")) #, "allatom_UMAP_onCoords"
+if (eDDM_analysis==TRUE) {
+    clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_umap, grps_pc12_tor,
+                                 grps_rmsd_allatom, grps_pc12_allatom, grps_dm_pc12), #, grps_umap_allatom
+                                 col.names = c("Structure", "backbone_RMSD", "backbone_PCA_onCoords",
+                                 "backbone_UMAP_onCoords", "backbone_PCA_onTorsion", "allatom_RMSD",
+                                 "allatom_PCA_onCoords", "allatom_PCA_onDist")) #, "allatom_UMAP_onCoords"
+} else {
+    clusters_df <- as.data.frame(list(ids, grps_rmsd, grps_pc12, grps_umap, grps_pc12_tor,
+                                 grps_rmsd_allatom, grps_pc12_allatom), #, grps_dm_pc12, grps_umap_allatom
+                                 col.names = c("Structure", "backbone_RMSD", "backbone_PCA_onCoords",
+                                 "backbone_UMAP_onCoords", "backbone_PCA_onTorsion", "allatom_RMSD",
+                                 "allatom_PCA_onCoords")) #, "allatom_PCA_onDist", "allatom_UMAP_onCoords"
+}
+
 # convert first column to rownames
 clusters_df <- data.frame(clusters_df, row.names = 1)
 # get consensus cluster attribution (most common) and add to df
