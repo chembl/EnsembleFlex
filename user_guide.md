@@ -169,9 +169,16 @@ create an output directory called `EnsembleFlex` besides your input folder where
 
 ### Troubleshooting
 
+##### Problems with finding the right path to Rscript  
 If you have R already installed on your system the execution of Rscript may default back to your previous R 
 installation. In such case just replace `Rscript` by `${CONDA_PREFIX}/bin/Rscript` in all commands. 
 This will ensure usage of the R installation inside the conda environment.
+
+##### Problems with package versions and dependencies (Python an R)
+In case you have errors during installation indicating incompatibilities of Python or R packages, try first using the 
+provided `conda-lock.yml` file (as indicated in installation instructions, for macOS or Linux), and if this does not 
+work on your system (e.g. for Windows) try using the `environment_versioned.yml` file instead of `environment.yml`. 
+This will potentially result in slightly older package versions, but they are compatible.
 
 
 ## Output structure explained
