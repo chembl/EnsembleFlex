@@ -43,6 +43,14 @@ the provided 'conda-lock' file (only on Linux or macOS). Be aware that this need
   
         micromamba install --name ensembleflex --file conda-lock.yml
 
+Finally:
+Install the R package(s) not available from conda: This is particularly `bio3d.eddm`. In case installation fails you can 
+still run EnsembleFlex, only ensemble Difference Distance Matrix (eDDM) calculations won't be available within ensemble 
+analysis.
+
+    mamba activate ensembleflex
+    Rscript requirements.r
+
 
 **Launch**:  
 With conda/mamba installation EnsemblFlex can be used with the 
