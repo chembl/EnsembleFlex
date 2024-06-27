@@ -30,6 +30,7 @@ dependencies:
   - r-umap
   - r-cluster
   - r-clvalid
+  - r-dplyr
   - r-remotes # for direct installation from bitbucket
   - bioconductor-msa
 
