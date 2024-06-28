@@ -337,28 +337,35 @@ print("Mean square fluctuations computed with sets of GNM modes stored in the B-
 #writePDB('GNM1_traj_aa.pdb', gnm1_traj_aa)
 
 
-# Square fluctuations along PCA and ANM modes in the same plot
-# ANM modes are scaled to have the same mean as PCA modes with showScaledSqFlucts.
-# Alternatively, we could plot normalized square fluctuations with showNormedSqFlucts
-showScaledSqFlucts(pca[0], anm[0])#;
-plt.legend()#;
-plt.savefig('SquareFluctuations_PC1_ANM1.png')
-plt.close()
-print('\nThe combined square fluctuations plot along PC1 and ANM1 is saved to SquareFluctuations_PC1_ANM1.png.\n')
-
-# cross-projection plot comparing PCA modes and ANM modes using showCrossProjection()
-showCrossProjection(ensemble, pca[0], anm[2], scale="y");
-plt.legend(loc='upper left');
-#plt.plot([-0.8, 0.8], [-0.8, 0.8], 'k');
-#plt.axis([-0.8, 0.8, -0.8, 0.8]);
-plt.savefig('CrossProjection_PCA_ANM.png')
-plt.close()
-print('\nCross-projection plot comparing PCA modes and ANM modes is saved to CrossProjection_PCA_ANM.png.\n')
-
-# correlation between these projections
-pca_coords, anm_coords = calcCrossProjection(ensemble, pca[0], anm[2])
-print('\nCorrelation between these projections:')
-print(np.corrcoef(pca_coords, anm_coords))
+# # Square fluctuations along PCA and ANM modes in the same plot
+# # ANM modes are scaled to have the same mean as PCA modes with showScaledSqFlucts.
+# structures = parsePDB(pdbfiles, subset='ca', compressed=False)  #, subset='ca'
+# ensemble = buildPDBEnsemble(structures, superpose=False)
+# # do PCA
+# pca = PCA('')           # Instantiate a PCA instance
+# pca.buildCovariance(ensemble)   # Build covariance for the ensemble
+# pca.calcModes()                 # Calculate modes (20 of the by default)
+#
+# # Alternatively, we could plot normalized square fluctuations with showNormedSqFlucts
+# showScaledSqFlucts(pca[0], anm[0])#;
+# plt.legend()#;
+# plt.savefig('SquareFluctuations_PC1_ANM1.png')
+# plt.close()
+# print('\nThe combined square fluctuations plot along PC1 and ANM1 is saved to SquareFluctuations_PC1_ANM1.png.\n')
+#
+# # cross-projection plot comparing PCA modes and ANM modes using showCrossProjection()
+# showCrossProjection(ensemble, pca[0], anm[2], scale="y");
+# plt.legend(loc='upper left');
+# #plt.plot([-0.8, 0.8], [-0.8, 0.8], 'k');
+# #plt.axis([-0.8, 0.8, -0.8, 0.8]);
+# plt.savefig('CrossProjection_PCA_ANM.png')
+# plt.close()
+# print('\nCross-projection plot comparing PCA modes and ANM modes is saved to CrossProjection_PCA_ANM.png.\n')
+#
+# # correlation between these projections
+# pca_coords, anm_coords = calcCrossProjection(ensemble, pca[0], anm[2])
+# print('\nCorrelation between these projections:')
+# print(np.corrcoef(pca_coords, anm_coords))
 
 
 
