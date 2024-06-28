@@ -7,6 +7,7 @@ dependencies:
   - python=3.11
   # -for script functionality
   - glob2=0.7
+  - scipy=1.13.1 # version 1.14 is incompatible with ProDy 2.4.
   - prody=2.4.0
   - biopython=1.83
   - matplotlib=3.8.4
