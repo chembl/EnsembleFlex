@@ -969,7 +969,8 @@ st.divider()
 #######################################################################################################################
 st.markdown("##### Optional: Edit the identified binding site residues\n"
             "Identified binding site residues are displayed below and ordered from most frequent to least frequent. "
-            "You can edit them if you want. Make sure to only include residues that are present in all your structures.")
+            "You can edit them if you want (Format: One residue number per line). "
+            "Make sure to only include residues that are present in all your structures.")
 
 def load_file(file_path):
     if os.path.exists(file_path):
