@@ -138,6 +138,8 @@ if 'superimposed_bs' not in st.session_state:
     st.session_state.superimposed_bs = ""
 if 'BSanalysisdone' not in st.session_state:
     st.session_state.BSanalysisdone = False
+if 'residue_numbers_file' not in st.session_state:
+    st.session_state.residue_numbers_file = ""
 if 'NMABio3Disdone' not in st.session_state:
     st.session_state.NMABio3Disdone = False
 if 'NMAProDyisdone' not in st.session_state:
@@ -831,6 +833,9 @@ st.divider()
 
 toc.header(":four: Binding Site Analysis")
 #st.header(":four: Binding Site Analysis")
+st.markdown('''Important note: Make sure that your structures have consistent residue numbering! (The following tools
+are based on residue numbers only, not on alignment position.)
+''')
 
 toc.subheader("1 - Identify the Binding Site")
 st.markdown("[Used package/tool: Bio3D (R)]")
@@ -898,7 +903,7 @@ if st.session_state.PDBhasLigandSortdone == True:
 
 st.markdown('''##### Liganded Structures - Input Directory''')
 st.write('Please select your input directory (where your liganded structure files are located):')
-input_directory_liganded = st_directory_picker_input_liganded(key='input_directory_liganded')
+input_directory_liganded = st_directory_picker_input_liganded(initial_path=str(output_directory)+'/structures_with_ligand', key='input_directory_liganded')
 
 st.markdown('''##### Variables''')
 cutoff = st.number_input("Distance cutoff for binding site detection (in angstrom):", value=4.0, step=0.1, format="%.1f")
@@ -915,6 +920,7 @@ def run_bs_ident_Bio3D():
     st.write("Bio3D calculations are running...")
     st.write("Output files are saved in: ", outputdir_BindingSite_ident)
     st.session_state.BSidentifydone = True
+    st.session_state.residue_numbers_file = outputdir_BindingSite_ident+'/binding_site_residue_numbers.txt'
     # show binding site csv file
     #csvfile = pd.read_csv(outputdir_BindingSite_ident+"/binding_site_residues.csv")  # path folder of the data file
     #st.write(csvfile)
@@ -961,6 +967,35 @@ if st.session_state.BSidentifydone == True:
 
 st.divider()
 #######################################################################################################################
+st.markdown("##### Optional: Edit the identified binding site residues\n"
+            "Identified binding site residues are displayed below and ordered from most frequent to least frequent. "
+            "You can edit them if you want. Make sure to only include residues that are present in all your structures.")
+
+def load_file(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            return file.read()
+    return ""
+
+def save_file(file_path, content):
+    with open(file_path, 'w') as file:
+        file.write(content)
+
+# Specify the path to your local text file
+#residue_numbers_file = st.session_state.residue_numbers_file
+# Load the file contents
+file_contents = load_file(st.session_state.residue_numbers_file)
+# Display the file contents in an editable text area
+edited_contents = st.text_area("Edit residues to be used:", value=file_contents, height=300)
+# Add a button to save the changes
+if st.button("Save Changes"):
+    changed_file = outputdir_BindingSite_ident+'/binding_site_residue_numbers_edited.txt'
+    save_file(changed_file, edited_contents)
+    st.success("File saved at "+changed_file)
+    st.session_state.residue_numbers_file = changed_file
+
+st.divider()
+#######################################################################################################################
 
 toc.subheader("2 - Superimpose using only Binding Site Residues")
 st.markdown('''
@@ -978,15 +1013,17 @@ st.write("Your choice is: ", superimp_method_bs)
 def superimpose_bs(superimp_method_bs):
     if superimp_method_bs == "Bio3D":
         result = subprocess.run(
-            ["Rscript", str(parentfilepath)+"/superimpose_binding_site_bio3d.R", '-i', str(input_directory), '-o', str(output_directory)])
+            ["Rscript", str(parentfilepath)+"/superimpose_binding_site_bio3d.R", '-i', str(input_directory),
+             '-o', str(output_directory), '-b', st.session_state.residue_numbers_file])
         st.write("Bio3D calculations are running...")
-        st.session_state.superimposed_bs = str(output_directory)+'/superimposed_binding_site'
+        st.session_state.superimposed_bs = str(output_directory)+'/superimposed_on_bs'
         st.write("Superimposed structures are saved in: ", st.session_state.superimposed_bs)
     if superimp_method_bs == "ProDy":
         result = subprocess.run(
-            [f"{sys.executable}", str(parentfilepath)+"/superimpose_binding_site_prody.py", '-i', str(input_directory), '-o', str(output_directory)])
+            [f"{sys.executable}", str(parentfilepath)+"/superimpose_binding_site_prody.py", '-i', str(input_directory),
+             '-o', str(output_directory), '-b', st.session_state.residue_numbers_file])
         st.write("ProDy calculations are running...")
-        st.session_state.superimposed_bs = str(output_directory)+'/superimposed_binding_site/split_ensemble'
+        st.session_state.superimposed_bs = str(output_directory)+'/superimposed_on_bs/split_ensemble'
         st.write("Superimposed structures are saved in: ", st.session_state.superimposed_bs)
     if superimp_method_bs == "None":
         st.session_state.superimposed_bs = str(input_directory_liganded)
@@ -1013,10 +1050,11 @@ st.markdown(" - Root Mean Square Fluctuations (RMSF)\n"
 outputdir_BindingSite_analysis_Bio3D = str(output_directory) + '/BindingSite_analysis_Bio3D'
 
 def run_analysis_BindingSite_Bio3D():
+    print(superimposed_bs)
     result = subprocess.run(
         ["Rscript", str(parentfilepath) + "/analyse_flex_binding_site_bio3d.R",
          '-i', superimposed_bs, '-o', outputdir_BindingSite_analysis_Bio3D,
-         '-b', outputdir_BindingSite_ident+'/binding_site_residue_numbers.txt'])
+         '-b', str(st.session_state.residue_numbers_file)])
     st.write("Superimposed structures are taken from ", superimposed_bs)
     st.write("Bio3D calculations are running...")
     st.write("Output files are saved in: ", outputdir_BindingSite_analysis_Bio3D)
@@ -1152,7 +1190,7 @@ if st.button('Run', key="ESSA_prody_btn"):
         [f"{sys.executable}", str(parentfilepath) + "/predict_flex_binding_site_essa_prody.py",
          '-i', str(input_directory),
          '-o', str(outputdir_ESSA_ProDy),
-         '-b', outputdir_BindingSite_ident+'/binding_site_residue_numbers.txt'])
+         '-b', st.session_state.residue_numbers_file])
     st.write("Output files are saved in: ", outputdir_ESSA_ProDy)
     st.session_state.ESSAisdone = True
 
