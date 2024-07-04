@@ -2,6 +2,7 @@
 import sys
 import os
 import subprocess
+import json
 
 import pandas as pd
 import streamlit as st
@@ -46,6 +47,7 @@ toc = stoc()
 # st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
 #st.markdown('<link rel="stylesheet" type="text/css" href="https://www.example.com/style.css">', unsafe_allow_html=True)
 
+# Unfortunately the following tkinter implementation is not working/permitted on macOS
 # def select_folder():
 #     '''
 #     Uses tkinter to open a GUI window, allowing users to select a directory
@@ -124,6 +126,10 @@ def multimodel_animation(pdbfilepath):
 
 
 # Session states initialisation
+# if 'input_directory' not in st.session_state:
+#     st.session_state.input_directory = ""
+# if 'output_directory' not in st.session_state:
+#     st.session_state.output_directory = ""
 if 'superimposed' not in st.session_state:
     st.session_state.superimposed = ""
 if 'Bio3Danalysisdone' not in st.session_state:
@@ -134,6 +140,8 @@ if 'PDBhasLigandSortdone' not in st.session_state:
     st.session_state.PDBhasLigandSortdone = False
 if 'BSidentifydone' not in st.session_state:
     st.session_state.BSidentifydone = False
+# if 'input_directory_liganded' not in st.session_state:
+#     st.session_state.input_directory_liganded = ""
 if 'superimposed_bs' not in st.session_state:
     st.session_state.superimposed_bs = ""
 if 'BSanalysisdone' not in st.session_state:
@@ -439,8 +447,8 @@ st.markdown('''
     but they can be rerun if upstream parameters have been changed:  
     :one: *Settings* - [mandatory] The place to provide your input and output directory  
         - *Display previous analysis results* - [optional] Use this to display analysis you have already run  
-    :two: *Superimpose (global)* - [mandatory confirmation] You can choose to run superpositioning with provided tools or not  
-    :three: ***Flexibility Analysis (global)*** - The main analysis computations are performed here  
+    :two: *Superimpose* - [mandatory confirmation] You can choose to run superpositioning with provided tools or not  
+    :three: ***Flexibility Analysis*** - The main analysis computations are performed here  
     :four: *Binding Site Analysis* - [optional] Recommended analysis if you have ligands in your structures  
     :five: *Compare with predicted flexibility* - [optional]  
     ''')
@@ -506,11 +514,98 @@ output_directory = st_directory_picker_output(key="output_directory")
 st.divider()
 #######################################################################################################################
 
+# Define the path where the session state will be saved
+session_state_file = str(output_directory)+"/session_state.json"
+
+# List of keys that should be treated as paths (and excluded from saving)
+EXCLUDE_PATH_KEYS = [
+    "outpath", "inpath_liganded", "output_directory",
+    "input_directory_liganded", "input_directory", "inpath",
+    "new_dir", "display_previous_btn"
+]
+PATH_KEYS = [
+    "superimposed", "superimposed_bs", "residue_numbers_file"
+]
+
+# List of suffixes for keys to be excluded
+EXCLUDE_SUFFIXES = ["subdirectory", "left", "right", "btn"]
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Path):
+            return str(obj)
+        return super().default(obj)
+
+def save_session_state():
+    # Convert session state to a dictionary, excluding streamlit's internal keys,
+    # keys ending with specified suffixes, and path keys
+    session_state_dict = {
+        key: value for key, value in st.session_state.items()
+        if not key.startswith('_')
+        and not any(key.endswith(suffix) for suffix in EXCLUDE_SUFFIXES)
+        and key not in EXCLUDE_PATH_KEYS
+    }
+    # Convert the dictionary to a JSON string using the custom encoder
+    json_str = json.dumps(session_state_dict, indent=2, cls=CustomEncoder)
+    # Save the JSON string to a file
+    with open(session_state_file, 'w') as f:
+        f.write(json_str)
+
+
+# Save button in sidebar
+if st.sidebar.button("Save Session State"):
+    save_session_state()
+
+
+def load_session_state():
+    if os.path.exists(session_state_file):
+        try:
+            # Read the JSON content
+            with open(session_state_file, 'r') as f:
+                content = f.read()
+
+            session_state_dict = json.loads(content)
+
+            # Update the session state
+            for key, value in session_state_dict.items():
+                # Convert string paths back to Path objects if necessary
+                if key in PATH_KEYS and value:
+                    st.session_state[key] = Path(value)
+                else:
+                    st.session_state[key] = value
+
+            st.success("Session state loaded successfully!")
+        except json.JSONDecodeError:
+            st.error("Invalid JSON file. Please check the session state file.")
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
+    else:
+        st.warning("No saved session state file found.")
+
+
 st.markdown('''#### Display previous analysis results''')
 st.write('In case you have already performed the analysis using this interface and you just want to re-display the '
-         'results, use this button (after having set the correct output directory above).')
+         'results, use one of the buttons below (after having set the correct `Output Directory` above!).')
 st.write('Be aware that pushing any further downstream button may overwrite your previous results.')
-if st.button('Display previous analysis results', key="display_previous_btn"):
+st.write('''There are two options:\n  
+A) You have run parts of the pipeline and want to continue from there AND you have previously saved the state of your 
+analysis through the `Save Session State` button in the side bar. (The file must be located in your Output Directory.)
+''')
+
+if st.button('A) Display previous analysis results - use saved session state', key="display_previous_ss_btn"):
+    # Load session state from file
+    load_session_state()
+    # # Display current session state
+    # st.write("Current Session State:", st.session_state)
+
+st.write('''  
+B) You have run the whole pipeline and want to visualise all results. (No need for having saved the session state.)  
+*Note that if the output files are not found in their destined place (e.g. you have moved them or you haven't run parts 
+of the pipeline) then the interface will likely throw an Error at that point, but you can still continue from there and 
+(re-)run the missing parts.*
+''')
+
+if st.button('B) Display previous analysis results - set all run', key="display_previous_all_btn"):
     st.session_state.superimposed = str(output_directory)+'/superimposed'
     st.session_state.Bio3Danalysisdone = True
     st.session_state.SASAanalysisdone = True
@@ -521,13 +616,14 @@ if st.button('Display previous analysis results', key="display_previous_btn"):
     st.session_state.NMABio3Disdone = True
     st.session_state.NMAProDyisdone = True
     st.session_state.ESSAisdone = True
+    st.success("Whole pipeline set to run.")
 
 st.divider()
 #######################################################################################################################
 st.markdown('''#### Optional Preparation Tools''')
-st.write('After running any of the preparation tools, don\'t forget to reset your Input (and Output) '
+st.write('*After running any of the preparation tools, don\'t forget to reset your Input (and Output) '
          'Directory to the correct one and verify that your new Input Directory contains only the structures you want '
-         'to include in the analysis.')
+         'to include in the analysis.*')
 
 st.write('##### - Split PDBs (in case they contain multiple chains or are multi-model files)')
 st.write('This is an additional optional tool that might help you with preparing you pdb ensemble.  '
@@ -556,7 +652,7 @@ if st.button('Subset gap structures', key="subset_gap_pdbs_btn"):
 st.divider()
 #######################################################################################################################
 
-toc.header(":two: Superimpose (global)")
+toc.header(":two: Superimpose")
 st.markdown('''
 _Superimpose your structures globally with one of the provided methods._
 ''')
@@ -602,7 +698,7 @@ superimposed = st.session_state.superimposed
 st.divider()
 #######################################################################################################################
 
-toc.header(":three: Flexibility Analysis (global)")
+toc.header(":three: Flexibility Analysis")
 st.markdown('''
 _Investigate structural flexibility globally using the provided methods._
 ''')
@@ -650,7 +746,7 @@ def show_report(parentpath, filename):
     else:
         st.write("HTML report could not be generated.")
 
-st.button('Run', key="Analyse_Bio3D_btn", on_click=run_analysis_Bio3D)
+st.button('Run', key="analyse_Bio3D_btn", on_click=run_analysis_Bio3D)
 st.markdown("Results in form of images will be displayed below.  "
             "Please note that more information is available in form of data connected to structures (.pdb .pml) "
             "in the output folder.")
@@ -770,7 +866,7 @@ cluster_option = st.selectbox(
      "allatom_RMSD", "allatom_PCA_onCoords", "allatom_UMAP_onCoords", "allatom_PCA_onDist"))
 st.write('Your choice is:', cluster_option)
 
-if st.button('Run', key="Subset_clusters"):
+if st.button('Run', key="subset_clusters_btn"):
     outputdirBio3D_clusters = str(output_directory) + '/Analysis_Bio3D/' + cluster_option
     cluster_dataframe = str(output_directory) + '/Analysis_Bio3D/cluster_attributions_with_consensus.csv'
     result = subprocess.run(
@@ -794,7 +890,7 @@ if st.button('Run', key="Subset_clusters"):
 #     st.write("Files are saved in: ", outputdirProDy)
 #     show_report(parentpath=outputdirProDy, filename="/analysis_prody_html_report.html")
 #
-# st.button('Run', key="Analyse_ProDy_btn", on_click=run_analysis_ProDy)
+# st.button('Run', key="analyse_ProDy_btn", on_click=run_analysis_ProDy)
 
 
 toc.subheader("B) SASA Difference Analysis")
@@ -818,7 +914,7 @@ def run_analysis_SASA():
     st.write("Files are saved in: ", outputdirSASA)
     st.session_state.SASAanalysisdone = True
 
-st.button('Run', key="Analyse_SASA_btn", on_click=run_analysis_SASA)
+st.button('Run', key="analyse_SASA_btn", on_click=run_analysis_SASA)
 
 if st.session_state.SASAanalysisdone == True:
     with st.container(border=True, height=600):
@@ -903,7 +999,8 @@ if st.session_state.PDBhasLigandSortdone == True:
 
 st.markdown('''##### Liganded Structures - Input Directory''')
 st.write('Please select your input directory (where your liganded structure files are located):')
-input_directory_liganded = st_directory_picker_input_liganded(initial_path=str(output_directory)+'/structures_with_ligand', key='input_directory_liganded')
+input_directory_liganded = st_directory_picker_input_liganded(initial_path=output_directory, key='input_directory_liganded')
+# st.session_state.input_directory_liganded = str(input_directory_liganded)
 
 st.markdown('''##### Variables''')
 cutoff = st.number_input("Distance cutoff for binding site detection (in angstrom):", value=4.0, step=0.1, format="%.1f")
@@ -948,7 +1045,7 @@ st.markdown("##### Calculation and outputs:\n"
             " - The output list 'binding_site_residue_numbers.txt' contains only the binding site residue numbers "
             "and will be used for binding site superpositioning and flexibility analysis (see next steps).")
 
-st.button('Run Binding Site Identification', key='BS_ident_btn', on_click=run_bs_ident_Bio3D)
+st.button('Run Binding Site Identification', key='ident_bs_btn', on_click=run_bs_ident_Bio3D)
 
 if st.session_state.BSidentifydone == True:
     with st.container(border=True, height=600):
@@ -989,7 +1086,7 @@ file_contents = load_file(st.session_state.residue_numbers_file)
 # Display the file contents in an editable text area
 edited_contents = st.text_area("Edit residues to be used:", value=file_contents, height=300)
 # Add a button to save the changes
-if st.button("Save Changes"):
+if st.button("Save Changes", key="save_session_state_btn"):
     changed_file = outputdir_BindingSite_ident+'/binding_site_residue_numbers_edited.txt'
     save_file(changed_file, edited_contents)
     st.success("File saved at "+changed_file)
@@ -1063,7 +1160,7 @@ def run_analysis_BindingSite_Bio3D():
     #show_report(parentpath=outputdir_BindingSite_analysis, filename="/bindingsite_analysis_bio3d_html_report.html")
 
 
-st.button('Run', key="Analyse_BindingSite_Bio3D_btn", on_click=run_analysis_BindingSite_Bio3D)
+st.button('Run', key="analyse_BindingSite_Bio3D_btn", on_click=run_analysis_BindingSite_Bio3D)
 
 if st.session_state.BSanalysisdone == True:
     with st.container(border=True, height=600):
@@ -1110,7 +1207,7 @@ if eNMA:
 
 outputdir_NMA_Bio3D = str(output_directory) + '/Prediction_NMA_Bio3D'
 
-if st.button('Run', key="NMA_bio3d_btn"):
+if st.button('Run', key="run_NMA_bio3d_btn"):
     if eNMA:
         result = subprocess.run(
             ["Rscript", str(parentfilepath) + "/predict_flex_nma_bio3d.R", '-i', str(input_directory), '-o',
@@ -1149,7 +1246,7 @@ st.markdown(" - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NM
 
 outputdir_NMA_ProDy = str(output_directory) + '/Prediction_NMA_ProDy'
 
-if st.button('Run', key="NMA_prody_btn"):
+if st.button('Run', key="run_NMA_prody_btn"):
     result = subprocess.run(
         [f"{sys.executable}", str(parentfilepath) + "/predict_flex_nma_prody.py", '-i', str(input_directory), '-o',
          str(outputdir_NMA_ProDy)])
@@ -1186,7 +1283,7 @@ st.markdown('''Essential Site Scanning Analysis (ESSA) - an elastic network mode
 
 outputdir_ESSA_ProDy = str(output_directory) + '/Prediction_ESSA_ProDy'
 
-if st.button('Run', key="ESSA_prody_btn"):
+if st.button('Run', key="run_ESSA_prody_btn"):
     result = subprocess.run(
         [f"{sys.executable}", str(parentfilepath) + "/predict_flex_binding_site_essa_prody.py",
          '-i', str(input_directory),
@@ -1205,7 +1302,7 @@ if st.session_state.ESSAisdone == True:
         b_fac_on_structure_vis(outputdir_ESSA_ProDy + '/reference_structure_gnm_zs.pdb')
 
 # toc.subheader("B) Monte-Carlo Sampling")
-# if st.button('Run', key="monte-carlo_btn"):
+# if st.button('Run', key="run_monte-carlo_btn"):
 #     st.write("Output files are saved in: ", output_directory)
 #
 #
@@ -1214,7 +1311,7 @@ if st.session_state.ESSAisdone == True:
 #             " - Root Mean Square Fluctuations (RMSF)\n"
 #             " - Principal Component Analysis (PCA)")
 #
-# if st.button('Run', key="PDBFlex_btn"):
+# if st.button('Run', key="run_PDBFlex_btn"):
 #     result = subprocess.run(
 #         [f"{sys.executable}", str(parentfilepath) + "/compare_PDBFlex.py", '-i', str(input_directory), '-o',
 #          str(output_directory)])
@@ -1226,7 +1323,7 @@ if st.session_state.ESSAisdone == True:
 #             " - Root Mean Square Fluctuations (RMSF)\n"
 #             " - Principal Component Analysis (PCA)")
 #
-# if st.button('Run', key="AlphaFold_btn"):
+# if st.button('Run', key="run_AlphaFold_btn"):
 #     result = subprocess.run(
 #         [f"{sys.executable}", str(parentfilepath) + "/compare_AlphaFold.py", '-i', str(input_directory), '-o',
 #          str(output_directory)])
