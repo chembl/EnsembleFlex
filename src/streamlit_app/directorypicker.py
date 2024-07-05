@@ -6,6 +6,7 @@ import streamlit as st
 from pathlib import Path
 
 
+@st.experimental_fragment
 def st_directory_picker_input(initial_path=Path(), key="key"):
 
     #st.markdown("#### Directory picker")
@@ -57,6 +58,7 @@ def st_directory_picker_input(initial_path=Path(), key="key"):
     return st.session_state.inpath
 
 
+@st.experimental_fragment
 def st_directory_picker_output(initial_path=Path(), key="key"):
 
     #st.markdown("#### Directory picker")
@@ -108,6 +110,7 @@ def st_directory_picker_output(initial_path=Path(), key="key"):
     return st.session_state.outpath
 
 
+@st.experimental_fragment
 def st_directory_picker_input_liganded(initial_path=Path(), key="key"):
 
     #st.markdown("#### Directory picker")
