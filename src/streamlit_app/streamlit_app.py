@@ -19,21 +19,22 @@ import Bio.PDB # to get b-factor values for display
 #from pdf2image import convert_from_path
 #import pypdfium2 as pdfium
 
-## Personalisation
-
-#icon = Image.open("icon.png")
-st.set_page_config(
-    page_title="EnsembleFlex", # the title of the page
-    #page_icon=icon, # the page’s icon
-    layout="centered", # ["centered", "wide"] # set Streamlit app to use wide mode
-    initial_sidebar_state="auto", # whether sidebar will be initially loaded
-)
 
 # make app accessible only through localhost - Not working!
 # st.set_option('browser.serverAddress', 'localhost')
 
 filepath = Path(__file__).parent.resolve()
 parentfilepath = Path(__file__).parent.parent.resolve()
+
+## Personalisation
+
+st.set_page_config(
+    page_title="EnsembleFlex", # the title of the page
+    page_icon='➰', # the page’s icon
+    # page_icon=str(filepath)+"/EnsembleFlex_icon.png", # the page’s icon
+    layout="centered", # ["centered", "wide"] # set Streamlit app to use wide mode
+    initial_sidebar_state="auto", # whether sidebar will be initially loaded
+)
 
 # Table of contents in sidebar
 toc = stoc()
