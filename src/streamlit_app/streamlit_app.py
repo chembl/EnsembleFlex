@@ -140,6 +140,8 @@ if 'PDBhasLigandSortdone' not in st.session_state:
     st.session_state.PDBhasLigandSortdone = False
 if 'BSidentifydone' not in st.session_state:
     st.session_state.BSidentifydone = False
+if 'loadinitialresidues' not in st.session_state:
+    st.session_state.loadinitialresidues = False
 # if 'input_directory_liganded' not in st.session_state:
 #     st.session_state.input_directory_liganded = ""
 if 'superimposed_bs' not in st.session_state:
@@ -613,6 +615,7 @@ if st.button('B) Display previous analysis results - set all run', key="display_
     st.session_state.BSidentifydone = True
     st.session_state.superimposed_bs = ""
     st.session_state.BSanalysisdone = True
+    st.session_state.loadinitialresidues = True
     st.session_state.NMABio3Disdone = True
     st.session_state.NMAProDyisdone = True
     st.session_state.ESSAisdone = True
@@ -733,18 +736,18 @@ def run_analysis_Bio3D():
     st.write("Files are saved in: ", outputdirBio3D)
     st.session_state.Bio3Danalysisdone = True
 
-def show_report(parentpath, filename):
-    # Show generated html report
-    path_to_html = str(parentpath) + filename
-    if os.path.isfile(path_to_html):
-        # Read file and keep in variable
-        with open(path_to_html, 'r') as f:
-            html_data = f.read()
-        ## Show in app
-        #st.header("Show an external HTML")
-        st.components.v1.html(html_data, height=200)
-    else:
-        st.write("HTML report could not be generated.")
+# def show_report(parentpath, filename):
+#     # Show generated html report
+#     path_to_html = str(parentpath) + filename
+#     if os.path.isfile(path_to_html):
+#         # Read file and keep in variable
+#         with open(path_to_html, 'r') as f:
+#             html_data = f.read()
+#         ## Show in app
+#         #st.header("Show an external HTML")
+#         st.components.v1.html(html_data, height=200)
+#     else:
+#         st.write("HTML report could not be generated.")
 
 st.button('Run', key="analyse_Bio3D_btn", on_click=run_analysis_Bio3D)
 st.markdown("Results in form of images will be displayed below.  "
@@ -853,8 +856,8 @@ if st.session_state.Bio3Danalysisdone == True:
             with open(outputdirBio3D + '/cluster_validation_UMAP.txt') as f:
                 st.write(f.readlines())
 
+        #show_report(parentpath=outputdirBio3D, filename="/analysis_bio3d_html_report.html")
 
-    show_report(parentpath=outputdirBio3D, filename="/analysis_bio3d_html_report.html")
 
 
 st.markdown("##### Helper Tool: Sort structures based on clustering")
@@ -1017,13 +1020,12 @@ def run_bs_ident_Bio3D():
     st.write("Bio3D calculations are running...")
     st.write("Output files are saved in: ", outputdir_BindingSite_ident)
     st.session_state.BSidentifydone = True
-    st.session_state.residue_numbers_file = outputdir_BindingSite_ident+'/binding_site_residue_numbers.txt'
     # show binding site csv file
     #csvfile = pd.read_csv(outputdir_BindingSite_ident+"/binding_site_residues.csv")  # path folder of the data file
     #st.write(csvfile)
     # show binding frequency plot
-    st.image(outputdir_BindingSite_ident+'/Histogram_binding_residues_percentage_colored.png',
-             caption='Histogram of binding residues')
+    # st.image(outputdir_BindingSite_ident+'/Histogram_binding_residues_percentage_colored.png',
+    #          caption='Histogram of binding residues')
     #show_report(parentpath=outputdir_BindingSite_ident, filename="/analysis_bio3d_html_report.html")
 
 st.markdown("##### Calculation and outputs:\n"
@@ -1048,6 +1050,12 @@ st.markdown("##### Calculation and outputs:\n"
 st.button('Run Binding Site Identification', key='ident_bs_btn', on_click=run_bs_ident_Bio3D)
 
 if st.session_state.BSidentifydone == True:
+    initial_residue_numbers_file = outputdir_BindingSite_ident + '/binding_site_residue_numbers.txt'
+    changed_residue_numbers_file = outputdir_BindingSite_ident + '/binding_site_residue_numbers_edited.txt'
+    if (st.session_state.loadinitialresidues is False) and (os.path.exists(changed_residue_numbers_file)):
+        st.session_state.residue_numbers_file = changed_residue_numbers_file
+    else:
+        st.session_state.residue_numbers_file = initial_residue_numbers_file
     with st.container(border=True, height=600):
         st.subheader("Binding Site Identification Results")
         st.write("More data is provided in structural and table format in the output directory.")
@@ -1079,18 +1087,23 @@ def save_file(file_path, content):
     with open(file_path, 'w') as file:
         file.write(content)
 
-# Specify the path to your local text file
-#residue_numbers_file = st.session_state.residue_numbers_file
+
+if st.button("Reload initially identified residues", key="load_initial_residues_btn"):
+    st.session_state.loadinitialresidues = True
+    st.session_state.residue_numbers_file = initial_residue_numbers_file
+
 # Load the file contents
 file_contents = load_file(st.session_state.residue_numbers_file)
 # Display the file contents in an editable text area
-edited_contents = st.text_area("Edit residues to be used:", value=file_contents, height=300)
+edited_contents = st.text_area("Edit residues to be used:", value=file_contents, height=200)
+
 # Add a button to save the changes
 if st.button("Save Changes", key="save_session_state_btn"):
-    changed_file = outputdir_BindingSite_ident+'/binding_site_residue_numbers_edited.txt'
-    save_file(changed_file, edited_contents)
-    st.success("File saved at "+changed_file)
-    st.session_state.residue_numbers_file = changed_file
+    st.session_state.loadinitialresidues = False
+    # changed_residue_numbers_file = outputdir_BindingSite_ident+'/binding_site_residue_numbers_edited.txt'
+    save_file(changed_residue_numbers_file, edited_contents)
+    st.success("File saved at "+changed_residue_numbers_file)
+    st.session_state.residue_numbers_file = changed_residue_numbers_file
 
 st.divider()
 #######################################################################################################################
