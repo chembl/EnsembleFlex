@@ -812,8 +812,8 @@ if st.session_state.Bio3Danalysisdone == True:
             multimodel_animation(outputdirBio3D + '/PC2_allatom.pdb')
             st.write("PC3")
             multimodel_animation(outputdirBio3D + '/PC3_allatom.pdb')
+            st.markdown("#### - on difference distance matrices (all-atom)")
             try:
-                st.markdown("#### - on difference distance matrices (all-atom)")
                 st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix.png', caption='PCA overall info')
                 st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix_loadings.png', caption='PCA loadings')
                 st.image(outputdirBio3D + '/PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png', caption='PCA dendrogram')
@@ -821,11 +821,13 @@ if st.session_state.Bio3Danalysisdone == True:
                 # st.markdown("#### - on coordinates (all-atom)")
                 # st.image(outputdirBio3D + '/UMAP_allatom.png', caption='2D UMAP plot')
                 # st.image(outputdirBio3D + '/UMAP_dendrogram_allatom.png', caption='2D UMAP dendrogram')
-                st.markdown("#### Difference Distance Matrix (DDM) analysis between structures (only all-atom)")
-            except: pass
+            except:
+                st.write("ERROR: No output available.")
+            st.markdown("#### Difference Distance Matrix (DDM) analysis between structures (only all-atom)")
             try:
                 st.image(outputdirBio3D + '/eDDM_complete.png', caption='Ensemble Difference Distance Matrix')
-            except: pass
+            except:
+                st.write("ERROR: No output available.")
         with tab6:
             st.markdown("#### Overall clustering results")
             st.image(outputdirBio3D + '/cluster_attributions_heatmap.png', caption='Cluster attributions')
@@ -1067,7 +1069,10 @@ if st.session_state.BSidentifydone == True:
         st.write("Reference structure residues colored by frequency (percentage) of involvement in binding site")
         b_fac_on_structure_vis(outputdir_BindingSite_ident + '/binding_site_interface_labelled_percentage.pdb')
         st.write("Which ligands share the same residue binding pattern?")
-        st.image(outputdir_BindingSite_ident + '/interaction_heatmap.png', caption='ligand-residue interactions')
+        try:
+            st.image(outputdir_BindingSite_ident + '/interaction_heatmap.png', caption='ligand-residue interactions')
+        except:
+            st.write("ERROR: No output available.")
         st.write("How extended are binding sites (approximated through radius of gyration of binding residues C-alphas)?")
         st.image(outputdir_BindingSite_ident + '/histogram_binding_residues_ca_rgyr.png', caption='Ca radius of gyration')
 
@@ -1274,13 +1279,13 @@ if st.session_state.NMAProDyisdone == True:
         st.markdown("#### - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NMA) for reference structure")
         st.image(outputdir_NMA_ProDy + '/B-factors_vs_ANM-msfs.png', caption='ANM NMA RMSFs vs B-factors')
         st.write("Reference structure colored by ANM fluctuations")
-        b_fac_on_structure_vis(outputdir_NMA_ProDy + '/ANM_msf_all20_on_bfactor.pdb')
+        b_fac_on_structure_vis(outputdir_NMA_ProDy + '/ANM_msf_first20_on_bfactor.pdb')
         st.image(outputdir_NMA_ProDy + '/CrossCorrelations_ANM.png', caption='ANM NMA residue cross correlations')
         st.image(outputdir_NMA_ProDy + '/ContactMap_ANM.png', caption='ANM NMA residue contact map')
         st.markdown("#### - Gaussian Network Model (GNM) C-alpha Normal Mode Analysis (NMA) for reference structure")
         st.image(outputdir_NMA_ProDy + '/B-factors_vs_GNM-msfs.png', caption='GNM NMA RMSFs vs B-factors')
         st.write("Reference structure colored by GNM fluctuations")
-        b_fac_on_structure_vis(outputdir_NMA_ProDy + '/GNM_msf_all20_on_bfactor.pdb')
+        b_fac_on_structure_vis(outputdir_NMA_ProDy + '/GNM_msf_first20_on_bfactor.pdb')
         st.image(outputdir_NMA_ProDy + '/CrossCorrelations_GNM.png', caption='GNM NMA residue cross correlations')
         st.image(outputdir_NMA_ProDy + '/ContactMap_GNM.png', caption='GNM NMA residue contact map')
 
@@ -1309,11 +1314,14 @@ if st.button('Run', key="run_ESSA_prody_btn"):
 if st.session_state.ESSAisdone == True:
     with st.container(border=True, height=600):
         st.subheader("Essential Site Scanning Analysis (ESSA) results")
-        st.write("More data is provided in structural format in the output directory.")
-        st.image(outputdir_ESSA_ProDy + '/ESSA_profile_of_reference_structure.png',
-                 caption='ESSA profile with annotated binding residues')
-        st.write("Reference structure colored by ESSA z-scores")
-        b_fac_on_structure_vis(outputdir_ESSA_ProDy + '/reference_structure_gnm_zs.pdb')
+        try:
+            st.write("More data is provided in structural format in the output directory.")
+            st.image(outputdir_ESSA_ProDy + '/ESSA_profile_of_reference_structure.png',
+                     caption='ESSA profile with annotated binding residues')
+            st.write("Reference structure colored by ESSA z-scores")
+            b_fac_on_structure_vis(outputdir_ESSA_ProDy + '/reference_structure_gnm_zs.pdb')
+        except:
+            st.write("ERROR: No output available.")
 
 # toc.subheader("B) Monte-Carlo Sampling")
 # if st.button('Run', key="run_monte-carlo_btn"):
