@@ -80,11 +80,19 @@ def copy_files_based_on_json(json_file, src_folder, dest_folder):
         src_file_path = os.path.join(src_folder, file_name)
         dest_file_path = os.path.join(dest_folder, file_name)
 
+        file_name_multimodel = f"{key}.1.pdb"
+        src_file_path_multimodel = os.path.join(src_folder, file_name_multimodel)
+        dest_file_path_multimodel = os.path.join(dest_folder, file_name_multimodel)
+
         # Check if the file exists in the source folder
         if os.path.isfile(src_file_path):
             # Copy the file to the destination folder
             shutil.copy2(src_file_path, dest_file_path)
             print(f"Copied: {file_name}")
+        elif os.path.isfile(src_file_path_multimodel):
+            # Copy the file to the destination folder
+            shutil.copy2(src_file_path_multimodel, dest_file_path_multimodel)
+            print(f"Copied: {file_name_multimodel}")
         else:
             print(f"File not found: {file_name}")
 
