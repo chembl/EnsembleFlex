@@ -21,6 +21,41 @@ from Bio import SeqIO
 from shutil import copyfile, rmtree
 
 
+def parse_arguments():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Subset PDB files based on gaps in sequence (taken from atom records).")
+    parser.add_argument("-i", "--input", dest="input_directory", required=True,
+                        help="Input directory path containing PDB files")
+    parser.add_argument("-o", "--output", dest="output_directory", required=True,
+                        help="Output directory path")
+    return parser.parse_args()
+
+
+def validate_directories(input_path, output_path):
+    """Validate input and output directories."""
+    # Convert input_path to an absolute path if it is not already
+    if not os.path.isabs(input_path):
+        input_path = os.path.abspath(input_path)
+
+    if not os.path.isdir(input_path):
+        print("Error: The input directory does not exist.")
+        sys.exit(1)
+
+    # Convert output_path to an absolute path if it is not already
+    if not os.path.isabs(output_path):
+        output_path = os.path.abspath(os.path.join(os.getcwd(), output_path))
+
+    if not os.path.isdir(output_path):
+        try:
+            os.makedirs(output_path)
+        except OSError as e:
+            print(f"Error: Could not create output directory '{output_path}'. {e}")
+            sys.exit(1)
+
+    return input_path, output_path
+
+
 def subset_pdbs_on_gap_in_seq(input_directory, output_directory):
     # Remove existing subdirectories if they exist
     output_folder_with_gaps = os.path.join(output_directory, "structures_with_gaps")
@@ -75,12 +110,9 @@ def subset_pdbs_on_gap_in_seq(input_directory, output_directory):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Subset PDB files based on gaps in sequence (taken from atom records).")
-    parser.add_argument("-i", "--input", dest="input_directory", required=True,
-                        help="Input directory path containing PDB files")
-    parser.add_argument("-o", "--output", dest="output_directory", required=True,
-                        help="Output directory path")
-    args = parser.parse_args()
-
-    subset_pdbs_on_gap_in_seq(args.input_directory, args.output_directory)
+    # Parse command-line arguments
+    args = parse_arguments()
+    # Validate input and output directories
+    input_path, output_path = validate_directories(args.input_directory, args.output_directory)
+    # Subset pdbs
+    subset_pdbs_on_gap_in_seq(input_path, output_path)

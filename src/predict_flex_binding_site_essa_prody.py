@@ -22,82 +22,110 @@ import matplotlib.pylab as plt
 plt.ion()  # The matplotlib.pyplot.ion() function turns on the interactive mode
 
 
-#------- File Argument/Option Parser -------#
-parser = argparse.ArgumentParser(description="Perform Essential Site Scanning Analysis (ESSA) on a protein structure.")
-parser.add_argument("-i", "--input", dest="input_path", required=True,
-                    help="input dataset directory path", metavar="PATH")
-parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
-                    help="output directory name", metavar="STRING")
-parser.add_argument("-b", "--bsresidues", dest="bsresidues", default=None,
-                    help="binding site residues as file", metavar="STRING")
+def parse_arguments():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="Perform Essential Site Scanning Analysis (ESSA) on a protein structure.")
+    parser.add_argument("-i", "--input", dest="input_path", required=True,
+                        help="input dataset directory path", metavar="PATH")
+    parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
+                        help="output directory name", metavar="STRING")
+    parser.add_argument("-b", "--bsresidues", dest="bsresidues", default=None,
+                        help="binding site residues as file", metavar="STRING")
+    return parser.parse_args()
 
-args = parser.parse_args()
-if os.path.isdir(args.input_path) and os.path.isdir(args.output_dir):
-    input_path = os.path.abspath(args.input_path)
-    output_path = os.path.abspath(args.output_dir)
-elif os.path.isdir(args.input_path) and not os.path.isdir(args.output_dir):
-    input_path = os.path.abspath(args.input_path)
-    if os.path.isdir(os.path.dirname(args.output_dir)):
-        output_path = args.output_dir
-        os.mkdir(output_path)
+
+def validate_directories(input_path, output_path):
+    """Validate input and output directories."""
+    # Convert input_path to an absolute path if it is not already
+    if not os.path.isabs(input_path):
+        input_path = os.path.abspath(input_path)
+
+    if not os.path.isdir(input_path):
+        print("Error: The input directory does not exist.")
+        sys.exit(1)
+
+    # Convert output_path to an absolute path if it is not already
+    if not os.path.isabs(output_path):
+        output_path = os.path.abspath(os.path.join(os.getcwd(), output_path))
+
+    if not os.path.isdir(output_path):
+        try:
+            os.makedirs(output_path)
+        except OSError as e:
+            print(f"Error: Could not create output directory '{output_path}'. {e}")
+            sys.exit(1)
+
+    return input_path, output_path
+
+
+def validate_binding_site_file(bsresidues):
+    """Validate binding site residues file."""
+    if bsresidues and os.path.isfile(bsresidues):
+        return os.path.abspath(bsresidues)
     else:
-        output_path = args.input_path+"/"+args.output_dir
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-else:
-    print("Please specify a valid input directory path to your structure files.\n")
+        print("No valid binding site residue list provided.")
+        return None
 
-if os.path.isfile(args.bsresidues):
-    bsresiduefile = os.path.abspath(args.bsresidues)
-    print("Residue file in use: "+bsresiduefile)
-else:
-    print("No binding site residue list provided.\n")
+def main():
+    # Parse command-line arguments
+    args = parse_arguments()
+    # Validate input and output directories
+    input_path, output_path = validate_directories(args.input_path, args.output_dir)
+    # Validate residue file
+    bsresiduefile = validate_binding_site_file(args.bsresidues)
 
-#-------------------------------------------#
+    # Change working directory to output_path
+    os.chdir(output_path)
 
-# change working directory to output_path
-os.chdir(output_path)
+    # List of input PDB files
+    pdbfiles = glob.glob(os.path.join(input_path, "*.pdb"))
+
+    # Parsing only reference structure (by default, the first structure of the ensemble is taken as the reference structure)
+    reference_structure = parsePDB(pdbfiles[0], compressed=False, title='reference_structure')
+
+    # Select C-alphas of reference structure
+    reference_calphas = reference_structure.select('calpha')
+
+    if bsresiduefile:
+        with open(bsresiduefile) as f:
+            residues = f.read().strip()
+    else:
+        print("No binding site residues provided. Proceeding without highlighting binding site residues.")
+        residues = ""
+
+    ### Essential Site Scanning Analysis (ESSA)
+
+    # Instantiate an ESSA object
+    essa = ESSA()
+    # Set system
+    essa.setSystem(reference_structure)
+    # Perform scanning
+    essa.scanResidues()
+
+    # Plot Z-Scores per residue with highlighted binding site residues
+    # ProDy selection string to highlight binding residues
+    if residues:
+        prody_sele = 'resnum ' + residues.replace("\n", " ")
+        print("\nResidue numbers used from file are: ")
+        print(prody_sele)
+    else:
+        prody_sele = None
+
+    # The blue dashed baseline shows the q-th quantile of the profile, which is by default q=0.75, representing the top quartile.
+    with plt.style.context({'figure.figsize': (9, 7), 'figure.dpi': 100}):
+        essa.showESSAProfile(rescode=True, sel=prody_sele)
+    plt.savefig('ESSA_profile_of_reference_structure.png')
+    plt.close()
+    print('\nESSA profile plot is saved to ESSA_profile_of_reference_structure.png.')
+
+    # Save ESSA Z-scores
+    essa.saveESSAZscores()
+    print("\nESSA Z-scores written to file")
+
+    # Save PDB file with Z-scores in the B-factor column
+    essa.writeESSAZscoresToPDB()
+    print("\nPDB file with ESSA Z-scores in B-factor column written to file\n")
 
 
-# list of input pdb files
-pdbfiles = glob.glob(input_path+"/*.pdb")
-# parsing only reference structure
-# by default first structure of ensemble is taken as reference structure
-reference_structure = parsePDB(pdbfiles[0], compressed=False, title='reference_structure')  #, subset='ca'
-# select C-alphas of reference structure
-reference_calphas = reference_structure.select('calpha')
-
-# read binding site residues
-with open(bsresiduefile) as f:
-    residues = f.read()
-#print(residues)
-
-
-### Essential Site Scanning Analysis (ESSA)
-
-# instantiate an ESSA object
-essa = ESSA()
-# set system
-essa.setSystem(reference_structure)
-# perform scanning
-essa.scanResidues()
-
-# Plot Z-Scores per residue with highlighted binding site residues
-# ProDy selection string to highlight binding residues
-prody_sele = 'resnum '+str(residues).replace("\n", " ")
-print("\nResidue numbers used from file are: ")
-print(prody_sele)
-# The blue dashed baseline shows the q-th quantile of the profile, which is by default q=0.75, representing the top quartile.
-with plt.style.context({'figure.figsize': (9, 7), 'figure.dpi': 100}):
-    essa.showESSAProfile(rescode=True, sel=prody_sele)
-plt.savefig('ESSA_profile_of_reference_structure.png')
-plt.close()
-print('\nESSA profile plot is saved to ESSA_profile_of_reference_structure.png.')
-
-# Save ESSA z-scores
-essa.saveESSAZscores()
-print("\nESSA Z-scores written to file")
-
-# Save PDB file with Z-scores in the B-factor column
-essa.writeESSAZscoresToPDB()
-print("\nPDB file with ESSA Z-scores in B-factor column written to file\n")
+if __name__ == "__main__":
+    main()

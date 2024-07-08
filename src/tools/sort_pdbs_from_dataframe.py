@@ -17,6 +17,57 @@ import shutil
 import argparse
 import pandas as pd
 
+
+def parse_arguments():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="Subset PDB files based on a CSV dataframe.")
+    parser.add_argument("-i", "--input", dest="input_directory", required=True,
+                        help="Input directory path")
+    parser.add_argument("-o", "--output", dest="output_directory", required=True,
+                        help="Output directory path")
+    parser.add_argument("-d", "--dataframe", dest="dataframe_path", required=True,
+                        help="Path of the CSV dataframe containing PDB filenames and the specified column")
+    parser.add_argument("-c", "--column", dest="column_name", required=True,
+                        help="Name of the column in the dataframe to use for subdirectories")
+    return parser.parse_args()
+
+
+def validate_directories(input_path, output_path):
+    """Validate input and output directories."""
+    # Convert input_path to an absolute path if it is not already
+    if not os.path.isabs(input_path):
+        input_path = os.path.abspath(input_path)
+
+    if not os.path.isdir(input_path):
+        print("Error: The input directory does not exist.")
+        sys.exit(1)
+
+    # Convert output_path to an absolute path if it is not already
+    if not os.path.isabs(output_path):
+        output_path = os.path.abspath(os.path.join(os.getcwd(), output_path))
+
+    if not os.path.isdir(output_path):
+        try:
+            os.makedirs(output_path)
+        except OSError as e:
+            print(f"Error: Could not create output directory '{output_path}'. {e}")
+            sys.exit(1)
+
+    return input_path, output_path
+
+
+def validate_dataframe_path(dataframe_path):
+    """Validate the JSON file path."""
+    if not os.path.isabs(dataframe_path):
+        dataframe_path = os.path.abspath(dataframe_path)
+
+    if not os.path.isfile(dataframe_path):
+        print("Error: The JSON file does not exist.")
+        sys.exit(1)
+
+    return dataframe_path
+
+
 def subset_pdbs_from_dataframe(input_dir, output_dir, dataframe_path, column_name):
     # Ensure the output directory exists, create it if not
     if not os.path.exists(output_dir):
@@ -41,17 +92,13 @@ def subset_pdbs_from_dataframe(input_dir, output_dir, dataframe_path, column_nam
         shutil.copy(src_path, dest_path)
         print(f"Copying {pdb_basename} to {dest_dir}")
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Subset PDB files based on a CSV dataframe.")
-    parser.add_argument("-i", "--input", dest="input_directory", required=True,
-                        help="Input directory path")
-    parser.add_argument("-o", "--output", dest="output_directory", required=True,
-                        help="Output directory path")
-    parser.add_argument("-d", "--dataframe", dest="dataframe_path", required=True,
-                        help="Path of the CSV dataframe containing PDB filenames and the specified column")
-    parser.add_argument("-c", "--column", dest="column_name", required=True,
-                        help="Name of the column in the dataframe to use for subdirectories")
-
-    args = parser.parse_args()
-
-    subset_pdbs_from_dataframe(args.input_directory, args.output_directory, args.dataframe_path, args.column_name)
+    # Parse command-line arguments
+    args = parse_arguments()
+    # Validate input and output directories
+    input_path, output_path = validate_directories(args.input_directory, args.output_directory)
+    # Validate dataframe file path
+    dataframe_path = validate_dataframe_path(args.dataframe_path)
+    # Subset pdbs
+    subset_pdbs_from_dataframe(input_path, output_path, dataframe_path, args.column_name)

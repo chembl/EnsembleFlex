@@ -2,7 +2,7 @@
 
 """
 Ensemble flexibility analysis through Solvent Accessibility Surface Area (SASA) differences
-using the Python package biopython.
+using the Python package Biopython.
 
 Usage:
     python3 analyse_flex_sasa_biopython.py -i <input_directory> -o <output_directory>
@@ -14,101 +14,113 @@ Example:
 import os
 import argparse
 import glob
-from Bio.PDB import PDBParser
-from Bio.PDB.SASA import ShrakeRupley
 import pandas as pd
 import matplotlib.pylab as plt
+from Bio.PDB import PDBParser
+from Bio.PDB.SASA import ShrakeRupley
 
-#------- File Argument/Option Parser -------#
-parser = argparse.ArgumentParser(description="Perform SASA calculations on protein structures.")
-parser.add_argument("-i", "--input", dest="input_path", required=True,
-                    help="input dataset directory path", metavar="PATH")
-parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
-                    help="output directory name", metavar="STRING")
 
-args = parser.parse_args()
-if os.path.isdir(args.input_path) and os.path.isdir(args.output_dir):
-    input_path = os.path.abspath(args.input_path)
-    output_path = os.path.abspath(args.output_dir)
-elif os.path.isdir(args.input_path) and not os.path.isdir(args.output_dir):
-    input_path = os.path.abspath(args.input_path)
-    if os.path.isdir(os.path.dirname(args.output_dir)):
-        output_path = args.output_dir
-        os.mkdir(output_path)
-    else:
-        output_path = args.input_path+"/"+args.output_dir
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-else:
-    print("Please specify a valid input directory path to your structure files.\n")
-#-------------------------------------------#
+def parse_arguments():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="Perform SASA calculations on protein structures.")
+    parser.add_argument("-i", "--input", dest="input_path", required=True,
+                        help="input dataset directory path", metavar="PATH")
+    parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
+                        help="output directory name", metavar="STRING")
+    return parser.parse_args()
 
-# change working directory to output_path
-os.chdir(output_path)
 
-parser = PDBParser(PERMISSIVE=True)
-sr = ShrakeRupley()
+def validate_directories(input_path, output_path):
+    """Validate input and output directories."""
+    # Convert input_path to an absolute path if it is not already
+    if not os.path.isabs(input_path):
+        input_path = os.path.abspath(input_path)
 
-pdbfiles = glob.glob(input_path+"/*.pdb")
+    if not os.path.isdir(input_path):
+        print("Error: The input directory does not exist.")
+        sys.exit(1)
 
-sasa_df = pd.DataFrame(columns=['ResNum', 'ResName'])
+    # Convert output_path to an absolute path if it is not already
+    if not os.path.isabs(output_path):
+        output_path = os.path.abspath(os.path.join(os.getcwd(), output_path))
 
-#metals = ['ZN', 'FE', 'CU', 'MG', 'CA', 'MN']
-residue_names = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLU", "GLN", "GLY", "HIS", "ILE",
-                 "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"]
+    if not os.path.isdir(output_path):
+        try:
+            os.makedirs(output_path)
+        except OSError as e:
+            print(f"Error: Could not create output directory '{output_path}'. {e}")
+            sys.exit(1)
 
-for fileName in pdbfiles:
-    # parse a structure
-    structure_id = fileName.rsplit('/', 1)[1][:-4]
-    structure = parser.get_structure(structure_id, fileName)
+    return input_path, output_path
 
-    # remove water molecules (all atoms in a structure may affect SASA calculation)
-    for chain in structure[0]:
-        for residue in list(chain):
-            if residue.id[0] == 'W':
-                chain.detach_child(residue.id)
 
-    # Calculate solvent accessibility surface area for an entity
-    # Level options: “A” (Atom), “R” (Residue), “C” (Chain), “M” (Model), or “S” (Structure)
-    # if level=”R”, all residues will have a .sasa attribute.
-    sr.compute(structure[0], level="R")
+def calculate_sasa(input_path, output_path):
+    """Calculate SASA for all PDB files in the input directory."""
+    os.chdir(output_path)
 
-    # get SASA data from each structure into list
-    my_list = []
-    for chain in structure[0]:
-        for res in chain:
-            my_list.append((res.id[1], res.get_resname(), round(res.sasa, 2)))
-    # combine lists into df
-    my_df = pd.DataFrame(my_list, columns=['ResNum', 'ResName', structure_id])
-    # keep only calculations for natural residues (filter other molecules)
-    my_df = my_df[my_df['ResName'].isin(residue_names)]
-    # merge data frames
-    sasa_df = sasa_df.merge(my_df, on=['ResNum', 'ResName'], how='outer')
+    parser = PDBParser(PERMISSIVE=True)
+    sr = ShrakeRupley()
+    pdbfiles = glob.glob(os.path.join(input_path, "*.pdb"))
 
-#print(sasa_df) # for debugging
+    sasa_df = pd.DataFrame(columns=['ResNum', 'ResName'])
+    residue_names = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLU", "GLN", "GLY", "HIS", "ILE",
+                     "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"]
 
-# save the dataframe containing per residue SASA values for all structures as CSV file
-sasa_df.to_csv('SASA_per_structure.csv', index=False)
-print('\nSASA values per residue and structure are saved to SASA_per_structure.csv.\n')
+    for fileName in pdbfiles:
+        structure_id = os.path.basename(fileName).rsplit('.', 1)[0]
+        structure = parser.get_structure(structure_id, fileName)
 
-# get numeric data to perform calculations
-calc_df = sasa_df.loc[:, ~sasa_df.columns.isin(['ResNum', 'ResName'])]
-# do calculations: max, min, spread, sd
-sasa_global_df = sasa_df[['ResNum', 'ResName']]
-sasa_global_df['max'] = calc_df.max(axis=1)
-sasa_global_df['min'] = calc_df.min(axis=1)
-sasa_global_df['spread'] = calc_df.max(axis=1)-calc_df.min(axis=1)
-sasa_global_df['sd'] = calc_df.std(axis=1).round(decimals=2)
-# save the dataframe containing global per residue calculations as CSV file
-sasa_global_df.to_csv('SASA_global.csv', index=False)
-print('\nSASA global metrics per residue are saved to SASA_global.csv.\n')
-# save only sd to file
-#sasa_global_df['sd'].to_csv('SASA_sd_global.csv', index=False, header=False)
+        for chain in structure[0]:
+            for residue in list(chain):
+                if residue.id[0] == 'W':
+                    chain.detach_child(residue.id)
 
-plt.plot(sasa_global_df['sd']);
-plt.title('Solvent Accessible Surface Area (SASA) differences');
-plt.xlabel('Residue index');
-plt.ylabel('SASA Standard Deviation');
-plt.savefig('SASA_sd.png')
-plt.close()
-print('\nSASA Standard Deviation plot saved to SASA_sd.png.\n')
+        sr.compute(structure[0], level="R")
+
+        my_list = []
+        for chain in structure[0]:
+            for res in chain:
+                my_list.append((res.id[1], res.get_resname(), round(res.sasa, 2)))
+        my_df = pd.DataFrame(my_list, columns=['ResNum', 'ResName', structure_id])
+        my_df = my_df[my_df['ResName'].isin(residue_names)]
+        sasa_df = sasa_df.merge(my_df, on=['ResNum', 'ResName'], how='outer')
+
+    return sasa_df
+
+
+def save_sasa_data(sasa_df):
+    """Save SASA data to CSV files and generate a plot."""
+    sasa_df.to_csv('SASA_per_structure.csv', index=False)
+    print('SASA values per residue and structure are saved to SASA_per_structure.csv.')
+
+    calc_df = sasa_df.loc[:, ~sasa_df.columns.isin(['ResNum', 'ResName'])]
+    sasa_global_df = sasa_df[['ResNum', 'ResName']]
+    sasa_global_df['max'] = calc_df.max(axis=1)
+    sasa_global_df['min'] = calc_df.min(axis=1)
+    sasa_global_df['spread'] = calc_df.max(axis=1) - calc_df.min(axis=1)
+    sasa_global_df['sd'] = calc_df.std(axis=1).round(decimals=2)
+    sasa_global_df.to_csv('SASA_global.csv', index=False)
+    print('SASA global metrics per residue are saved to SASA_global.csv.')
+
+    plt.plot(sasa_global_df['sd'])
+    plt.title('Solvent Accessible Surface Area (SASA) differences')
+    plt.xlabel('Residue index')
+    plt.ylabel('SASA Standard Deviation')
+    plt.savefig('SASA_sd.png')
+    plt.close()
+    print('SASA Standard Deviation plot saved to SASA_sd.png.')
+
+
+def main():
+    # Parse command-line arguments
+    args = parse_arguments()
+    # Validate input and output directories
+    input_path, output_path = validate_directories(args.input_path, args.output_dir)
+    # Calculate SASA
+    sasa_df = calculate_sasa(input_path, output_path)
+    # Save SASA dataframe
+    save_sasa_data(sasa_df)
+
+
+if __name__ == "__main__":
+    main()

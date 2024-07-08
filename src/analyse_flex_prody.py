@@ -17,191 +17,205 @@ import glob
 from prody import *
 import matplotlib.pylab as plt
 import numpy as np
-#from matplotlib.pylab import *
+from datetime import datetime
 
 
-#------- File Argument/Option Parser -------#
-parser = argparse.ArgumentParser(description="Perform flexibility analysis on protein structures.")
-parser.add_argument("-i", "--input", dest="input_path", required=True,
-                    help="input dataset directory path", metavar="PATH")
-parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
-                    help="output directory name", metavar="STRING")
-
-args = parser.parse_args()
-if os.path.isdir(args.input_path) and os.path.isdir(args.output_dir):
-    input_path = os.path.abspath(args.input_path)
-    output_path = os.path.abspath(args.output_dir)
-elif os.path.isdir(args.input_path) and not os.path.isdir(args.output_dir):
-    input_path = os.path.abspath(args.input_path)
-    if os.path.isdir(os.path.dirname(args.output_dir)):
-        output_path = args.output_dir
-        os.mkdir(output_path)
-    else:
-        output_path = args.input_path+"/"+args.output_dir
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-else:
-    print("Please specify a valid input directory path to your structure files.\n")
-#-------------------------------------------#
-
-# change working directory to output_path
-os.chdir(output_path)
-
-#------- Logging to file and console -------#
-class Logger(object):
-    def __init__(self):
-        self.terminal = sys.stdout
-        self.log = open("logfile.log", "a")
-
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-
-    def flush(self):
-        # this flush method is needed for python 3 compatibility.
-        # this handles the flush command by doing nothing.
-        # you might want to specify some extra behavior here.
-        pass
-sys.stdout = Logger()
-#-------------------------------------------#
+def parse_arguments():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="Perform flexibility analysis on protein structures.")
+    parser.add_argument("-i", "--input", dest="input_path", required=True,
+                        help="input dataset directory path", metavar="PATH")
+    parser.add_argument("-o", "--output", dest="output_dir", default="outdir",
+                        help="output directory name", metavar="STRING")
+    return parser.parse_args()
 
 
-# list of input pdb files
-pdbfiles = glob.glob(input_path+"/*.pdb")
-# parsing structures
-structures = parsePDB(pdbfiles, subset='ca', compressed=False)  #, subset='ca'
-reference_structure = structures[0] # by default first structure of ensemble is taken as reference structure and
-# For unresolved atoms, the coordinates of the reference structure is assumed in RMSD calculations and superpositions.
-# select C-alphas of reference structure
-#reference_calphas = reference_structure.select('calpha')
+def validate_directories(input_path, output_path):
+    """Validate input and output directories."""
+    # Convert input_path to an absolute path if it is not already
+    if not os.path.isabs(input_path):
+        input_path = os.path.abspath(input_path)
 
-# buildPDBEnsemble() maps each structure against the reference structure using a function such as mapOntoChain().
-# The reference structure is automatically the first member of list provided.
-# Here superpositioning is omitted by setting it to 'False'.
-ensemble = buildPDBEnsemble(structures, superpose=False)
-# set c-alpha reference
-#ensemble.setAtoms(reference_structure.calpha)
+    if not os.path.isdir(input_path):
+        print("Error: The input directory does not exist.")
+        sys.exit(1)
 
+    # Convert output_path to an absolute path if it is not already
+    if not os.path.isabs(output_path):
+        output_path = os.path.abspath(os.path.join(os.getcwd(), output_path))
 
-### 1. RMSF
-rmsf = ensemble.getRMSFs()
-plt.plot(rmsf);
-plt.xlabel('Residue index');
-plt.ylabel('RMSF');
-plt.savefig('RMSF.png')
-plt.close()
-print('\nRoot mean square fluctuation (RMSF) plot saved to RMSF.png.\n')
+    if not os.path.isdir(output_path):
+        try:
+            os.makedirs(output_path)
+        except OSError as e:
+            print(f"Error: Could not create output directory '{output_path}'. {e}")
+            sys.exit(1)
 
-# Save reference structure with RMSF in B-factor column
-writePDB('RMSFonReference.pdb', reference_structure, beta=rmsf)
-print('\nRMSF values are saved in B-factor column of RMSFonReference.pdb for visualisation.\n')
+    return input_path, output_path
 
 
+def setup_logging(output_path):
+    """Setup logging to file and console."""
+    class Logger(object):
+        def __init__(self):
+            self.terminal = sys.stdout
+            self.log = open(os.path.join(output_path, "logfile.log"), "a")
 
-### 2. Principal Component Analysis (PCA)
-# PCA is a method that identifies the components which account for the greatest amount of variability in the ensemble.
-# PCA calculations
+        def write(self, message):
+            self.terminal.write(message)
+            self.log.write(f"{datetime.now()}: {message}")
 
-pca = PCA('')           # Instantiate a PCA instance
-pca.buildCovariance(ensemble)   # Build covariance for the ensemble
-pca.calcModes()                 # Calculate modes (20 of the by default)
+        def flush(self):
+            pass
 
-# if more than 3 structures are present:
-if len(pdbfiles) > 3:
-    # using singular value decomposition for faster and more memory efficient calculation of principal modes
-    pca_svd = PCA('ensemblePCAsvd')
-    pca_svd.performSVD(ensemble)
+    sys.stdout = Logger()
 
-    abs(pca_svd.getEigvals()[:20] - pca.getEigvals()).max()
-    abs(calcOverlap(pca, pca_svd).diagonal()[:20]).min()
 
-    # plot
-    showOverlapTable(pca, pca_svd[:20])#;
-    plt.savefig('Overlap_PCA_PCA-SVD.png')
+def perform_rmsf_analysis(ensemble, reference_structure):
+    """Perform RMSF analysis and save results."""
+    rmsf = ensemble.getRMSFs()
+    plt.plot(rmsf)
+    plt.xlabel('Residue index')
+    plt.ylabel('RMSF')
+    plt.savefig('RMSF.png')
     plt.close()
-    print('\nOverlap plot of PCA and PCA with singular value decomposition saved to Overlap_PCA_PCA-SVD.png.\n')
+    print('Root mean square fluctuation (RMSF) plot saved to RMSF.png.')
 
-else:
-    print("Ensembles must contain more than 3 structures to perform singular value decomposition. \n")
+    writePDB('RMSFonReference.pdb', reference_structure, beta=rmsf)
+    print('RMSF values are saved in B-factor column of RMSFonReference.pdb for visualization.')
 
-## Variance along PCs
-# print to sys.stdout
-print('Variance along PCs:')
-for mode in pca[:3]:
-    var = calcFractVariance(mode)*100
-    print(str(mode) + '  % variance = {:.2f}'.format(var))
-    #print('{0:s}  % variance = {1:.2f}'.format(mode, var))
-# save to file
-with open('PCA_variance.txt', 'w') as f:
-    print('Variance along PCs:', file=f)
+
+def perform_pca_analysis(ensemble, pdbfiles):
+    """Perform PCA analysis and save results."""
+    pca = PCA('')
+    pca.buildCovariance(ensemble)
+    pca.calcModes()
+
+    if len(pdbfiles) > 3:  # if more than 3 structures are present
+        # Perform Singular Value Decomposition (SVD) for faster and more memory efficient calculation of principal modes
+        pca_svd = PCA('ensemblePCAsvd')
+        pca_svd.performSVD(ensemble)
+
+        abs(pca_svd.getEigvals()[:20] - pca.getEigvals()).max()
+        abs(calcOverlap(pca, pca_svd).diagonal()[:20]).min()
+
+        # Plot overlap table of PCA and PCA-SVD
+        showOverlapTable(pca, pca_svd[:20])
+        plt.savefig('Overlap_PCA_PCA-SVD.png')
+        plt.close()
+        print('Overlap plot of PCA and PCA with singular value decomposition saved to Overlap_PCA_PCA-SVD.png.')
+    else:
+        print("Ensembles must contain more than 3 structures to perform singular value decomposition.")
+
+    # Print variance along PCs to console and save to file
+    print('Variance along PCs:')
     for mode in pca[:3]:
         var = calcFractVariance(mode) * 100
-        print(str(mode) + '  % variance = {:.2f}'.format(var), file=f)
+        print(f'{mode}  % variance = {var:.2f}')
+    with open('PCA_variance.txt', 'w') as f:
+        print('Variance along PCs:', file=f)
+        for mode in pca[:3]:
+            var = calcFractVariance(mode) * 100
+            print(f'{mode}  % variance = {var:.2f}', file=f)
 
-## Collectivity of modes
-# print to sys.stdout
-print('PCA mode collectivity:')
-for mode in pca[:3]:    # Print PCA mode collectivity
-    coll = calcCollectivity(mode)
-    print(str(mode) + '  collectivity = {:.2f}'.format(coll))
-    #print('{0:s}  collectivity = {1:.2f}'.format(mode, coll))
-# save to file
-with open('PCA_mode_collectivity.txt', 'w') as f:
-    print('PCA mode collectivity:', file=f)
-    for mode in pca[:3]:  # Print PCA mode collectivity
+    # Print PCA mode collectivity to console and save to file
+    print('PCA mode collectivity:')
+    for mode in pca[:3]:
         coll = calcCollectivity(mode)
-        print(str(mode) + '  collectivity = {:.2f}'.format(coll), file=f)
+        print(f'{mode}  collectivity = {coll:.2f}')
+    with open('PCA_mode_collectivity.txt', 'w') as f:
+        print('PCA mode collectivity:', file=f)
+        for mode in pca[:3]:
+            coll = calcCollectivity(mode)
+            print(f'{mode}  collectivity = {coll:.2f}', file=f)
 
-writeArray('PCA_eigvecs.txt', pca.getEigvecs() ) # PCA eigenvectors
-print('\nPCA eigenvectors are written to PCA_eigvecs.txt.\n')
+    # Save PCA eigenvectors to file
+    writeArray('PCA_eigvecs.txt', pca.getEigvecs())
+    print('PCA eigenvectors are written to PCA_eigvecs.txt.')
 
-# Square fluctuations - PCA
-showSqFlucts(pca[:3])#;
-plt.savefig('Fluctuations_PCA.png')
-plt.close()
-print('\nPCA square fluctuations plot is saved to Fluctuations_PCA.png.\n')
+    # Plot PCA square fluctuations and save to file
+    showSqFlucts(pca[:3])
+    plt.savefig('Fluctuations_PCA.png')
+    plt.close()
+    print('PCA square fluctuations plot is saved to Fluctuations_PCA.png.')
 
-
-## Cross Correlations
-# We can also see how correlated the motions for each residue are with each other residue. We see similar patterns
-# for the two methods, especially when using a large number of modes.
-
-showCrossCorr(pca[0])#;
-plt.savefig('CrossCorrelations_PCA1perResidue.png')
-plt.close()
-print('\nCross Correlations of PC1 per residue is saved to CrossCorrelations_PCA1perResidue.png.\n')
+    # Plot cross correlations of PC1 per residue and save to file
+    showCrossCorr(pca[0])
+    plt.savefig('CrossCorrelations_PCA1perResidue.png')
+    plt.close()
+    print('Cross Correlations of PC1 per residue is saved to CrossCorrelations_PCA1perResidue.png.')
 
 
+def perform_eda_analysis(ensemble):
+    """Perform EDA analysis and save results."""
+    eda = EDA('')
+    eda.buildCovariance(ensemble)
+    eda.calcModes()
 
-### 3. Essential Dynamics Analysis (EDA)
-
-eda = EDA('')
-eda.buildCovariance( ensemble )
-eda.calcModes()
-#saveModel(eda)
-
-## Variance along modes
-# print to sys.stdout
-print('Variance along modes:')
-for mode in eda[:3]:
-    var = calcFractVariance(mode)*100
-    print(str(mode) + '  % variance = {:.2f}'.format(var))
-    #print('{0:s}  % variance = {1:.2f}'.format(mode, var))
-# save to file
-with open('EDA_variance.txt', 'w') as f:
-    print('Variance along modes:', file=f)
+    # Print variance along modes to console and save to file
+    print('Variance along modes:')
     for mode in eda[:3]:
         var = calcFractVariance(mode) * 100
-        print(str(mode) + '  % variance = {:.2f}'.format(var), file=f)
+        print(f'{mode}  % variance = {var:.2f}')
+    with open('EDA_variance.txt', 'w') as f:
+        print('Variance along modes:', file=f)
+        for mode in eda[:3]:
+            var = calcFractVariance(mode) * 100
+            print(f'{mode}  % variance = {var:.2f}', file=f)
 
-# Square fluctuations - PCA
-showSqFlucts(eda[:3])#;
-plt.savefig('Fluctuations_EDA.png')
-plt.close()
-print('\nEDA square fluctuations plot is saved to Fluctuations_EDA.png.\n')
+    # Plot EDA square fluctuations and save to file
+    showSqFlucts(eda[:3])
+    plt.savefig('Fluctuations_EDA.png')
+    plt.close()
+    print('EDA square fluctuations plot is saved to Fluctuations_EDA.png.')
 
 
+def main():
+    # Parse command-line arguments
+    args = parse_arguments()
+    # Validate input and output directories
+    input_path, output_path = validate_directories(args.input_path, args.output_dir)
+    # Set up logging to file and console
+    setup_logging(output_path)
 
-### Generate Report
-import analyse_flex_prody_reporting as reporting
-reporting.generate_report(str_input_path=args.input_path, output_path=output_path)
+    # Change working directory to output_path
+    os.chdir(output_path)
+
+    # List of input PDB files
+    pdbfiles = glob.glob(os.path.join(input_path, "*.pdb"))
+
+    # Parse structures and select C-alphas (ca) of the first structure as reference
+    structures = parsePDB(pdbfiles, subset='ca', compressed=False)
+    reference_structure = structures[0] # by default first structure of ensemble is taken as reference structure and
+    # For unresolved atoms, the coordinates of the reference structure is assumed in RMSD calculations and superpositions.
+    # select only C-alphas of reference structure (not explicitly needed here)
+    #reference_calphas = reference_structure.select('calpha')
+
+    # Build PDB ensemble without superposition
+    # buildPDBEnsemble() maps each structure against the reference structure using a function such as mapOntoChain().
+    # The reference structure is automatically the first member of list provided.
+    # Here superpositioning is omitted by setting it to 'False'.
+    ensemble = buildPDBEnsemble(structures, superpose=False)
+    # set c-alpha reference (not explicitly needed here)
+    # ensemble.setAtoms(reference_structure.calpha)
+
+    ### 1. RMSF Analysis
+    # Perform RMSF analysis
+    perform_rmsf_analysis(ensemble, reference_structure)
+
+    ### 2. Principal Component Analysis (PCA)
+    # PCA is a method that identifies the components which account for the greatest amount of variability in the ensemble.
+    # Perform PCA analysis
+    perform_pca_analysis(ensemble, pdbfiles)
+
+    ### 3. Essential Dynamics Analysis (EDA)
+    # Perform EDA analysis
+    perform_eda_analysis(ensemble)
+
+    # ### Generate Report # Not in use
+    # import analyse_flex_prody_reporting as reporting
+    # reporting.generate_report(str_input_path=args.input_path, output_path=output_path)
+
+
+if __name__ == "__main__":
+    main()
