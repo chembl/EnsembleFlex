@@ -1146,6 +1146,12 @@ def superimpose_bs(superimp_method_bs):
         st.session_state.superimposed_bs = str(input_directory_liganded)
         st.write("Superimposed structures from input directory/liganded will be used.")
 
+
+# default setting is "None" (no superpositioning required)
+if st.session_state.superimposed_bs == "":
+    st.session_state.superimposed_bs = str(input_directory_liganded)
+    st.write("Superimposed structures from input directory/liganded will be used.")
+
 st.button('Confirm/Go!', key="superimp_bs_btn", on_click=superimpose_bs, args=[superimp_method_bs])
 
 superimposed_bs = st.session_state.superimposed_bs
@@ -1185,17 +1191,31 @@ if st.session_state.BSanalysisdone == True:
     with st.container(border=True, height=600):
         st.subheader("Binding Site Analysis Results")
         st.write("More data is provided in structural format in the output directory.")
-        st.markdown("#### - RMSF analysis")
-        try:
-            st.image(outputdir_BindingSite_analysis_Bio3D + '/RMSF_bsite2.png', caption='binding residues RMSFs')
-        except:
-            st.write("ERROR: No output available.")
-        st.markdown("#### - PCA on coordinates (all-atom)")
-        try:
-            st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_bsite_allatom.png', caption='binding residues PCA')
-            st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_atom_contribution_bsite_allatom.png', caption='PCA loadings')
-        except:
-            st.write("ERROR: No output available.")
+        tab1, tab2 = st.tabs(["All-atom RMSF & PCA", "Backbone RMSF & PCA"])
+        with tab1:
+            st.markdown("#### - RMSF analysis (all-atom)")
+            try:
+                st.image(outputdir_BindingSite_analysis_Bio3D + '/RMSF_bsite_ascending.png', caption='binding residues RMSFs')
+            except:
+                st.write("ERROR: No output available.")
+            st.markdown("#### - PCA on coordinates (all-atom)")
+            try:
+                st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_bsite_allatom.png', caption='binding residues PCA')
+                st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_atom_contribution_bsite_allatom.png', caption='PCA loadings')
+            except:
+                st.write("ERROR: No output available.")
+        with tab2:
+            st.markdown("#### - RMSF analysis (backbone)")
+            try:
+                st.image(outputdir_BindingSite_analysis_Bio3D + '/RMSF_bsite_backbone_ascending.png', caption='binding residues RMSFs')
+            except:
+                st.write("ERROR: No output available.")
+            st.markdown("#### - PCA on coordinates (backbone)")
+            try:
+                st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_bsite_backbone.png', caption='binding residues PCA')
+                st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_atom_contribution_bsite_backbone.png', caption='PCA loadings')
+            except:
+                st.write("ERROR: No output available.")
 
 # toc.subheader("4 - SASA Analysis of Binding Site Residues")
 # st.markdown('''
