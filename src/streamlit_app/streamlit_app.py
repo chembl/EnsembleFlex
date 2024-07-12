@@ -133,16 +133,18 @@ def multimodel_animation(pdbfilepath):
 #     st.session_state.output_directory = ""
 if 'superimposed' not in st.session_state:
     st.session_state.superimposed = ""
-if 'superimposedBio3d' not in st.session_state:
-    st.session_state.superimposedBio3d = False
+if 'superimposeisdone' not in st.session_state:
+    st.session_state.superimposeisdone = False
+if 'superimposeBio3Disdone' not in st.session_state:
+    st.session_state.superimposeBio3Disdone = False
 if 'Bio3Danalysisdone' not in st.session_state:
     st.session_state.Bio3Danalysisdone = False
 if 'SASAanalysisdone' not in st.session_state:
     st.session_state.SASAanalysisdone = False
-if 'PDBhasLigandSortdone' not in st.session_state:
-    st.session_state.PDBhasLigandSortdone = False
-if 'BSidentifydone' not in st.session_state:
-    st.session_state.BSidentifydone = False
+if 'PDBhasLigandSortisdone' not in st.session_state:
+    st.session_state.PDBhasLigandSortisdone = False
+if 'BSidentifyisdone' not in st.session_state:
+    st.session_state.BSidentifyisdone = False
 if 'loadinitialresidues' not in st.session_state:
     st.session_state.loadinitialresidues = False
 # if 'input_directory_liganded' not in st.session_state:
@@ -612,11 +614,12 @@ of the pipeline) then the interface will likely throw an Error at that point, bu
 
 if st.button('B) Display previous analysis results - set all run', key="display_previous_all_btn"):
     st.session_state.superimposed = str(output_directory)+'/superimposed'
-    st.session_state.superimposedBio3d = True
+    st.session_state.superimposeisdone = True
+    st.session_state.superimposeBio3Disdone = True
     st.session_state.Bio3Danalysisdone = True
     st.session_state.SASAanalysisdone = True
-    st.session_state.PDBhasLigandSortdone = True
-    st.session_state.BSidentifydone = True
+    st.session_state.PDBhasLigandSortisdone = True
+    st.session_state.BSidentifyisdone = True
     st.session_state.superimposed_bs = ""
     st.session_state.BSanalysisdone = True
     st.session_state.loadinitialresidues = True
@@ -686,15 +689,15 @@ def superimpose(superimp_method):
         # # Show stdout for external command
         # for line in iter(lambda: result.stdout.readline(), b""):
         #     st.text(line.decode("utf-8"))
-        st.session_state.superimposedBio3d = True
         st.session_state.superimposed = str(output_directory)+'/superimposed'
-        st.write("Superimposed structures are saved in: ", st.session_state.superimposed)
+        st.session_state.superimposeisdone = True
+        st.session_state.superimposeBio3Disdone = True
     if superimp_method == "ProDy":
         result = subprocess.run(
             [f"{sys.executable}", str(parentfilepath)+"/superimpose_prody.py", '-i', str(input_directory), '-o', str(output_directory)])
         st.write("ProDy calculations are running...")
         st.session_state.superimposed = str(output_directory)+'/superimposed/split_ensemble'
-        st.write("Superimposed structures are saved in: ", st.session_state.superimposed)
+        st.session_state.superimposeisdone = True
     if superimp_method == "None":
         st.session_state.superimposed = str(input_directory)
         st.write("Superimposed structures from input directory will be used.")
@@ -703,10 +706,14 @@ st.button('Confirm/Go!', key="superimp_btn", on_click=superimpose, args=[superim
 
 superimposed = st.session_state.superimposed
 
-if st.session_state.superimposedBio3d == True:
+if st.session_state.superimposeisdone == True:
+    with st.container(border=True, height=80):
+        st.write("Superimposed structures are saved in: ", st.session_state.superimposed)
+
+if st.session_state.superimposeBio3Disdone == True:
     with st.container(border=True, height=500):
-        st.markdown('##### Identified "rigid core" residues that were used for superpositioning \n (highlighted on reference '
-                    'structure)')
+        st.markdown('##### Identified "rigid core" residues that were used for superpositioning \n '
+                    '(highlighted on reference structure)')
         b_fac_on_structure_vis(str(output_directory) + '/superimp_core_labelled_on_ref.pdb')
 
 st.divider()
@@ -1000,11 +1007,11 @@ def sortPDBs():
     liganded = str(output_directory) + '/structures_with_ligand'
     not_liganded = str(output_directory) + '/structures_without_ligand'
     st.write("The subfolders are located in ", output_directory)
-    st.session_state.PDBhasLigandSortdone = True
+    st.session_state.PDBhasLigandSortisdone = True
 
 st.button('Sort structures', key='sort_btn', on_click=sortPDBs)
 
-if st.session_state.PDBhasLigandSortdone == True:
+if st.session_state.PDBhasLigandSortisdone == True:
     with st.container(border=True, height=300):
         st.write('Structures have been sorted into respective subfolders '
                  '"structures_with_ligand" and "structures_without_ligand" based on the following '
@@ -1019,7 +1026,7 @@ input_directory_liganded = st_directory_picker_input_liganded(initial_path=outpu
 # st.session_state.input_directory_liganded = str(input_directory_liganded)
 
 st.markdown('''##### Variables''')
-cutoff = st.number_input("Distance cutoff for binding site detection (in angstrom):", value=4.0, step=0.1, format="%.1f")
+cutoff = st.number_input("Distance cutoff for binding site detection (in angstrom):", value=3.5, step=0.1, format="%.1f")
 cutoff = round(cutoff,1) # round to one decimal, because when using the +/- buttons it goes out of 0.1 steps
 st.write('Distance cutoff for binding site detection is ', cutoff, ' A.')
 
@@ -1032,7 +1039,7 @@ def run_bs_ident_Bio3D():
     st.write("Structures are taken from ", input_directory_liganded)
     st.write("Bio3D calculations are running...")
     st.write("Output files are saved in: ", outputdir_BindingSite_ident)
-    st.session_state.BSidentifydone = True
+    st.session_state.BSidentifyisdone = True
     # show binding site csv file
     #csvfile = pd.read_csv(outputdir_BindingSite_ident+"/binding_site_residues.csv")  # path folder of the data file
     #st.write(csvfile)
@@ -1062,7 +1069,7 @@ st.markdown("##### Calculation and outputs:\n"
 
 st.button('Run Binding Site Identification', key='ident_bs_btn', on_click=run_bs_ident_Bio3D)
 
-if st.session_state.BSidentifydone == True:
+if st.session_state.BSidentifyisdone == True:
     initial_residue_numbers_file = outputdir_BindingSite_ident + '/binding_site_residue_numbers.txt'
     changed_residue_numbers_file = outputdir_BindingSite_ident + '/binding_site_residue_numbers_edited.txt'
     if (st.session_state.loadinitialresidues is False) and (os.path.exists(changed_residue_numbers_file)):
