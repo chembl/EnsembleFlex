@@ -301,10 +301,19 @@ mktrj.pca(pc_xyz_bsite_allatom, pc=1, file="PC1_bsite_allatom.pdb") #, mag = 1, 
 mktrj.pca(pc_xyz_bsite_allatom, pc=2, file="PC2_bsite_allatom.pdb") #, mag = 1, step = 0.125
 mktrj.pca(pc_xyz_bsite_allatom, pc=3, file="PC3_bsite_allatom.pdb") #, mag = 1, step = 0.125
 
+mktrj.pca(pc_xyz_bsite_backbone, pc=1, file="PC1_bsite_backbone.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz_bsite_backbone, pc=2, file="PC2_bsite_backbone.pdb") #, mag = 1, step = 0.125
+mktrj.pca(pc_xyz_bsite_backbone, pc=3, file="PC3_bsite_backbone.pdb") #, mag = 1, step = 0.125
+
+
 # PC_bsite-allatom Vector field representation
 pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=1, as="wire", file="PC1vectors_bsite_allatom.pml", type="script")
 pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=2, as="wire", file="PC2vectors_bsite_allatom.pml", type="script")
 pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=3, as="wire", file="PC3vectors_bsite_allatom.pml", type="script")
+
+pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=1, as="wire", file="PC1vectors_bsite_backbone.pml", type="script")
+pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=2, as="wire", file="PC2vectors_bsite_backbone.pml", type="script")
+pymol(pc_xyz_bsite_allatom, pdb=pdbs_allatoms[1]$all, pc=3, as="wire", file="PC3vectors_bsite_backbone.pml", type="script")
 
 
 

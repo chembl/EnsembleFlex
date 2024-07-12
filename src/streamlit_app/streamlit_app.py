@@ -1219,6 +1219,12 @@ if st.session_state.BSanalysisdone == True:
             try:
                 st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_bsite_allatom.png', caption='binding residues PCA')
                 st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_atom_contribution_bsite_allatom.png', caption='PCA loadings')
+                st.write("Sampling along PC1")
+                multimodel_animation(outputdir_BindingSite_analysis_Bio3D + '/PC1_bsite_allatom.pdb')
+                st.write("Sampling along PC2")
+                multimodel_animation(outputdir_BindingSite_analysis_Bio3D + '/PC2_bsite_allatom.pdb')
+                st.write("Sampling along PC3")
+                multimodel_animation(outputdir_BindingSite_analysis_Bio3D + '/PC3_bsite_allatom.pdb')
             except:
                 st.write("ERROR: No output available.")
         with tab2:
@@ -1231,6 +1237,12 @@ if st.session_state.BSanalysisdone == True:
             try:
                 st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_bsite_backbone.png', caption='binding residues PCA')
                 st.image(outputdir_BindingSite_analysis_Bio3D + '/PCA_atom_contribution_bsite_backbone.png', caption='PCA loadings')
+                st.write("Sampling along PC1")
+                multimodel_animation(outputdir_BindingSite_analysis_Bio3D + '/PC1_bsite_backbone.pdb')
+                st.write("Sampling along PC2")
+                multimodel_animation(outputdir_BindingSite_analysis_Bio3D + '/PC2_bsite_backbone.pdb')
+                st.write("Sampling along PC3")
+                multimodel_animation(outputdir_BindingSite_analysis_Bio3D + '/PC3_bsite_backbone.pdb')
             except:
                 st.write("ERROR: No output available.")
 
