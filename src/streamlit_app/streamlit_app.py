@@ -133,6 +133,8 @@ def multimodel_animation(pdbfilepath):
 #     st.session_state.output_directory = ""
 if 'superimposed' not in st.session_state:
     st.session_state.superimposed = ""
+if 'superimposedBio3d' not in st.session_state:
+    st.session_state.superimposedBio3d = False
 if 'Bio3Danalysisdone' not in st.session_state:
     st.session_state.Bio3Danalysisdone = False
 if 'SASAanalysisdone' not in st.session_state:
@@ -610,6 +612,7 @@ of the pipeline) then the interface will likely throw an Error at that point, bu
 
 if st.button('B) Display previous analysis results - set all run', key="display_previous_all_btn"):
     st.session_state.superimposed = str(output_directory)+'/superimposed'
+    st.session_state.superimposedBio3d = True
     st.session_state.Bio3Danalysisdone = True
     st.session_state.SASAanalysisdone = True
     st.session_state.PDBhasLigandSortdone = True
@@ -683,6 +686,7 @@ def superimpose(superimp_method):
         # # Show stdout for external command
         # for line in iter(lambda: result.stdout.readline(), b""):
         #     st.text(line.decode("utf-8"))
+        st.session_state.superimposedBio3d = True
         st.session_state.superimposed = str(output_directory)+'/superimposed'
         st.write("Superimposed structures are saved in: ", st.session_state.superimposed)
     if superimp_method == "ProDy":
@@ -698,6 +702,12 @@ def superimpose(superimp_method):
 st.button('Confirm/Go!', key="superimp_btn", on_click=superimpose, args=[superimp_method])
 
 superimposed = st.session_state.superimposed
+
+if st.session_state.superimposedBio3d == True:
+    with st.container(border=True, height=500):
+        st.markdown('##### Identified "rigid core" residues that were used for superpositioning \n (highlighted on reference '
+                    'structure)')
+        b_fac_on_structure_vis(str(output_directory) + '/superimp_core_labelled_on_ref.pdb')
 
 st.divider()
 #######################################################################################################################

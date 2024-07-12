@@ -82,7 +82,20 @@ pdbs <- pdbaln(files, exefile='msa')
 core <- core.find(pdbs)
 # use core inds for structural superposition
 core.inds <- print(core, vol=1.0)
-write.pdb(xyz = pdbs$xyz[1,core.inds$xyz], file = "quick_core.pdb")
+write.pdb(xyz = pdbs$xyz[1,core.inds$xyz], file = "superimp_core.pdb")
+
+## Save identified core residues in b-factor column on reference structure
+# read the reference pdb file (first file in filelist)
+pdb1 <- read.pdb(files[[1]])
+# get pdb1 atom indices of identified core residues
+core_pdb1.inds <- atom.select(pdb1, resno=core$c1A.resno)
+# use b-factor column to store core in PDB file
+pdb1$atom$b <- 0
+pdb1$atom$b[ core_pdb1.inds$atom ] <- 1
+# write to file
+write.pdb(pdb1, file=paste(outdir,"/superimp_core_labelled_on_ref.pdb",sep=''))
+print("PDB saved to file superimp_core_labelled_on_ref.pdb")
+
 
 # pdbfit is a wrapper for the function fit.xyz
 # The reference frame for supperposition (i.e. the fixed structure to which others are superposed) is the first entry
