@@ -17,7 +17,26 @@ equivalent chains of the ensemble need to be placed together into one folder for
 ### Version
 v1.0.0 (2024.07)
 
-### Installation \& launch with CONDA/MAMBA
+
+## Installation \& launch with DOCKER:
+
+**Installation**:
+
+        git clone https://gitlab.ebi.ac.uk/melanie/ensembleflex.git
+        cd EnsembleFlex
+        docker build -t ensembleflex-image .
+
+**Launch**:  
+
+        docker run -d -it --name ensembleflex -p 8501:8501 -p 80:80 --volume ./docker-data:/app/docker-data ensembleflex-image
+
+Then open your browser and navigate to `http://localhost:8501/`. There you should see the graphical user interface.
+Note that your input pdb files need to be put into `EnsembleFlex/docker-data/` (or subdirectories), 
+as this is a mounted directory in the Docker image and will therefore be accessible from within the Docker container 
+and the user interface.
+
+
+## Installation \& launch with CONDA/MAMBA
 
 EnsembleFlex can be installed by cloning this repository and setting up an environment using your favourite environment 
 manager. (I recommend [`mamba` through miniforge](https://github.com/conda-forge/miniforge#mambaforge)).
@@ -72,25 +91,8 @@ First, activate the environment:
   The user interface should automatically open in a new tab of your default browser.
 
 
-### Installation \& launch with DOCKER:
 
-**Installation**:
-
-        git clone https://gitlab.ebi.ac.uk/melanie/ensembleflex.git
-        cd EnsembleFlex
-        docker build -t ensembleflex-image .
-
-**Launch**:  
-
-        docker run -d -it --name ensembleflex -p 8501:8501 -p 80:80 --volume ./docker-data:/app/docker-data ensembleflex-image
-
-Then open your browser and navigate to `http://localhost:8501/`. There you should see the graphical user interface.
-Note that your input pdb files need to be put into `EnsembleFlex/docker-data/` (or subdirectories), 
-as this is a mounted directory in the Docker image and will therefore be accessible from within the Docker container 
-and the user interface.
-
-
-### Operating instructions  
+## Operating instructions  
 
 #### Input files
 After launching the GUI the user needs to provide an input directory containing all (monomeric) ensemble structure 
@@ -110,7 +112,7 @@ Example output data is provided in the folder `example_results`.
 When using the graphical user interface analysis results are presented in a scrollable container which will appear when 
 analysis is finished.  
 
-#### Analysis
+### Analysis
 Please look into `user_guide.md` for a detailed interpretation help and description of methods.  
 
 Primary tools and packages used in the workflow are:
@@ -124,7 +126,8 @@ for the user interface:
 - [Streamlit](https://streamlit.io) - main interface
 - [py3Dmol](https://pypi.org/project/py3Dmol/) - molecular visualisations
 
-##### Workflow description:  
+
+#### Workflow description:  
 
 1. **Settings**: The user needs to provide input and output directories.
 
@@ -138,12 +141,12 @@ from Bio3D (recommended) or ProDy.
 PCA and UMAP, ...) and Biopython tools (). 
 (Additionally, equivalent ProDy tools are provided via a command line script.).  
 
-4. **Binding Site Analysis**: For binding site analysis the user has the option to perform a superposing on binding site residues only (recommended 
+4. **Binding Site Analysis** [optional]: For binding site analysis the user has the option to perform a superposing on binding site residues only (recommended 
 when there is domain movement shifting the binding site). 
 Again this is possible with Bio3D or ProDy. The user can also opt for using the globally superimposed structures 
 (recommended in most minor-movement cases).
 
-5. **Flexibility Prediction**: Additionally, there is the option to perform flexibility prediction based on elastic network model Normal Mode Analysis
+5. **Flexibility Prediction** [optional]: Additionally, there is the option to perform flexibility prediction based on elastic network model Normal Mode Analysis
 (NMA), as well as Essential Site Scanning Analysis (ESSA) on the reference structure.
 
 ### File manifest  
