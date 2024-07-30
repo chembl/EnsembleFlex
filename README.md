@@ -22,8 +22,8 @@ EnsembleFlex is basically composed of Python and R scripts that require several 
 You have different options for installing EnsembleFlex.
 Choose one of the following options depending on your expertise and required environment restrictions. 
 Here is the list of options ordered from highest environment reproducibility to lowest:
-- Using **Docker** - This is the most reproducible environment and comes with all benefits but also 
-inconveniences of containerisation.
+- Using **Docker** - This is the most reproducible environment setup and comes with all benefits but also some 
+inconveniences of containers.
 - Using the `conda-lock.yml` file with **Conda-lock** or **Micromamba** - This provides also a highly reproducible 
 environment, but can only be used on Mac or Linux systems (not for Windows).
 - Using the `environment_versioned.yml` file with **Conda** or **Mamba** to create the environment - This ensures 
@@ -74,7 +74,7 @@ Clone the repository and go to the EnsembleFlex folder:
 package version inconsistencies, you can use the provided 'conda-lock' file (only on Linux or macOS). Be aware that 
 this needs to be installed with the `conda-lock install` or `micromamba install` commands, as `mamba/conda create` will 
 ignore the pip package dependencies.
-  - using ['conda-lock'](https://conda.github.io/conda-lock/) (to be installed):
+  - using ['conda-lock'](https://conda.github.io/conda-lock/) (will be installed):
 
         mamba install -c conda-forge conda-lock
         conda-lock install --name ensembleflex --file conda-lock.yml
@@ -100,7 +100,7 @@ First, activate the environment:
       
       mamba activate ensembleflex
 
-  For the browser-based graphical user interface run:
+  For the browser-based graphical user interface run (replace `path/to/` with yor local path):
 
       streamlit run path/to/EnsembleFlex/src/streamlit_app/streamlit_app.py
 
