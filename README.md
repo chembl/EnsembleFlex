@@ -165,7 +165,8 @@ Again this is possible with Bio3D or ProDy. The user can also opt for using the 
 5. **Flexibility Prediction** [optional]: Additionally, there is the option to perform flexibility prediction based on elastic network model Normal Mode Analysis
 (NMA), as well as Essential Site Scanning Analysis (ESSA) on the reference structure.
 
-### File manifest  
+
+## File manifest  
 ```
 EnsembleFlex  
 ├── LICENSE  
@@ -213,7 +214,7 @@ EnsembleFlex
 └── tests
 ```
 
-### Compliance with FAIR principles for research software
+## Compliance with FAIR principles for research software
 - **F**indable: The EnsembleFlex code is available on GitHub, the Docker image is also available on Docker Hub 
 and the tool is listed at Elixir [bio.tools](https://bio.tools/).
 - **A**ccessible: All code is available on GitHub and can be installed via Conda environment manager or simply 
@@ -227,13 +228,13 @@ The provided scripts are wrapped into a complete workflow, executable through a 
 that does not require any coding experience. 
 Environment reproducibility is achieved through installation with a conda-lock file and full isolation through Docker.
 
-### Copyright and licensing information  
+## Copyright and licensing information  
 This program is distributed under a permissive open source licence
 (MIT). A copy is provided in file `LICENSE`.
 
-### Contact information  
+## Contact information  
 The author Melanie Schneider can be contacted at melanie@ebi.ac.uk.
 
-### Funding
+## Funding
 Funding was provided to Melanie Schneider as ARISE Fellowship from the European Union’s Horizon 2020 research and 
 innovation programme under the Marie Skłodowska-Curie grant agreement No 945405.
