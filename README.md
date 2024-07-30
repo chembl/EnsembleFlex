@@ -21,7 +21,7 @@ v1.0.0 (2024.07)
 EnsembleFlex is basically composed of Python and R scripts that require several Python and R packages. 
 You have different options for installing EnsembleFlex.
 Choose one of the following options depending on your expertise and required environment restrictions. 
-Here is the list with options ordered from highest environment reproducibility to lowest:
+Here is the list of options ordered from highest environment reproducibility to lowest:
 - Using **Docker** - This is the most reproducible environment and comes with all benefits but also 
 inconveniences of containerisation.
 - Using the `conda-lock.yml` file with **Conda-lock** or **Micromamba** - This provides also a highly reproducible 
