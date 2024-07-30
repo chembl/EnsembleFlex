@@ -154,7 +154,7 @@ The user can directly supply a superposed ensemble, or choose one of the two pro
 from Bio3D (recommended) or ProDy. 
 
 3. **Flexibility Analysis**: Upon superposing the ensemble can be analysed using Bio3D tools (RMSD, RMSF, dimension reduction and projection with 
-PCA and UMAP, ...) and Biopython tools (). 
+PCA and UMAP, ...) and Biopython tools (SASA, radius of gyration). 
 (Additionally, equivalent ProDy tools are provided via a command line script.).  
 
 4. **Binding Site Analysis** [optional]: For binding site analysis the user has the option to perform a superposing on binding site residues only (recommended 
