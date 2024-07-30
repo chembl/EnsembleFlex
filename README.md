@@ -17,8 +17,24 @@ equivalent chains of the ensemble need to be placed together into one folder for
 ### Version
 v1.0.0 (2024.07)
 
+## General installation notes
+EnsembleFlex is basically composed of Python and R scripts that require several Python and R packages. 
+You have different options for installing EnsembleFlex.
+Choose one of the following options depending on your expertise and required environment restrictions. 
+Here is the list with options ordered from highest environment reproducibility to lowest:
+- Using **Docker** - This is the most reproducible environment and comes with all benefits but also 
+inconveniences of containerisation.
+- Using the `conda-lock.yml` file with **Conda-lock** or **Micromamba** - This provides also a highly reproducible 
+environment, but can only be used on Mac or Linux systems (not for Windows).
+- Using the `environment_versioned.yml` file with **Conda** or **Mamba** to create the environment - This ensures 
+package compatibility, but may give you slightly older package versions compared to the next option below.
+- Using the `environment.yml` file with **Conda** or **Mamba** to create the environment - This installs more recent 
+versions of required packages.
+- [NOT recommended] Installing all packages listed in the `environment.yml` **manually** on your system / in your custom environment - 
+This is the highest customizable installation option, but you need to manage the package dependencies.
 
-## Installation \& launch with DOCKER:
+
+## Installation \& launch with DOCKER
 
 **Installation**:
 
