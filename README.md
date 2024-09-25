@@ -78,6 +78,7 @@ ignore the pip package dependencies.
 
         mamba install -c conda-forge conda-lock
         conda-lock install --name ensembleflex --file conda-lock.yml
+  
   - OR using ['micromamba'](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html) (to be installed):
   
         micromamba install --name ensembleflex --file conda-lock.yml
@@ -88,7 +89,7 @@ still run EnsembleFlex, only ensemble Difference Distance Matrix (eDDM) calculat
 analysis.
 
     mamba activate ensembleflex
-    Rscript requirements.r
+    Rscript requirements.R
 
 
 **Launch**:  
@@ -137,6 +138,7 @@ Primary tools and packages used in the workflow are:
 - [Biopython](https://biopython.org) (Python package) - SASA & radius of gyration analysis, data handling tools
 - [umap](https://github.com/tkonopka/umap) (R package) - UMAP projection
 - [cluster](https://cran.r-project.org/web/packages/cluster/index.html) and [clvalid](https://cran.r-project.org/web/packages/clValid/index.html) - clustering and cluster validation
+- [vanddraabe](external_packages) (R package - modified package provided in `external_packages`) - conserved water analysis
 
 for the user interface:
 - [Streamlit](https://streamlit.io) - main interface
@@ -158,9 +160,13 @@ PCA and UMAP, ...) and Biopython tools (SASA, radius of gyration).
 (Additionally, equivalent ProDy tools are provided via a command line script.).  
 
 4. **Binding Site Analysis** [optional]: For binding site analysis the user has the option to perform a superposing on binding site residues only (recommended 
-when there is domain movement shifting the binding site). 
+only when there is domain movement shifting the binding site). 
 Again this is possible with Bio3D or ProDy. The user can also opt for using the globally superimposed structures 
 (recommended in most minor-movement cases).
+The binding site analysis includes an automatised identification of the binding site (based on user-defined distance to ligands), 
+a statistical analysis of the residues identified as binding site (occurrence), as well as an all-atom flexibility analysis.
+Additionally a conserved water analysis can be performed, which takes into account all waters from all provided structures (not only the binding site), 
+and outputs an additional PyMol script dedicated to the binding site of the reference structure.
 
 5. **Flexibility Prediction** [optional]: Additionally, there is the option to perform flexibility prediction based on elastic network model Normal Mode Analysis
 (NMA), as well as Essential Site Scanning Analysis (ESSA) on the reference structure.
@@ -177,9 +183,12 @@ EnsembleFlex
 ├── environment.yml
 ├── example_input_data
 ├── example_results
+├── external_packages
+│   └── vanddraabe.zip
 ├── requirements.r
 ├── requirements.txt
 ├── src  
+│   ├── analyse_conserved_waters.R
 │   ├── analyse_flex_binding_site_bio3d.R
 │   ├── analyse_flex_bio3d.R
 │   ├── analyse_flex_bio3d_reporting.py

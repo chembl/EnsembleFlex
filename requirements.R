@@ -22,3 +22,7 @@
 library(remotes) # remotes package is lighter than devtools and available on conda channels
 remotes::install_bitbucket("Grantlab/bio3d/bio3d-core", ref="core", dependencies=TRUE)
 remotes::install_bitbucket("Grantlab/bio3d-eddm", dependencies=TRUE)
+# for conserved water analysis
+#remotes::install_github("exeResearch/vanddraabe") # does only work with PDBs downloaded from the PDB
+# install vanddraabe with modified scripts from local compressed directory
+remotes::install_local("./external_packages/vanddraabe.zip", force = TRUE)

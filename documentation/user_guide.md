@@ -44,6 +44,7 @@ and is specified in the header of each script.
 ```
 EnsembleFlex  
 └── src  
+   ├── analyse_conserved_waters.R
    ├── analyse_flex_binding_site_bio3d.R
    ├── analyse_flex_bio3d.R
    ├── analyse_flex_bio3d_reporting.py
@@ -153,6 +154,11 @@ create an output directory called `EnsembleFlex` besides your input folder where
 
       python3 ~/path/to/EnsembleFlex/src/predict_flex_binding_site_essa_prody.py -i EnsembleFlex/superimposed/ -o EnsembleFlex/Prediction_BindingSite_ESSA_ProDy -b EnsembleFlex/BindingSite_ident_Bio3D/binding_site_residue_numbers.txt
 
+**Conserved Waters**
+- Conserved Water Analysis
+
+      Rscript ~/path/to/EnsembleFlex/src/analyse_conserved_waters.R -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_Waters
+
 
 **Flexibility Prediction**
 
@@ -196,6 +202,7 @@ EnsembleFlex_output_folder (defined by you)
 ├── Analysis_Bio3D  
 │   └── pymol_pdbs  
 ├── Analysis_SASA_Biopython  
+├── Analysis_Waters  
 ├── superimposed_no_ions (optional)  
 ├── superimposed_no_ions_<MOL-ID>  (optional)  
 ├── structures_with_ligand  

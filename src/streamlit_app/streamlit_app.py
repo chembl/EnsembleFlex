@@ -155,6 +155,8 @@ if 'BSanalysisdone' not in st.session_state:
     st.session_state.BSanalysisdone = False
 if 'residue_numbers_file' not in st.session_state:
     st.session_state.residue_numbers_file = ""
+if 'wateranalysisdone' not in st.session_state:
+    st.session_state.wateranalysisdone = False
 if 'NMABio3Disdone' not in st.session_state:
     st.session_state.NMABio3Disdone = False
 if 'NMAProDyisdone' not in st.session_state:
@@ -457,7 +459,8 @@ st.markdown('''
     :two: *Superimpose* - [mandatory confirmation] You can choose to run superpositioning with provided tools or not  
     :three: ***Flexibility Analysis*** - The main analysis computations are performed here  
     :four: *Binding Site Analysis* - [optional] Recommended analysis if you have ligands in your structures  
-    :five: *Compare with predicted flexibility* - [optional]  
+    :five: *Conserved Water Analysis* - [optional]  
+    :six: *Compare with predicted flexibility* - [optional]  
     ''')
 
 toc.subheader('Output structure explained')
@@ -475,6 +478,7 @@ EnsembleFlex_output_folder (defined by you)
 ├── Analysis_Bio3D  
 │   └── pymol_pdbs  
 ├── Analysis_SASA_Biopython  
+├── Analysis_Waters  
 ├── superimposed_no_ions (optional)  
 ├── superimposed_no_ions_<MOL-ID>  (optional)  
 ├── structures_with_ligand  
@@ -622,6 +626,7 @@ if st.button('B) Display previous analysis results - set all run', key="display_
     st.session_state.BSidentifyisdone = True
     st.session_state.superimposed_bs = ""
     st.session_state.BSanalysisdone = True
+    st.session_state.wateranalysisdone = True
     st.session_state.loadinitialresidues = True
     st.session_state.NMABio3Disdone = True
     st.session_state.NMAProDyisdone = True
@@ -775,8 +780,10 @@ st.markdown("Results in form of images will be displayed below.  "
 if st.session_state.Bio3Danalysisdone == True:
     with st.container(border=True, height=600):
         st.subheader("Flexibility Analysis Results")
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Base info", "RMSF & RMSD analysis", "PCA", "UMAP analysis",
-                                                      "All-atom PCA & DDM analysis", "Clustering"])
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+            "Base info", "RMSF & RMSD analysis", "PCA", "UMAP analysis",
+            "All-atom RMSF & RMSD analysis", "All-atom PCA & DDM analysis",
+            "Clustering"])
         with tab1:
             st.markdown("#### Base info: Alignment overview and B-factors of reference")
             st.image(outputdirBio3D + '/alignment_overview.png', caption='alignment overview')
@@ -790,12 +797,6 @@ if st.session_state.Bio3Danalysisdone == True:
             b_fac_on_structure_vis(outputdirBio3D + '/RMSF_data_on_structure.pdb')
             st.image(outputdirBio3D + '/RMSD_hist.png', caption='RMSD histogram')
             st.image(outputdirBio3D + '/RMSD_heatmap.png', caption='RMSD heatmap')
-            st.markdown("#### - on all-atom coordinates (including side chains)")
-            st.image(outputdirBio3D + '/RMSF_allatom.png', caption='All-atom RMSF')
-            st.write("Reference structure residues colored by 'all-atom' RMSF")
-            b_fac_on_structure_vis(outputdirBio3D + '/RMSF_allatom_data_on_structure.pdb')
-            st.image(outputdirBio3D + '/RMSD_hist_allatom.png', caption='All-atom RMSD histogram')
-            st.image(outputdirBio3D + '/RMSD_heatmap_allatom.png', caption='All-atom RMSD heatmap')
         with tab3:
             st.markdown("#### Principal Component Analysis (PCA) on coordinates and on torsion data")
             st.markdown("#### - on coordinates (backbone)")
@@ -818,6 +819,14 @@ if st.session_state.Bio3Danalysisdone == True:
             st.image(outputdirBio3D + '/UMAP.png', caption='2D UMAP plot')
             st.image(outputdirBio3D + '/UMAP_dendrogram.png', caption='2D UMAP dendrogram')
         with tab5:
+            st.markdown("#### All-atom RMSF and RMSD analysis")
+            st.markdown("#### - on all-atom coordinates (including side chains)")
+            st.image(outputdirBio3D + '/RMSF_allatom.png', caption='All-atom RMSF')
+            st.write("Reference structure residues colored by 'all-atom' RMSF")
+            b_fac_on_structure_vis(outputdirBio3D + '/RMSF_allatom_data_on_structure.pdb')
+            st.image(outputdirBio3D + '/RMSD_hist_allatom.png', caption='All-atom RMSD histogram')
+            st.image(outputdirBio3D + '/RMSD_heatmap_allatom.png', caption='All-atom RMSD heatmap')
+        with tab6:
             st.markdown("#### All-atom PCA")
             st.markdown("#### - on coordinates (all-atom)")
             st.image(outputdirBio3D + '/PCA_allatom.png', caption='PCA overall info')
@@ -845,7 +854,7 @@ if st.session_state.Bio3Danalysisdone == True:
                 st.image(outputdirBio3D + '/eDDM_complete.png', caption='Ensemble Difference Distance Matrix')
             except:
                 st.write("ERROR: No output available.")
-        with tab6:
+        with tab7:
             st.markdown("#### Overall clustering results")
             st.image(outputdirBio3D + '/cluster_attributions_heatmap.png', caption='Cluster attributions')
             st.markdown("#### Clustering validation metrics")
@@ -1055,15 +1064,15 @@ st.markdown("##### Calculation and outputs:\n"
             "pdbID, ligIDs, number of residues, C-alpha radius of gyration, residue names of identified binding site.\n"
             " - The frequency of identification within the binding site is calculated for each residue and saved as "
             "data table 'binding_site_residue_occurrence_frequency.csv' and visualised in histograms.\n"
-            " - Identified residues are labeled for each structure using the b-factor column of the given structure "
+            " - Identified residues are labelled for each structure using the b-factor column of the given structure "
             " and pdb files are saved in subdirectory 'structures_labeled_binding_site'.\n"
             " - Three further pdb files are saved containing the coordinates of the reference structure and in the "
             "b-factor column either whether a residue was identified as being part of the binding site in any "
             "structure (values of 0 or 1) 'binding_site_interface_labelled_occurrence.pdb', or the calculated "
             "occurrence frequencies 'binding_site_interface_labelled_frequency.pdb', or as percentage "
             "'binding_site_interface_labelled_percentage.pdb'.\n"
-            " - Ligand-Residue interactions are plotted as heatmap with pattern clustering (to allow detection of "
-            "eventual sub pockets) 'interaction_heatmap.png'.\n"
+            " - Ligand-Residue interactions are plotted as heatmap with pattern clustering to allow detection of "
+            "ligand dependant characteristics, such as eventual sub-pockets 'interaction_heatmap.png'.\n"
             " - The output list 'binding_site_residue_numbers.txt' contains only the binding site residue numbers "
             "and will be used for binding site superpositioning and flexibility analysis (see next steps).")
 
@@ -1255,7 +1264,56 @@ if st.session_state.BSanalysisdone == True:
 st.divider()
 #######################################################################################################################
 
-toc.header(":five: Compare with predicted flexibility")
+toc.header(":five: Conserved Water Analysis")
+st.markdown('''
+_Investigate conserved water molecules in your ensemble._
+''')
+# toc.subheader("4 - Conserved Water Analysis")
+st.markdown("[Used package/tool: vanddraabe (R - modified) and Bio3D (R)]")
+st.markdown(" - Identification of conserved water molecules by clustering\n ")
+st.markdown("Reference for vanddraabe's water analysis can be found [here](https://github.com/exeResearch/vanddraabe), [here](https://www.rdocumentation.org/packages/vanddraabe/versions/1.1.1) "
+            "and [here](http://www.exeresearch.com/uploads/6/8/2/0/6820495/thrombin10_conservedwater_vignette.pdf).\n  "
+            "The script `Conserved_Waters.R` from the vanddraabe package has been modified to enable analysis of custom ensembles (without metadata from the RCSB-PDB).\n"
+            "")
+
+outputdir_water_analysis = str(output_directory) + '/Analysis_Waters'
+
+if st.button('Run', key="run_water_analysis_btn"):
+    result = subprocess.run(
+        ["Rscript", str(parentfilepath) + "/analyse_conserved_waters.R", '-i', str(superimposed), '-o',
+         str(outputdir_water_analysis)])
+    st.write("Superimposed structures are taken from ", superimposed)
+    st.write("Output files are saved in: ", outputdir_water_analysis)
+    st.session_state.wateranalysisdone = True
+
+if st.session_state.wateranalysisdone == True:
+    with st.container(border=True, height=600):
+        st.subheader("Conserved Water Analysis Results")
+        st.write("Superimposed structures were taken from ", superimposed)
+        st.write("Output files can be found in: ", outputdir_water_analysis)
+        st.write("Detailed water analysis results are provided as Excel file `WaterAnalysis_DATA_RESULTS.xlsx` in the output directory.\n"
+                 "More data is provided in structural format in the output directory:\n"
+                 "Two pdb structure files, `WaterAnalysis_ConservedWaters_ALL.pdb` and `WaterAnalysis_ConservedWaters_PASSED.pdb` "
+                 "contain the water molecules with conservation saved as occupancy value. "
+                 "A PyMol script highlighting the conserved waters at the ligand binding site of the reference structure "
+                 "can be found at `WaterAnalysis_ConservedWaters_PASSED_PyMOL_white_background_.pml`.")
+        try:
+            st.image(outputdir_water_analysis + '/ConservationPlot.png', caption='ConservationPlot')
+            st.image(outputdir_water_analysis + '/OccupancyBarplot.png', caption='OccupancyBarplot')
+            st.image(outputdir_water_analysis + '/MobilityBarplot.png', caption='MobilityBarplot')
+            st.image(outputdir_water_analysis + '/BvalueBarplot.png', caption='BvalueBarplot')
+            st.image(outputdir_water_analysis + '/BvalueBarplot_calculated_values.png', caption='BvalueBarplot_calculated_values')
+            st.image(outputdir_water_analysis + '/nBvalueBarplot.png', caption='nBvalueBarplot')
+            st.image(outputdir_water_analysis + '/MobNormBvalEvalPlots.png', caption='MobNormBvalEvalPlots')
+        except:
+            st.write("ERROR: No output available.")
+
+
+
+st.divider()
+#######################################################################################################################
+
+toc.header(":six: Compare with predicted flexibility")
 st.markdown('''
 _Compare differences in structural flexibility of your ensemble with other sources and simulation based results._
 ''')
