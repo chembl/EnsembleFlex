@@ -94,6 +94,7 @@ b) to your input and output directory:
 The following commands assume that your input structure files are located in a folder called `pdbs` and you want to 
 create an output directory called `EnsembleFlex` besides your input folder where all outputs will be located. 
 
+**Pre-processing Tools**
 - [optional] Tool: PDB splitting on whole directory (if multiple chains are present in your PDB files)
 
       Rscript ~/path/to/EnsembleFlex/src/tools/split_pdbs_bio3d.R -i pdbs -o split_pdbs
@@ -103,30 +104,39 @@ create an output directory called `EnsembleFlex` besides your input folder where
 
       python3 ~/path/to/EnsembleFlex/src/tools/sort_pdbs_has_gap_in_pdb_seq.py -i pdbs/ -o .
 
-- Superimpositioning  
+**Superimpositioning**  
 
+      # with Bio3D (recommended)
       Rscript ~/path/to/EnsembleFlex/src/superimpose_bio3d.R -i pdbs -o EnsembleFlex
 
-      [OR] python3 ~/path/to/EnsembleFlex/src/superimpose_prody.py -i pdbs/ -o EnsembleFlex/
+      # [OR] with ProDy
+      python3 ~/path/to/EnsembleFlex/src/superimpose_prody.py -i pdbs/ -o EnsembleFlex/
 
-- Analysis
+**Main Analysis**
+- Flexibility Analysis  
     
+      # Flexibility Analysis with Bio3D
       Rscript ~/path/to/EnsembleFlex/src/analyse_flex_bio3d.R -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_Bio3D -n 3
         
-      [optional] python3 ~/path/to/EnsembleFlex/src/analyse_flex_prody.py -i EnsembleFlex/superimposed -o EnsemblFlex/Analysis_ProDy
+      # [optional] Flexibility Analysis with ProDy
+      python3 ~/path/to/EnsembleFlex/src/analyse_flex_prody.py -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_ProDy
       
-      python3 ~/path/to/EnsembleFlex/src/analyse_flex_sasa_biopython.py -i EnsembleFlex/superimposed/ -o EnsemblFlex/Analysis_SASA_Biopython
-
-      Rscript ~/path/to/EnsembleFlex/src/tools/data_on_structure.R -i EnsembleFlex/superimposed -o EnsemblFlex/Analysis_SASA_Biopython -d EnsembleFlex/Analysis_SASA_Biopython/SASA_global.csv -c sd
+- SASA Analysis  
     
-- Subset clusters based on dataframe (where option `-c ` specifies the column name of the data frame)
+      # SASA Analysis with Biopython
+      python3 ~/path/to/EnsembleFlex/src/analyse_flex_sasa_biopython.py -i EnsembleFlex/superimposed/ -o EnsembleFlex/Analysis_SASA_Biopython
+      Rscript ~/path/to/EnsembleFlex/src/tools/data_on_structure.R -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_SASA_Biopython -d EnsembleFlex/Analysis_SASA_Biopython/SASA_global.csv -c sd
+    
+- Subset clusters  
 
+      # Subset clusters based on dataframe (where option `-c ` specifies the column name of the data frame)
       python3 ~/path/to/EnsembleFlex/src/tools/pdb_sorter_from_dataframe.py -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_Bio3D/Consensus_Clusters -d EnsembleFlex/Analysis_Bio3D/cluster_attributions_with_consensus.csv -c Consensus_Cluster
 
-**Binding site**
+
+**Binding Site Analysis**
 - Checking for ligands
 
-      Rscript ~/path/to/EnsembleFlex/src/tools/pdb_sorter_has_ligand.R -i EnsembleFlex/superimposed -o EnsemblFlex
+      Rscript ~/path/to/EnsembleFlex/src/tools/pdb_sorter_has_ligand.R -i EnsembleFlex/superimposed -o EnsembleFlex
 
 - [optional] Removing crystallization factor DMSO (using resname DMS)
 
@@ -152,9 +162,9 @@ create an output directory called `EnsembleFlex` besides your input folder where
 
       Rscript ~/path/to/EnsembleFlex/src/analyse_flex_binding_site_bio3d.R -i EnsembleFlex/structures_with_ligand -o EnsembleFlex/BindingSite_analysis_Bio3D -b EnsembleFlex/BindingSite_ident_Bio3D/binding_site_residue_numbers.txt
 
-      python3 ~/path/to/EnsembleFlex/src/predict_flex_binding_site_essa_prody.py -i EnsembleFlex/superimposed/ -o EnsembleFlex/Prediction_BindingSite_ESSA_ProDy -b EnsembleFlex/BindingSite_ident_Bio3D/binding_site_residue_numbers.txt
 
-**Conserved Waters**
+**Conserved Water Analysis**
+
 - Conserved Water Analysis
 
       Rscript ~/path/to/EnsembleFlex/src/analyse_conserved_waters.R -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_Waters
@@ -162,18 +172,27 @@ create an output directory called `EnsembleFlex` besides your input folder where
 
 **Flexibility Prediction**
 
-- NMA
+- NMA (coarse-grained, using C-alpha atoms)
 
-      Rscript ~/path/to/EnsembleFlex/src/predict_flex_nma_bio3d.R -i EnsemblFlex/superimposed -o EnsemblFlex/Prediction_NMA_Bio3D -e
+      # NMA and eNMA with Bio3D, remove `-e` to avoid ensemble NMA (eNMA)
+      # Note that ensemble NMA should only be performed on small ensembles (<=50 structures), as computationally expensive
+      Rscript ~/path/to/EnsembleFlex/src/predict_flex_nma_bio3d.R -i EnsembleFlex/superimposed -o EnsembleFlex/Prediction_NMA_Bio3D -e
 
-      python3 ~/path/to/EnsembleFlex/src/predict_flex_nma_prody.py -i EnsemblFlex/superimposed -o EnsemblFlex/Prediction_NMA_ProDy
+      # NMA with ProDy
+      python3 ~/path/to/EnsembleFlex/src/predict_flex_nma_prody.py -i EnsembleFlex/superimposed -o EnsembleFlex/Prediction_NMA_ProDy
+
+- all-atom NMA (using all heavy atoms)
+
+      # aaNMA and aaeNMA with Bio3D, remove `-e` to avoid all-atom ensemble NMA (aaeNMA)
+      # Note that all-atom ensemble NMA should only be performed on mini ensembles (<=5 structures), as computationally very expensive
+      Rscript ~/path/to/EnsembleFlex/src/predict_flex_aanma_bio3d.R -i EnsembleFlex/superimposed -o EnsembleFlex/Prediction_aaNMA_Bio3D -e
 
 - Essential Site Scanning Analysis (ESSA)
 
-      python3 ~/path/to/EnsembleFlex/src/predict_flex_binding_site_essa_prody.py -i EnsemblFlex/superimposed -o EnsemblFlex/Prediction_BindingSite_ESSA_ProDy
+      python3 ~/path/to/EnsembleFlex/src/predict_flex_binding_site_essa_prody.py -i EnsembleFlex/superimposed/ -o EnsembleFlex/Prediction_BindingSite_ESSA_ProDy -b EnsembleFlex/BindingSite_ident_Bio3D/binding_site_residue_numbers.txt
 
 
-### Troubleshooting
+### Troubleshooting installation
 
 ##### Problems with finding the right path to Rscript  
 If you have R already installed on your system the execution of Rscript may default back to your previous R 
@@ -189,7 +208,7 @@ This will potentially result in slightly older package versions, but they are co
 
 ## Output structure explained
 *Several types of output files will be generated by the analysis tools. This includes image files (png), 
-text files (txt), data tables (csv/tsv), structure files (pdb), pymol scripts (pml).  
+text files (txt), data tables (csv/tsv/xlsx), structure files (pdb), PyMol scripts (pml).  
 Most output will be visualised directly in the browser-based user interface when analysis is performed. 
 All generated output will be saved in the respective output directory with potential further information. 
 The output directory will contain the following structure of subdirectories, where 
@@ -212,6 +231,7 @@ EnsembleFlex_output_folder (defined by you)
 ├── BindingSite_analysis_Bio3D  
 ├── Prediction_NMA_Bio3D  
 ├── Prediction_NMA_ProDy  
+├── Prediction_aaNMA_Bio3D  
 └── Prediction_ESSA_ProDy  
 ```
 

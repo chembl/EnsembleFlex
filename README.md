@@ -149,27 +149,32 @@ for the user interface:
 
 1. **Settings**: The user needs to provide input and output directories.
 
-2. **Structural superposing**: The analysis result is in many cases (when coordinates are used) dependent on the relative superposition of the 
-structures contained in the ensemble. Therefore, structural superposing (also known as structural alignment) needs to 
-be performed prior to analysis. 
+2. **Structural superposing**: The analysis result is in many cases (when coordinates are used) dependent on the 
+relative superposition of the structures contained in the ensemble. Therefore, structural superposing (also known as 
+structural alignment) needs to be performed prior to analysis. 
 The user can directly supply a superposed ensemble, or choose one of the two provided superposing methods - 
 from Bio3D (recommended) or ProDy. 
 
-3. **Flexibility Analysis**: Upon superposing the ensemble can be analysed using Bio3D tools (RMSD, RMSF, dimension reduction and projection with 
-PCA and UMAP, ...) and Biopython tools (SASA, radius of gyration). 
+3. **Flexibility Analysis**: Upon superposing the ensemble can be analysed using Bio3D tools (RMSD, RMSF, dimension 
+reduction and projection with PCA and UMAP, ...) and Biopython tools (SASA, radius of gyration). 
 (Additionally, equivalent ProDy tools are provided via a command line script.).  
 
-4. **Binding Site Analysis** [optional]: For binding site analysis the user has the option to perform a superposing on binding site residues only (recommended 
-only when there is domain movement shifting the binding site). 
+4. **Binding Site Analysis** [optional]: For binding site analysis the user has the option to perform a superposing on 
+binding site residues only (recommended only when there is domain movement shifting the binding site). 
 Again this is possible with Bio3D or ProDy. The user can also opt for using the globally superimposed structures 
 (recommended in most minor-movement cases).
-The binding site analysis includes an automatised identification of the binding site (based on user-defined distance to ligands), 
-a statistical analysis of the residues identified as binding site (occurrence), as well as an all-atom flexibility analysis.
-Additionally a conserved water analysis can be performed, which takes into account all waters from all provided structures (not only the binding site), 
-and outputs an additional PyMol script dedicated to the binding site of the reference structure.
+The binding site analysis includes an automatised identification of the binding site (based on user-defined distance to 
+ligands), a statistical analysis of the residues identified as binding site (occurrence), as well as an all-atom 
+flexibility analysis.
 
-5. **Flexibility Prediction** [optional]: Additionally, there is the option to perform flexibility prediction based on elastic network model Normal Mode Analysis
-(NMA), as well as Essential Site Scanning Analysis (ESSA) on the reference structure.
+5. **Conserved Water Analysis** [optional]: A conserved water analysis can be performed, which takes into account all 
+waters from all provided structures, produces a statistical analysis based on clustering with a detailed data output as 
+Excel sheet and overall statistic analysis plots, as well as an additional PyMol script dedicated to the binding site 
+of the reference structure (if this contains a ligand).
+
+6. **Flexibility Prediction** [optional]: Additionally, there is the option to perform flexibility prediction on the 
+reference structure based on elastic network model Normal Mode Analysis (NMA) on C-alpha coarse grained or all-atom 
+representations as input, as well as Essential Site Scanning Analysis (ESSA) on the reference structure.
 
 
 ## File manifest  
@@ -196,6 +201,7 @@ EnsembleFlex
 │   ├── analyse_flex_prody_reporting.py
 │   ├── analyse_flex_sasa_biopython.py
 │   ├── identify_binding_site_bio3d.R
+│   ├── predict_flex_aanma_bio3d.R
 │   ├── predict_flex_binding_site_essa_prody.py
 │   ├── predict_flex_nma_bio3d.R
 │   ├── predict_flex_nma_prody.py

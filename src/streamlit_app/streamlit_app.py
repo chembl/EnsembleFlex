@@ -161,6 +161,8 @@ if 'NMABio3Disdone' not in st.session_state:
     st.session_state.NMABio3Disdone = False
 if 'NMAProDyisdone' not in st.session_state:
     st.session_state.NMAProDyisdone = False
+if 'aaNMABio3Disdone' not in st.session_state:
+    st.session_state.aaNMABio3Disdone = False
 if 'ESSAisdone' not in st.session_state:
     st.session_state.ESSAisdone = False
 
@@ -630,6 +632,7 @@ if st.button('B) Display previous analysis results - set all run', key="display_
     st.session_state.loadinitialresidues = True
     st.session_state.NMABio3Disdone = True
     st.session_state.NMAProDyisdone = True
+    st.session_state.aaNMABio3Disdone = True
     st.session_state.ESSAisdone = True
     st.success("Whole pipeline set to run.")
 
@@ -1288,16 +1291,16 @@ if st.button('Run', key="run_water_analysis_btn"):
 
 if st.session_state.wateranalysisdone == True:
     with st.container(border=True, height=600):
-        st.subheader("Conserved Water Analysis Results")
-        st.write("Superimposed structures were taken from ", superimposed)
-        st.write("Output files can be found in: ", outputdir_water_analysis)
-        st.write("Detailed water analysis results are provided as Excel file `WaterAnalysis_DATA_RESULTS.xlsx` in the output directory.\n"
-                 "More data is provided in structural format in the output directory:\n"
-                 "Two pdb structure files, `WaterAnalysis_ConservedWaters_ALL.pdb` and `WaterAnalysis_ConservedWaters_PASSED.pdb` "
-                 "contain the water molecules with conservation saved as occupancy value. "
-                 "A PyMol script highlighting the conserved waters at the ligand binding site of the reference structure "
-                 "can be found at `WaterAnalysis_ConservedWaters_PASSED_PyMOL_white_background_.pml`.")
         try:
+            st.subheader("Conserved Water Analysis Results")
+            st.write("Superimposed structures were taken from ", superimposed)
+            st.write("Output files can be found in: ", outputdir_water_analysis)
+            st.write("Detailed water analysis results are provided as Excel file `WaterAnalysis_DATA_RESULTS.xlsx` in the output directory.\n"
+                     "More data is provided in structural format in the output directory:\n"
+                     "Two pdb structure files, `WaterAnalysis_ConservedWaters_ALL.pdb` and `WaterAnalysis_ConservedWaters_PASSED.pdb` "
+                     "contain the water molecules with conservation saved as occupancy value. "
+                     "A PyMol script highlighting the conserved waters at the ligand binding site of the reference structure "
+                     "can be found at `WaterAnalysis_ConservedWaters_PASSED_PyMOL_white_background_.pml`.")
             st.image(outputdir_water_analysis + '/ConservationPlot.png', caption='ConservationPlot')
             st.image(outputdir_water_analysis + '/OccupancyBarplot.png', caption='OccupancyBarplot')
             st.image(outputdir_water_analysis + '/MobilityBarplot.png', caption='MobilityBarplot')
@@ -1327,7 +1330,7 @@ st.markdown(" - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NM
             " - [optional] Ensemble NMA (eNMA) based on ANM on all structures + clustering based on fluctuation "
             "similarity including RMSIP and Bhattacharyya coefficient comparison"
             )
-eNMA = st.toggle('Activate eNMA calculation - only recommended for small-to-medium-size ensembles, as computationally expensive')
+eNMA = st.toggle('Activate eNMA calculation - only recommended for small-to-medium-size ensembles (<=50), as computationally expensive')
 if eNMA:
     st.write('eNMA calculation activated!')
 
@@ -1347,20 +1350,32 @@ if st.button('Run', key="run_NMA_bio3d_btn"):
 
 if st.session_state.NMABio3Disdone == True:
     with st.container(border=True, height=600):
-        st.subheader("Normal Mode Analysis (NMA) results")
-        st.write("More data is provided in structural format in the output directory.")
-        st.markdown("#### - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NMA) for reference structure")
-        st.image(outputdir_NMA_Bio3D + '/ANM_NMA_reference_pdb.png', caption='ANM NMA')
-        st.image(outputdir_NMA_Bio3D + '/ANM_NMA_dynamic_cross_correlations_reference_pdb.png',
-                 caption='ANM NMA residue cross correlations')
-        st.write("Reference structure colored by ANM fluctuations")
-        b_fac_on_structure_vis(outputdir_NMA_Bio3D + '/ANM_fluctuations_onReference.pdb')
-        st.markdown("#### - Gaussian Network Model (GNM) C-alpha Normal Mode Analysis (NMA) for reference structure")
-        st.image(outputdir_NMA_Bio3D + '/GNM_NMA_reference_pdb.png', caption='GNM NMA')
-        st.image(outputdir_NMA_Bio3D + '/GNM_NMA_dynamic_cross_correlations_reference_pdb.png',
-                 caption='GNM NMA residue cross correlations')
-        st.write("Reference structure colored by GNM fluctuations")
-        b_fac_on_structure_vis(outputdir_NMA_Bio3D + '/GNM_fluctuations_onReference.pdb')
+        try:
+            st.subheader("Normal Mode Analysis (NMA) results")
+            st.write("More data is provided in structural format in the output directory.")
+            st.markdown("#### - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NMA) for reference structure")
+            st.image(outputdir_NMA_Bio3D + '/ANM_NMA_reference_pdb.png', caption='ANM NMA')
+            st.image(outputdir_NMA_Bio3D + '/ANM_NMA_dynamic_cross_correlations_reference_pdb.png',
+                     caption='ANM NMA residue cross correlations')
+            st.write("Reference structure colored by ANM fluctuations")
+            b_fac_on_structure_vis(outputdir_NMA_Bio3D + '/ANM_fluctuations_onReference.pdb')
+            st.write("First non-trivial ANM mode as interpolated trajectory")
+            multimodel_animation(outputdir_NMA_Bio3D + '/ANM_NMA_reference_pdb_mode7_traj.pdb')
+            st.markdown("#### - Gaussian Network Model (GNM) C-alpha Normal Mode Analysis (NMA) for reference structure")
+            st.image(outputdir_NMA_Bio3D + '/GNM_NMA_reference_pdb.png', caption='GNM NMA')
+            st.image(outputdir_NMA_Bio3D + '/GNM_NMA_dynamic_cross_correlations_reference_pdb.png',
+                     caption='GNM NMA residue cross correlations')
+            st.write("Reference structure colored by GNM fluctuations")
+            b_fac_on_structure_vis(outputdir_NMA_Bio3D + '/GNM_fluctuations_onReference.pdb')
+        except:
+            st.write("No NMA output available.")
+        try:
+            st.subheader("Ensemble Normal Mode Analysis (eNMA) results")
+            st.image(outputdir_NMA_Bio3D + '/eNMA_fluctuations.png', caption='Ensemble Normal Mode fluctuations')
+            st.write("Interpolated structures along eNMA modes as trajectory")
+            multimodel_animation(outputdir_NMA_Bio3D + '/eNMA_traj.pdb')
+        except:
+            st.write("No eNMA output available.")
 
 
 
@@ -1381,23 +1396,82 @@ if st.button('Run', key="run_NMA_prody_btn"):
 
 if st.session_state.NMAProDyisdone == True:
     with st.container(border=True, height=600):
-        st.subheader("Normal Mode Analysis (NMA) results")
-        st.write("More data is provided in structural format in the output directory.")
-        st.markdown("#### - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NMA) for reference structure")
-        st.image(outputdir_NMA_ProDy + '/B-factors_vs_ANM-msfs.png', caption='ANM NMA RMSFs vs B-factors')
-        st.write("Reference structure colored by ANM fluctuations")
-        b_fac_on_structure_vis(outputdir_NMA_ProDy + '/ANM_msf_first20_on_bfactor.pdb')
-        st.image(outputdir_NMA_ProDy + '/CrossCorrelations_ANM.png', caption='ANM NMA residue cross correlations')
-        st.image(outputdir_NMA_ProDy + '/ContactMap_ANM.png', caption='ANM NMA residue contact map')
-        st.markdown("#### - Gaussian Network Model (GNM) C-alpha Normal Mode Analysis (NMA) for reference structure")
-        st.image(outputdir_NMA_ProDy + '/B-factors_vs_GNM-msfs.png', caption='GNM NMA RMSFs vs B-factors')
-        st.write("Reference structure colored by GNM fluctuations")
-        b_fac_on_structure_vis(outputdir_NMA_ProDy + '/GNM_msf_first20_on_bfactor.pdb')
-        st.image(outputdir_NMA_ProDy + '/CrossCorrelations_GNM.png', caption='GNM NMA residue cross correlations')
-        st.image(outputdir_NMA_ProDy + '/ContactMap_GNM.png', caption='GNM NMA residue contact map')
+        try:
+            st.subheader("Normal Mode Analysis (NMA) results")
+            st.write("More data is provided in structural format in the output directory.")
+            st.markdown("#### - Anisotropic Network Model (ANM) C-alpha Normal Mode Analysis (NMA) for reference structure")
+            st.image(outputdir_NMA_ProDy + '/B-factors_vs_ANM-msfs.png', caption='ANM NMA RMSFs vs B-factors')
+            st.write("Reference structure colored by ANM fluctuations")
+            b_fac_on_structure_vis(outputdir_NMA_ProDy + '/ANM_msf_first20_on_bfactor.pdb')
+            st.image(outputdir_NMA_ProDy + '/CrossCorrelations_ANM.png', caption='ANM NMA residue cross correlations')
+            st.image(outputdir_NMA_ProDy + '/ContactMap_ANM.png', caption='ANM NMA residue contact map')
+            st.markdown("#### - Gaussian Network Model (GNM) C-alpha Normal Mode Analysis (NMA) for reference structure")
+            st.image(outputdir_NMA_ProDy + '/B-factors_vs_GNM-msfs.png', caption='GNM NMA RMSFs vs B-factors')
+            st.write("Reference structure colored by GNM fluctuations")
+            b_fac_on_structure_vis(outputdir_NMA_ProDy + '/GNM_msf_first20_on_bfactor.pdb')
+            st.image(outputdir_NMA_ProDy + '/CrossCorrelations_GNM.png', caption='GNM NMA residue cross correlations')
+            st.image(outputdir_NMA_ProDy + '/ContactMap_GNM.png', caption='GNM NMA residue contact map')
+        except:
+            st.write("ERROR: No output available.")
 
 
-toc.subheader("B) Essential Site Scanning Analysis")
+toc.subheader("B) *All-atom* Normal Mode Analysis of elastic network models")
+#st.markdown("##### a) with Bio3D")
+st.markdown("[Used package/tool: Bio3D (R)]")
+st.markdown(" - Anisotropic Network Model (ANM) all-atom Normal Mode Analysis (aaNMA) for reference structure\n"
+            # " - Comparison of ensemble PCs and aaNMA modes of reference structure\n"
+            " - [optional] all-atom Ensemble NMA (aaeNMA) based on ANM on all structures + clustering based on fluctuation "
+            "similarity including RMSIP and Bhattacharyya coefficient comparison"
+            )
+aaeNMA = st.toggle('Activate aaeNMA calculation - only recommended for mini ensembles (<=5), as computationally very expensive')
+if aaeNMA:
+    st.write('All-atom eNMA calculation activated!')
+
+outputdir_aaNMA_Bio3D = str(output_directory) + '/Prediction_aaNMA_Bio3D'
+
+if st.button('Run', key="run_aaNMA_bio3d_btn"):
+    if aaeNMA:
+        result = subprocess.run(
+            ["Rscript", str(parentfilepath) + "/predict_flex_aanma_bio3d.R", '-i', str(input_directory), '-o',
+             str(outputdir_aaNMA_Bio3D), '-e'])
+    else:
+        result = subprocess.run(
+            ["Rscript", str(parentfilepath) + "/predict_flex_aanma_bio3d.R", '-i', str(input_directory), '-o',
+             str(outputdir_aaNMA_Bio3D)])
+    st.write("Output files are saved in: ", outputdir_aaNMA_Bio3D)
+    st.session_state.aaNMABio3Disdone = True
+
+if st.session_state.aaNMABio3Disdone == True:
+    with st.container(border=True, height=600):
+        try:
+            st.subheader("All-atom Normal Mode Analysis (aaNMA) results")
+            st.write("More data is provided in structural format in the output directory.")
+            st.markdown("#### - Anisotropic Network Model (ANM) All-atom Normal Mode Analysis (aaNMA) for reference structure")
+            st.image(outputdir_aaNMA_Bio3D + '/ANM_aaNMA_reference_pdb.png', caption='ANM NMA')
+            st.image(outputdir_aaNMA_Bio3D + '/ANM_aaNMA_dynamic_cross_correlations_reference_pdb.png',
+                     caption='ANM aaNMA residue cross correlations')
+            st.write("Reference structure colored by ANM all-atom fluctuations")
+            b_fac_on_structure_vis(outputdir_aaNMA_Bio3D + '/ANM_aa_fluctuations_data_on_structure.pdb')
+            st.write("First non-trivial ANM mode as interpolated trajectory")
+            multimodel_animation(outputdir_aaNMA_Bio3D + '/ANM_aaNMA_reference_pdb_mode7_traj.pdb')
+            # st.markdown("#### - Gaussian Network Model (GNM) All-atom Normal Mode Analysis (aaNMA) for reference structure")
+            # st.image(outputdir_aaNMA_Bio3D + '/GNM_aaNMA_reference_pdb.png', caption='GNM NMA')
+            # st.image(outputdir_aaNMA_Bio3D + '/GNM_aaNMA_dynamic_cross_correlations_reference_pdb.png',
+            #          caption='GNM aaNMA residue cross correlations')
+            # st.write("Reference structure colored by GNM all-atom fluctuations")
+            # b_fac_on_structure_vis(outputdir_aaNMA_Bio3D + '/GNM_aa_fluctuations_onReference.pdb')
+        except:
+            st.write("No all-atom NMA output available.")
+        try:
+            st.subheader("All-atom Ensemble Normal Mode Analysis (eNMA) results")
+            st.image(outputdir_NMA_Bio3D + '/aaeNMA_fluctuations.png', caption='All-atom Ensemble Normal Mode fluctuations')
+            st.write("Interpolated structures along all-atom eNMA modes as trajectory")
+            multimodel_animation(outputdir_NMA_Bio3D + '/aaeNMA_traj.pdb')
+        except:
+            st.write("No all-atom eNMA output available.")
+
+
+toc.subheader("C) Essential Site Scanning Analysis")
 st.markdown("[Used package/tool: ProDy (Python)]")
 st.markdown('''Essential Site Scanning Analysis (ESSA) - an elastic network model (ENM)-based method - is performed 
             for all residues of the reference protein structure. 
