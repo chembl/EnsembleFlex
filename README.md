@@ -231,7 +231,7 @@ EnsembleFlex
 
 ## Compliance with FAIR principles for research software
 - **F**indable: The EnsembleFlex code is available on GitHub, the Docker image is also available on Docker Hub 
-and the tool is listed at Elixir [bio.tools](https://bio.tools/).
+and the tool is listed at Elixir [bio.tools](https://bio.tools/ensembleflex).
 - **A**ccessible: All code is available on GitHub and can be installed via Conda environment manager or simply 
 executed as Docker image. 
 Documentation is provided via this `README.md` and an additional `user_guide.md` file.
