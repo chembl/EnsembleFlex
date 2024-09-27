@@ -22,7 +22,7 @@ library(msa)
 option_list = list(
   make_option(c("-i", "--indir"), type="character", default=NULL,
               help="input directory path", metavar="character"),
-  make_option(c("-o", "--outdir"), type="character", default="Bio3D_NMA",
+  make_option(c("-o", "--outdir"), type="character", default="Prediction_aaNMA_Bio3D",
               help="output directory [default=%default]", metavar="character"),
   make_option(c("-n", "--ngroups"), type="integer", default=3,
               help="number of groups for clustering [default=%default]", metavar="integer"),
@@ -35,7 +35,7 @@ opt = parse_args(opt_parser);
 
 ## Check provided output directory <opt$outdir>
 
-if (opt$outdir == "Bio3D_aaNMA"){
+if (opt$outdir == "Prediction_aaNMA_Bio3D"){
   # output directory is supposed to be located in input directory
   outdir <- file.path(opt$indir, opt$outdir)
   dir.create(outdir, showWarnings = FALSE)
@@ -102,30 +102,15 @@ ref_pdb <- trim.pdb(ref_pdb, "notwater")
 
 # ca.ref_pdb <- trim.pdb(ref_pdb, "calpha")
 
-residue_vec <- pdbs$resno[pdb1$id, gaps.res$f.inds]
-residue_vec_with_gaps <- pdbs$resno[pdb1$id]
-
-data_on_structure <- function(pdbX, residue_vec, data_vec, dataname){
-    dataframe <- cbind(data.frame(residue_vec), data_vec)
-    #pdbX <- read.pdb(pdbfile)
+# Custom function to save atom data on structure
+atom_data_on_structure <- function(pdbX, atom_vec, data_vec, dataname){
+    dataframe <- cbind(data.frame(atom_vec), data_vec)
     # set all b-factors to 0
     pdbX$atom$b <- 0
-
     for(i in 1:length(dataframe[,1])){
-        # get residue number from first column in dataframe
-        residue_num <- dataframe[i,1]
-        #print(residue_num)
-        # get data value from provided column in dataframe
-        value <- dataframe[i,2]
-        #print(value)
-        # get indices of residue
-        residue_inds <- atom.select(pdb1, resno=c(residue_num))
-        #print(residue_inds)
-        # store data value in b-factor column for each residue in PDB file
-        #print(pdb1$atom$b[ residue_inds$atom ])
-        pdbX$atom$b[ residue_inds$atom ] <- value
+        # set all b-factors of atoms contained in atom_vec to the respective data value
+        pdbX$atom$b[ dataframe[i,1] ] <- dataframe[i,2]
     }
-
     # write to file
     write.pdb(pdbX, file=paste0(dataname,"_data_on_structure.pdb"))
 }
@@ -148,6 +133,7 @@ mktrj(modes_ref_pdb, mode=7, pdb=ref_pdb, file="ANM_aaNMA_reference_pdb_mode7_tr
 print("Interpolated trajectory structures saved to file ANM_aaNMA_reference_pdb_mode7_traj.pdb")
 # Vector field representation
 pymol(modes_ref_pdb, mode=7, pdb=ref_pdb, file="ANM_aaNMA_reference_pdb_mode7.pml", type="script")
+print("Vector field representation saved to file ANM_aaNMA_reference_pdb_mode7.pml")
 
 # Dynamic Cross-Correlation from ANM
 cm_anm <- dccm.nma(modes_ref_pdb)
@@ -160,14 +146,20 @@ dev.off()
 # pymol.dccm(cm_anm, pdb=ref_pdb, step=0.2, omit=0.2, radius = 0.15, type="pdb",
 #         file="ANM_NMA_dynamic_cross_correlations.pdb")
 
-# Save reference structure with ANM_fluctuations in B-factor column
+
+## Save reference structure with ANM_fluctuations in B-factor column
+# vector of atom indices used for NMA calculation (needs to be the same length as fluctuations)
+atom_vec <- atom.select(ref_pdb, "noh")$atom
+# print(length(modes_ref_pdb$fluctuations))
+# print(length(atom_vec))
 tryCatch(
     #try to ...
     {
-    #write.pdb(ref_pdb, b=modes_ref_pdb$fluctuations, file="ANM_aa_fluctuations_onReference.pdb") #ca.ref_pdb
+    ## Cannot use write.pdb, as this takes only C-alpha values "vector of B-factors of length equal to length(xyz)/3."
+    #write.pdb(ca.ref_pdb, b=modes_ref_pdb$fluctuations, file="ANM_aa_fluctuations_onReference.pdb")
     #print("PDB saved to file ANM_aa_fluctuations_onReference.pdb")
-    # save data in b-factor column on structure
-    data_on_structure(pdb1, residue_vec_with_gaps, modes_ref_pdb$fluctuations, "ANM_aa_fluctuations")
+    # save data in b-factor column on structure using custom function atom_data_on_structure()
+    atom_data_on_structure(pdb1, atom_vec, modes_ref_pdb$fluctuations, "ANM_aa_fluctuations")
     print("PDB saved to file ANM_aa_fluctuations_data_on_structure.pdb")
     },
     #if an error occurs, tell me the error
