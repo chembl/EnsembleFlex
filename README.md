@@ -6,7 +6,8 @@
 This program provides flexibility analysis tools for protein structure ensembles via a graphical user interface (GUI).
 Nevertheless, all tools are provided as separately executable Python or R scripts and can therefore be integrated in 
 custom in-house pipelines, without using the GUI. 
-For more details, please see section 'Operating instructions' below, as well as the additional `user_guide.md` file.  
+For more details, please see section 'Operating instructions' below, as well as the additional 
+[`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md) file.  
 
 **Input**: The program and tools are particularly designed to work with heterogeneous pdb ensembles (non-identical 
 number of atoms or residues), but can also be used for homogenous ensembles (originating e.g. from molecular dynamics 
@@ -95,7 +96,7 @@ analysis.
 **Launch**:  
 With conda/mamba installation EnsemblFlex can be used with the 
 browser based Graphical User Interface (GUI) and the 
-Command Line (see detailed documentation in `user_guide.md`).  
+Command Line (see detailed documentation in [`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md)).  
 
 First, activate the environment:
       
@@ -113,7 +114,7 @@ First, activate the environment:
 
 #### Input files
 After launching the GUI the user needs to provide an input directory containing all (monomeric) ensemble structure 
-files that shall be analysed. Example input data is provided in the folder `example_input_data`.
+files that shall be analysed. Example input data is provided in the folder `examples`.
 
 #### Output files
 The execution of provided tools will produce the following types of output files:
@@ -124,20 +125,20 @@ The execution of provided tools will produce the following types of output files
 
 The user is free to use any convenient structure visualisation tool to examine the structural output (except for the 
 PyMol scripts, which are only executable with PyMol).
-Example output data is provided in the folder `example_results`.  
 
 When using the graphical user interface analysis results are presented in a scrollable container which will appear when 
 analysis is finished.  
 
 ### Analysis
-Please look into `user_guide.md` for a detailed interpretation help and description of methods.  
+Please look into [`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md) 
+for a detailed interpretation help and description of methods.  
 
 Primary tools and packages used in the workflow are:
 - [Bio3D](http://thegrantlab.org/bio3d/) (R package) - main flexibility analysis & prediction
 - [ProDy](http://www.bahargroup.org/prody/) (Python package) - alternative main flexibility analysis & prediction
 - [Biopython](https://biopython.org) (Python package) - SASA & radius of gyration analysis, data handling tools
 - [umap](https://github.com/tkonopka/umap) (R package) - UMAP projection
-- [cluster](https://cran.r-project.org/web/packages/cluster/index.html) and [clvalid](https://cran.r-project.org/web/packages/clValid/index.html) - clustering and cluster validation
+- [cluster](https://cran.r-project.org/web/packages/cluster/index.html) and [clvalid](https://cran.r-project.org/web/packages/clValid/index.html) (R packages) - clustering and cluster validation
 - [vanddraabe](external_packages) (R package - modified package provided in `external_packages`) - conserved water analysis
 
 for the user interface:
@@ -183,58 +184,62 @@ EnsembleFlex
 ├── LICENSE  
 ├── README.md  
 ├── docker-data
+│   └── examples
+│      └── COX2-h_P35354_7
 ├── documentation  
-│   └── OutputDirectoryStructure.rtf
+│   ├── OutputDirectoryStructure.rtf
+│   └── user_guide.md
+├── conda-lock.yml
 ├── environment.yml
-├── example_input_data
-├── example_results
+├── environment_versioned.yml
 ├── external_packages
 │   └── vanddraabe.zip
-├── requirements.r
-├── requirements.txt
-├── src  
-│   ├── analyse_conserved_waters.R
-│   ├── analyse_flex_binding_site_bio3d.R
-│   ├── analyse_flex_bio3d.R
-│   ├── analyse_flex_bio3d_reporting.py
-│   ├── analyse_flex_prody.py
-│   ├── analyse_flex_prody_reporting.py
-│   ├── analyse_flex_sasa_biopython.py
-│   ├── identify_binding_site_bio3d.R
-│   ├── predict_flex_aanma_bio3d.R
-│   ├── predict_flex_binding_site_essa_prody.py
-│   ├── predict_flex_nma_bio3d.R
-│   ├── predict_flex_nma_prody.py
-│   ├── superimpose_binding_site_bio3d.R
-│   ├── superimpose_bio3d.R
-│   ├── superimpose_prody.py
-│   ├── streamlit_app
-│   │   ├── directorypicker.py
-│   │   ├── requirements.txt
-│   │   ├── stoc.py
-│   │   ├── streamlit_app.py
-│   └── tools
-│       ├── data_on_structure.R
-│       ├── pdb_delhetatm.py
-│       ├── pdb_delhetatm_ions.py
-│       ├── pdb_delresname.py
-│       ├── run_pdb_del_on_directory.sh
-│       ├── sort_pdbs_from_dataframe.py
-│       ├── sort_pdbs_from_file.py
-│       ├── sort_pdbs_has_gap_in_seq.py
-│       ├── sort_pdbs_has_ligand.R
-│       ├── split_pdbs_bio3d.R
-│       ├── subset_alignment_gap_fraction_drop.py
-│       └── subset_alignment_has_gap_in_seq.sh
-└── tests
+├── requirements.R
+└──  src  
+   ├── analyse_conserved_waters.R
+   ├── analyse_flex_binding_site_bio3d.R
+   ├── analyse_flex_bio3d.R
+   ├── analyse_flex_bio3d_reporting.py
+   ├── analyse_flex_prody.py
+   ├── analyse_flex_prody_reporting.py
+   ├── analyse_flex_sasa_biopython.py
+   ├── identify_binding_site_bio3d.R
+   ├── predict_flex_aanma_bio3d.R
+   ├── predict_flex_binding_site_essa_prody.py
+   ├── predict_flex_nma_bio3d.R
+   ├── predict_flex_nma_prody.py
+   ├── superimpose_binding_site_bio3d.R
+   ├── superimpose_bio3d.R
+   ├── superimpose_prody.py
+   ├── streamlit_app
+   │   ├── directorypicker.py
+   │   ├── requirements.txt
+   │   ├── stoc.py
+   │   └── streamlit_app.py
+   └── tools
+       ├── data_on_structure.R
+       ├── pdb_delhetatm.py
+       ├── pdb_delhetatm_ions.py
+       ├── pdb_delresname.py
+       ├── run_pdb_del_on_directory.sh
+       ├── sort_pdbs_from_dataframe.py
+       ├── sort_pdbs_from_file.py
+       ├── sort_pdbs_has_gap_in_seq.py
+       ├── sort_pdbs_has_ligand.R
+       ├── split_pdbs_bio3d.R
+       ├── subset_alignment_gap_fraction_drop.py
+       └── subset_alignment_has_gap_in_seq.sh
+
 ```
 
 ## Compliance with FAIR principles for research software
-- **F**indable: The EnsembleFlex code is available on GitHub, the Docker image is also available on Docker Hub 
+- **F**indable: The EnsembleFlex code is available on [GitLab](https://gitlab.ebi.ac.uk/melanie/ensembleflex), 
+where the Docker image is also available in the Container Registry 
 and the tool is listed at Elixir [bio.tools](https://bio.tools/ensembleflex).
 - **A**ccessible: All code is available on GitHub and can be installed via Conda environment manager or simply 
 executed as Docker image. 
-Documentation is provided via this `README.md` and an additional `user_guide.md` file.
+Documentation is provided via this `README.md` file and an additional [`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md) 
+file.
 - **I**nteroperable: The code is constructed in a building block manner, where all steps of the workflow can be 
 executed independently via command line execution of scripts having a consistent execution syntax (see `user_guide.md`), 
 ensuring for customizability and interoperability. 
@@ -245,7 +250,7 @@ Environment reproducibility is achieved through installation with a conda-lock f
 
 ## Copyright and licensing information  
 This program is distributed under a permissive open source licence
-(MIT). A copy is provided in file `LICENSE`.
+(MIT). A copy is provided in file [`LICENSE`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/LICENSE).
 
 ## Contact information  
 The author Melanie Schneider can be contacted at melanie@ebi.ac.uk.
