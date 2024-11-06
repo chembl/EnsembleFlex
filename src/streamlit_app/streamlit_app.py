@@ -937,7 +937,8 @@ _This highlights residues that experience differences in solvent accessibility a
 
 outputdirSASA = str(output_directory) + '/Analysis_SASA_Biopython'
 
-def run_analysis_SASA():
+if st.button('Run fast SASA (expecting coherent residue numbering)', key="analyse_SASA_btn"):
+# def run_analysis_SASA():
     result = subprocess.run(
         [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython.py", '-i', superimposed, '-o', outputdirSASA])
     st.write("Superimposed structures are taken from ", superimposed)
@@ -948,8 +949,33 @@ def run_analysis_SASA():
     st.write("SASA standard deviation per residue saved in b-factor on reference structure.")
     st.write("Files are saved in: ", outputdirSASA)
     st.session_state.SASAanalysisdone = True
+# st.button('Run fast SASA (expecting coherent residue numbering)', key="analyse_SASA_btn", on_click=run_analysis_SASA)
 
-st.button('Run', key="analyse_SASA_btn", on_click=run_analysis_SASA)
+if st.button('Run SASA using reference (for incoherent residue numbering)', key="analyse_SASA_with_ref_btn"):
+    result = subprocess.run(
+        [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython_using_reference.py", '-i',
+         superimposed, '-o', outputdirSASA])
+    st.write("Superimposed structures are taken from ", superimposed)
+    st.write("SASA calculations are done.")
+    result = subprocess.run(
+        ["Rscript", str(parentfilepath) + "/tools/data_on_structure.R", '-i', superimposed, '-o', outputdirSASA,
+         '-d', outputdirSASA + "/SASA_global.csv", '-c', "sd"])
+    st.write("SASA standard deviation per residue saved in b-factor on reference structure.")
+    st.write("Files are saved in: ", outputdirSASA)
+    st.session_state.SASAanalysisdone = True
+
+if st.button('Run SASA using alignment (for incoherent residue numbering) - slow!', key="analyse_SASA_with_aln_btn"):
+    result = subprocess.run(
+        [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython_using_alignment.py", '-i',
+         superimposed, '-o', outputdirSASA])
+    st.write("Superimposed structures are taken from ", superimposed)
+    st.write("SASA calculations are done.")
+    result = subprocess.run(
+        ["Rscript", str(parentfilepath) + "/tools/data_on_structure.R", '-i', superimposed, '-o', outputdirSASA,
+         '-d', outputdirSASA + "/SASA_global.csv", '-c', "sd"])
+    st.write("SASA standard deviation per residue saved in b-factor on reference structure.")
+    st.write("Files are saved in: ", outputdirSASA)
+    st.session_state.SASAanalysisdone = True
 
 if st.session_state.SASAanalysisdone == True:
     with st.container(border=True, height=600):
