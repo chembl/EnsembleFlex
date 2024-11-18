@@ -937,10 +937,26 @@ _This highlights residues that experience differences in solvent accessibility a
 
 outputdirSASA = str(output_directory) + '/Analysis_SASA_Biopython'
 
-if st.button('Run fast SASA (expecting coherent residue numbering)', key="analyse_SASA_btn"):
-# def run_analysis_SASA():
-    result = subprocess.run(
-        [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython.py", '-i', superimposed, '-o', outputdirSASA])
+sasa_choice = st.radio(
+    "Select the method you would like to use",
+    ["Fast SASA", "SASA using reference", "SASA using alignment"],
+    captions = ["This is recommended due to its speed, but it expects coherent residue numbering.",
+                "This uses the reference structure as residue indices (for incoherent residue numbering).",
+                "This uses a sequence alignment as residue indices (for incoherent residue numbering) - may be slow."],
+    key="sasa_choice")
+st.write("Your choice is: ", sasa_choice)
+
+# if st.button('Run fast SASA (expecting coherent residue numbering)', key="analyse_SASA_btn"):
+def run_analysis_SASA(sasa_choice):
+    if sasa_choice == "Fast SASA":
+        result = subprocess.run(
+            [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython.py", '-i', superimposed, '-o', outputdirSASA])
+    if sasa_choice == "SASA using reference":
+        result = subprocess.run(
+            [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython_using_reference.py", '-i', superimposed, '-o', outputdirSASA])
+    if sasa_choice == "SASA using alignment":
+        result = subprocess.run(
+            [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython_using_alignment.py", '-i', superimposed, '-o', outputdirSASA])
     st.write("Superimposed structures are taken from ", superimposed)
     st.write("SASA calculations are done.")
     result = subprocess.run(
@@ -949,33 +965,9 @@ if st.button('Run fast SASA (expecting coherent residue numbering)', key="analys
     st.write("SASA standard deviation per residue saved in b-factor on reference structure.")
     st.write("Files are saved in: ", outputdirSASA)
     st.session_state.SASAanalysisdone = True
-# st.button('Run fast SASA (expecting coherent residue numbering)', key="analyse_SASA_btn", on_click=run_analysis_SASA)
 
-if st.button('Run SASA using reference (for incoherent residue numbering)', key="analyse_SASA_with_ref_btn"):
-    result = subprocess.run(
-        [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython_using_reference.py", '-i',
-         superimposed, '-o', outputdirSASA])
-    st.write("Superimposed structures are taken from ", superimposed)
-    st.write("SASA calculations are done.")
-    result = subprocess.run(
-        ["Rscript", str(parentfilepath) + "/tools/data_on_structure.R", '-i', superimposed, '-o', outputdirSASA,
-         '-d', outputdirSASA + "/SASA_global.csv", '-c', "sd"])
-    st.write("SASA standard deviation per residue saved in b-factor on reference structure.")
-    st.write("Files are saved in: ", outputdirSASA)
-    st.session_state.SASAanalysisdone = True
+st.button('Run SASA', key="analyse_SASA_btn", on_click=run_analysis_SASA, args=[sasa_choice])
 
-if st.button('Run SASA using alignment (for incoherent residue numbering) - slow!', key="analyse_SASA_with_aln_btn"):
-    result = subprocess.run(
-        [f"{sys.executable}", str(parentfilepath) + "/analyse_flex_sasa_biopython_using_alignment.py", '-i',
-         superimposed, '-o', outputdirSASA])
-    st.write("Superimposed structures are taken from ", superimposed)
-    st.write("SASA calculations are done.")
-    result = subprocess.run(
-        ["Rscript", str(parentfilepath) + "/tools/data_on_structure.R", '-i', superimposed, '-o', outputdirSASA,
-         '-d', outputdirSASA + "/SASA_global.csv", '-c', "sd"])
-    st.write("SASA standard deviation per residue saved in b-factor on reference structure.")
-    st.write("Files are saved in: ", outputdirSASA)
-    st.session_state.SASAanalysisdone = True
 
 if st.session_state.SASAanalysisdone == True:
     with st.container(border=True, height=600):
@@ -1007,7 +999,7 @@ st.markdown("[Used package/tool: Bio3D (R)]")
 st.write('This tool automatically sorts copies of your superimposed structures into the subfolders "structures_with_ligand" and "structures_without_ligand".')
 st.write('Additionally, you have the option to remove *ions* and other *non-relevant/unwanted* small molecules (such as crystallisation additives or co-factors) before sorting in order to exclude them from the analysis.')
 
-removeIons = st.toggle('Remove all *ions* from all structures.')
+removeIons = st.toggle('Remove all *ions* from all structures.', value=True)
 removeLigs = st.toggle('Remove *non-relevant/unwanted* molecules (such as crystallisation additives or co-factors) from all structures.')
 if removeLigs:
     ligs_to_remove = st.text_input('Ligand IDs to remove', key='rem_ligs_input', placeholder='DMS,PEG',
@@ -1060,6 +1052,7 @@ if st.session_state.PDBhasLigandSortisdone == True:
 
 st.markdown('''##### Liganded Structures - Input Directory''')
 st.write('Please select your input directory (where your liganded structure files are located):')
+st.write(f'(If you have used the tool above, this should be: "{str(output_directory)}/structures_with_ligand")')
 input_directory_liganded = st_directory_picker_input_liganded(initial_path=output_directory, key='input_directory_liganded')
 # st.session_state.input_directory_liganded = str(input_directory_liganded)
 
@@ -1561,7 +1554,9 @@ if st.session_state.ESSAisdone == True:
 
 st.divider()
 #######################################################################################################################
-
+st.write("***Funding***")
+st.write("*This work was supported by the EMBL ARISE Fellowship from the European Union’s Horizon 2020 research "
+         "and innovation program under the Marie Skłodowska-Curie grant agreement No 945405.*")
 
 # toc.generate()
 toc.toc()
