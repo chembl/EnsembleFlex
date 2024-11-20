@@ -133,14 +133,14 @@ number_of_groups <- opt$ngroups
 ##-------------------------------------
 rd <- rmsd(pdbs, fit=FALSE)
 png("RMSD_hist.png", units="in", width=5, height=5, res=300)
-hist(rd, breaks=40, xlab="RMSD (Å)", main="Histogram of RMSD")
+hist(rd, breaks=40, xlab="RMSD (Å)", main="Histogram of backbone RMSDs")
 dev.off()
 print("Plot saved to file RMSD_hist.png")
 
 ## RMSD heatmap
 png("RMSD_heatmap.png", units="in", width=5, height=5, res=300)
 #heatmap(rd, labCol=ids, main="RMSD Heatmap")
-pheatmap(rd, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
+pheatmap(rd, main="Backbone RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
 dev.off()
 print("Plot saved to file RMSD_heatmap.png")
 
@@ -148,7 +148,7 @@ print("Plot saved to file RMSD_heatmap.png")
 hc_rmsd <- hclust(as.dist(rd))
 png("RMSD_dendrogram.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_rmsd, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+           ylab="RMSD (Å)", main="Backbone RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
 print("Plot saved to file RMSD_dendrogram.png")
 
@@ -181,7 +181,8 @@ dev.off()
 if (length(files)>=5) {
     cluster_validation_test_rmsd <- clValid(rd, c(2:5), # cluster sizes 2,3,4,5
                       clMethods = c("hierarchical", "kmeans",  "pam" ),
-                      validation = c("internal") # "stability"
+                      validation = c("internal"), # "stability"
+                      maxitems = nrow(rd) # needed for very large datasets
     )
     summary(cluster_validation_test_rmsd)
     writeLines(capture.output(summary(cluster_validation_test_rmsd)), paste0(output_path, "/cluster_validation_RMSD.txt"))
@@ -236,14 +237,14 @@ data_on_structure <- function(pdbX, residue_vec, data_vec, dataname){
 rf <- rmsf(pdbs$xyz[, gaps.pos$f.inds])
 png("RMSF.png", units="in", width=5, height=5, res=300)
 plot.bio3d(rf, resno=ref_pdb, sse=ref_pdb, ylab="RMSF (Å)",
-           xlab="Residue No.", col="gray", main="RMSFs per Residue") #, typ="l"
+           xlab="Residue No.", col="gray", main="Backbone RMSFs per Residue") #, typ="l"
 dev.off()
 print("Plot saved to file RMSF.png")
 
 rf_withgaps <- rmsf(pdbs$xyz)
 png("RMSF_including_gaps.png", units="in", width=5, height=5, res=300)
 plot.bio3d(rf_withgaps, rm.gaps=FALSE, resno=pdb1, sse=pdb1, sse.min.length=0, ylab="RMSF (Å)",
-           xlab="Residue No.", col="gray", main="RMSFs per Residue") #, typ="l"
+           xlab="Residue No.", col="gray", main="Backbone RMSFs per Residue") #, typ="l"
 dev.off()
 print("Plot saved to file RMSF_including_gaps.png")
 
@@ -270,7 +271,7 @@ data_on_structure(pdb1, residue_vec, rf, "RMSF")
 ##-------------------------------------
 png("B-factors.png", units="in", width=5, height=5, res=300)
 plot.bio3d(pdbs$b, rm.gaps=TRUE, ylab="B-factor", #, resno=ref_pdb, sse=ref_pdb
-           xlab="Residue No.", main="B-factors", col="gray") #, typ="l"
+           xlab="Residue No.", main="Backbone B-factors", col="gray") #, typ="l"
 dev.off()
 print("Plot saved to file B-factors.png")
 
@@ -314,7 +315,7 @@ print("Plot saved to file PCA.png")
 # Plot PCA dendrogram
 png("PCA_dendrogram.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+           ylab="PC1-2 distance", main="Backbone PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
 print("Plot saved to file PCA_dendrogram.png")
 
@@ -335,7 +336,7 @@ if (length(files)>=5) {
     for (i in 1:5) wss[i] <- sum(kmeans(pc_xyz$z[,1:2], centers=i)$withinss)
     png(filename="cluster_number_elbow_plot_kmeans_onPCA.png", width=750, height=750, units="px", res=120)
     plot(1:5, wss, type="b", xlab="Number of Clusters", ylab="Within-clusters sum of squares",
-        main="Within-cluster dissimilarity based on k-means clustering")
+        main="Within-cluster dissimilarity based on k-means clustering of PC1-2")
     dev.off()
 }
 set.seed(11)
@@ -355,7 +356,8 @@ dev.off()
 if (length(files)>=5) {
     cluster_validation_test_pc_xyz <- clValid(pc_xyz$z[,1:2], c(2:5), # cluster sizes 2,3,4,5
                           clMethods = c("hierarchical", "kmeans",  "pam" ),
-                          validation = c("internal") # "stability"
+                          validation = c("internal"), # "stability"
+                          maxitems = nrow(rd) # needed for very large datasets
     )
     summary(cluster_validation_test_pc_xyz)
     writeLines(capture.output(summary(cluster_validation_test_pc_xyz)), paste0(output_path, "/cluster_validation_PCA.txt"))
@@ -388,7 +390,7 @@ print("Plot saved to file PCA_on_Torsion_loadings.png")
 
 png("PCA_on_Torsion_dendrogram.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12_tor, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="PC1-2 distance", main="PC Cluster Dendrogram (on Torsion)", fillbox=FALSE) #, colors=annotation[, "color"]
+           ylab="PC1-2 distance", main="Backbone Torsion PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
 print("Plot saved to file PCA_on_Torsion_dendrogram.png")
 
@@ -470,13 +472,13 @@ grps_umap <- cutree(hc_umap, k=number_of_groups)
 
 # Plot UMAP
 png("UMAP.png", units="in", width=5, height=5, res=300)
-plot(umap_fit$layout, col=grps_umap, xlab="UMAP1", ylab="UMAP2", main="UMAP plot") #, col=annotation[, "color"]
+plot(umap_fit$layout, col=grps_umap, xlab="UMAP1", ylab="UMAP2", main="UMAP on backbone coordinates") #, col=annotation[, "color"]
 dev.off()
 print("Plot saved to file UMAP.png")
 
 png("UMAP_dendrogram.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_umap, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="UMAP1-2 distance", main="UMAP Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+           ylab="UMAP1-2 distance", main="UMAP Cluster Dendrogram (backbone coordinates)", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
 print("Plot saved to file UMAP_dendrogram.png")
 
@@ -501,7 +503,7 @@ if (length(files)>=5) {
     for (i in 1:5) wss[i] <- sum(kmeans(umap_fit$layout, centers=i)$withinss)
     png(filename="cluster_number_elbow_plot_kmeans_onUMAP.png", width=750, height=750, units="px", res=120)
     plot(1:5, wss, type="b", xlab="Number of Clusters", ylab="Within-clusters sum of squares",
-        main="Within-cluster dissimilarity based on k-means clustering")
+        main="Within-cluster dissimilarity based on k-means clustering on backbone UMAP")
     dev.off()
 }
 set.seed(11)
@@ -521,7 +523,8 @@ dev.off()
 if (length(files)>=5) {
     cluster_validation_test_umap_xyz <- clValid(umap_fit$layout, c(2:5), # cluster sizes 2,3,4,5
                           clMethods = c("hierarchical", "kmeans",  "pam" ),
-                          validation = c("internal") # "stability"
+                          validation = c("internal"), # "stability"
+                          maxitems = nrow(rd) # needed for very large datasets
     )
     summary(cluster_validation_test_umap_xyz)
     writeLines(capture.output(summary(cluster_validation_test_umap_xyz)), paste0(output_path, "/cluster_validation_UMAP.txt"))
@@ -545,14 +548,14 @@ pdbs_allatoms <- read.all(pdbs)
 ##-------------------------------------
 rd_allatom <- rmsd(pdbs_allatoms$all, fit=FALSE)
 png("RMSD_hist_allatom.png", units="in", width=5, height=5, res=300)
-hist(rd_allatom, breaks=40, xlab="RMSD (Å)", main="Histogram of RMSD")
+hist(rd_allatom, breaks=40, xlab="RMSD (Å)", main="Histogram of all-atom RMSDs")
 dev.off()
 print("Plot saved to file RMSD_hist_allatom.png")
 
 ## all-atom RMSD heatmap
 png("RMSD_heatmap_allatom.png", units="in", width=5, height=5, res=300)
 #heatmap(rd_allatom, labCol=ids, main="RMSD Heatmap")
-pheatmap(rd_allatom, main="RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
+pheatmap(rd_allatom, main="All-atom RMSD Heatmap", fontsize = 6, show_colnames = FALSE) #annotation_row = ids
 dev.off()
 print("Plot saved to file RMSD_heatmap_allatom.png")
 
@@ -560,7 +563,7 @@ print("Plot saved to file RMSD_heatmap_allatom.png")
 hc_rmsd_allatom <- hclust(as.dist(rd_allatom))
 png("RMSD_dendrogram_allatom.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_rmsd_allatom, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="RMSD (Å)", main="RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+           ylab="RMSD (Å)", main="All-atom RMSD Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
 print("Plot saved to file RMSD_dendrogram_allatom.png")
 
@@ -638,7 +641,7 @@ print("Plot saved to file PCA_loadings_allatom.png")
 # Plot PCA dendrogram
 png("PCA_dendrogram_allatom.png", units="in", width=5, height=5, res=300)
 hclustplot(hc_pc12_allatom, labels=ids, cex=0.5, k=number_of_groups,
-           ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+           ylab="PC1-2 distance", main="All-atom PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
 dev.off()
 print("Plot saved to file PCA_dendrogram_allatom.png")
 
@@ -733,7 +736,7 @@ tryCatch(
     # Plot PCA dendrogram
     png("PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png", units="in", width=5, height=5, res=300)
     hclustplot(hc_dm_pc12, labels=ids, cex=0.5, k=number_of_groups,
-               ylab="PC1-2 distance", main="PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
+               ylab="PC1-2 distance", main="Difference Distance Matrix PC Cluster Dendrogram", fillbox=FALSE) #, colors=annotation[, "color"]
     dev.off()
     print("Plot saved to file PCA_on_allatom_DifferenceDistanceMatrix_dendrogram.png")
 
