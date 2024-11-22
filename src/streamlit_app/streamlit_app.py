@@ -897,8 +897,8 @@ st.markdown("[Used package/tool:  (Python)]")
 
 cluster_option = st.selectbox(
     'Which clustering result would you like to use to sort structures into subdirectories?',
-    ("Consensus_Cluster", "backbone_RMSD", "backbone_PCA_onCoords", "backbone_UMAP_onCoords", "backbone_PCA_onTorsion",
-     "allatom_RMSD", "allatom_PCA_onCoords", "allatom_UMAP_onCoords", "allatom_PCA_onDist"))
+    ("backbone_RMSD", "backbone_PCA_onCoords", "backbone_UMAP_onCoords", "backbone_PCA_onTorsion",
+     "allatom_RMSD", "allatom_PCA_onCoords", "allatom_UMAP_onCoords", "allatom_PCA_onDist")) #"Consensus_Cluster",
 st.write('Your choice is:', cluster_option)
 
 if st.button('Run', key="subset_clusters_btn"):
