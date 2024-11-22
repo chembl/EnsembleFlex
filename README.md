@@ -9,6 +9,8 @@ custom in-house pipelines, without using the GUI.
 For more details, please see section 'Operating instructions' below, as well as the additional 
 [`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md) file.  
 
+![EnsembleFlex_Screenshot](documentation/EnsembleFlex_Screenshot.png)
+
 **Input**: The program and tools are particularly designed to work with heterogeneous pdb ensembles (non-identical 
 number of atoms or residues), but can also be used for homogenous ensembles (originating e.g. from molecular dynamics 
 simulations). The analysis will be performed for a single chain (monomeric) protein. If your protein of interest 
@@ -147,6 +149,8 @@ for the user interface:
 
 
 #### Workflow description:  
+
+![EnsembleFlex_Workflow](documentation/EnsembleFlex_Workflow.png)
 
 1. **Settings**: The user needs to provide input and output directories.
 

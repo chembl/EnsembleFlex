@@ -25,6 +25,7 @@ import Bio.PDB # to get b-factor values for display
 
 filepath = Path(__file__).parent.resolve()
 parentfilepath = Path(__file__).parent.parent.resolve()
+basefilepath = Path(__file__).parent.parent.parent.resolve()
 
 ## Personalisation
 
@@ -453,6 +454,7 @@ with st.expander("**3. Flexibility prediction: How to interpret Normal Mode Anal
     ''')
 
 toc.subheader("Workflow overview")
+st.image(str(basefilepath) + '/documentation/EnsembleFlex_Workflow.png') #, caption='EnsembleFlex_Workflow'
 st.markdown('''
     The workflow steps are ideally performed in sequential order, as some steps are dependant on previous output, 
     but they can be rerun if upstream parameters have been changed:  
