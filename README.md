@@ -17,6 +17,8 @@ simulations). The analysis will be performed for a single chain (monomeric) prot
 contains several chains, they need to be split first (e.g. using the provided tool `split_pdbs_bio3d.R`) and the 
 equivalent chains of the ensemble need to be placed together into one folder for analysis. 
 
+![EnsembleFlex_Workflow](documentation/EnsembleFlex_Workflow.png)
+
 ### Version
 v1.0.0 (2024.07)
 
@@ -149,8 +151,6 @@ for the user interface:
 
 
 #### Workflow description:  
-
-![EnsembleFlex_Workflow](documentation/EnsembleFlex_Workflow.png)
 
 1. **Settings**: The user needs to provide input and output directories.
 
