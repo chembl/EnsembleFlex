@@ -119,7 +119,7 @@ cm_anm <- dccm.nma(modes_ref_pdb)
 # Plot correlation map
 png(filename="ANM_NMA_dynamic_cross_correlations_reference_pdb.png", width=900, height=750, units="px", res=120)
 plot(cm_anm, resno=ref_pdb, sse=ref_pdb, contour = FALSE, col.regions = bwr.colors(20),
-     at = seq(-1, 1, 0.1)), main="ANM-NMA Residue Cross Correlation"
+     at = seq(-1, 1, 0.1), main="ANM-NMA Residue Cross Correlation")
 dev.off()
 # # DCCM PyMOL visualization: save a PDB file with CONECT records (when argument type='pdb')
 # pymol.dccm(cm_anm, pdb=ref_pdb, step=0.2, omit=0.2, radius = 0.15, type="pdb",
@@ -153,7 +153,7 @@ cm_gnm <- dccm.gnm(modes_gnm_ref_pdb)
 # Plot correlation map
 png(filename="GNM_NMA_dynamic_cross_correlations_reference_pdb.png", width=900, height=750, units="px", res=120)
 plot(cm_gnm, resno=ref_pdb, sse=ref_pdb, contour = FALSE, col.regions = bwr.colors(20),
-     at = seq(-1, 1, 0.1)), main="GNM-NMA Residue Cross Correlation"
+     at = seq(-1, 1, 0.1), main="GNM-NMA Residue Cross Correlation")
 dev.off()
 # # DCCM PyMOL visualization: save a PDB file with CONECT records (when argument type='pdb')
 # pymol(cm_gnm, ref_pdb, step=0.2, omit=0.2, radius = 0.15, type="pdb",
