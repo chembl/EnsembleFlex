@@ -79,7 +79,7 @@ abs_output_path = getAbsolutePath(".")
 
 ##-------------------------------------
 # Protect spaces in path names with gsub(" ","\\\\ ",pathname)
-str_input_path = gsub(" ","\\\\ ",opt$indir)
+str_input_path = gsub(" ","\\\\ ",indir)
 output_path = gsub(" ","\\\\ ",abs_output_path)
 
 
@@ -91,8 +91,6 @@ output_path = gsub(" ","\\\\ ",abs_output_path)
 
 # load reference pdb and get ID
 pdb1 <- read.pdb(files[1])
-pdb1$id <- sub("[.].*", "", basename(files[1])) # get filename and drop any extensions
-
 
 conservedWaters <- ConservedWaters(prefix = indir,
                                    cluster = 2.4, #2.4
@@ -141,6 +139,15 @@ MobNormBvalEvalPlots(data = conservedWaters, passed.waters = TRUE,
 dev.off()
 print("Plot saved to file MobNormBvalEvalPlots.png")
 
+png(filename="BoundWaterEnvPlots.png", width=8, height=5, units="in", res=150)
+BoundWaterEnvPlots(data = conservedWaters, passed.waters = TRUE,
+                   pct.conserved.gte = 50, num.clusters = 50)
+print("Plot saved to file MobNormBvalEvalPlots.png")
+
+png(filename="BoundWaterEnvSummaryPlot.png", width=8, height=5, units="in", res=150)
+BoundWaterEnvSummaryPlot(data = conservedWaters, passed.waters = TRUE,
+                         title = "Bound Water Environment per Conservation Percentage")
+print("Plot saved to file BoundWaterEnvSummaryPlot.png")
 
 
 # Get ligand IDs
@@ -148,12 +155,22 @@ print("Plot saved to file MobNormBvalEvalPlots.png")
 lig.inds <- atom.select(pdb1, "ligand")
 # Access the PDB data with the selected atom indices
 ligID <- pdb1$atom[ lig.inds$atom, "resid" ]
-print(ligID)
+# Ensure ligID is unique
+ligID <- unique(ligID)
+print(paste0("Detected ligand(s) are: ", ligID, "."))
+
 # # If there are several ligands, take the first detected one
-# if (is.list(ligID)){
-# ligID <- ligID[1]
-# print(paste0("Ligand with ID ", ligID, " used for pymol script generation."))
-# }
+# Handle multiple ligands or a single ligand
+if (length(ligID) > 1) {
+  ligID <- as.character(ligID[1])  # Take the first unique ligand ID and convert to string
+  print(paste0("Multiple ligands detected. Using the first ligand with ID ", ligID, " for further processing."))
+} else {
+  ligID <- as.character(ligID)  # Convert the single ligand ID to string
+  print(paste0("Ligand with ID ", ligID, " used for pymol script generation."))
+}
+
+pdb1$id <- sub("[.].*", "", basename(files[1])) # get filename and drop any extensions
+print(paste0("Reference structure used for pymol script generation: ", pdb1$id))
 
 CreatePyMOLscript(conservedWaters.data = conservedWaters,
                    passed.waters = TRUE,
