@@ -27,7 +27,7 @@ ENV PATH="/env/bin:${PATH}"
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # install additional r libraries (not available through conda)
 COPY requirements.R .
-RUN Rscript requirements.R || echo "Installation of boi3d.eddm failed!"
+RUN Rscript requirements.R
 
 # copy scripts to the working directory
 # (as last steps so that when there are changes to the scripts the above steps don't need to be repeated as they are cached)
