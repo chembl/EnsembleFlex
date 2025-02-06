@@ -8,16 +8,12 @@ import pandas as pd
 import streamlit as st
 from stoc import stoc
 #from directorypicker import st_directory_picker
-from directorypicker import st_directory_picker_input, st_directory_picker_output, st_directory_picker_input_liganded
 from pathlib import Path
 import py3Dmol
-from stmol import showmol, makeobj, speck_plot
+from stmol import showmol
 import Bio.PDB # to get b-factor values for display
-# import tkinter as tk
-# from tkinter import filedialog
-#from PIL import Image
-#from pdf2image import convert_from_path
-#import pypdfium2 as pdfium
+import tkinter as tk
+from tkinter import filedialog
 
 
 # make app accessible only through localhost - Not working!
@@ -49,18 +45,174 @@ toc = stoc()
 # st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
 #st.markdown('<link rel="stylesheet" type="text/css" href="https://www.example.com/style.css">', unsafe_allow_html=True)
 
-# Unfortunately the following tkinter implementation is not working/permitted on macOS
-# def select_folder():
-#     '''
-#     Uses tkinter to open a GUI window, allowing users to select a directory
-#     :return: folder_path
-#     '''
-#     root = tk.Tk()
-#     root.withdraw()
-#     root.wm_attributes('-topmost', 1) # Make folder picker dialog appear on top of other windows
-#     folder_path = str(filedialog.askdirectory(master=root))
-#     root.destroy()
-#     return folder_path
+# Function to detect if running in Docker
+def is_running_in_docker():
+    """Check if the script is running inside a Docker container."""
+    return os.path.exists("/.dockerenv")
+
+# Function to list directories for browser-based selection
+def list_directories(base_path, show_hidden=False):
+    """
+    List directories with enhanced filtering and error handling.
+    Args:
+        base_path (str): Base directory to list subdirectories from
+        show_hidden (bool): Whether to show hidden directories
+    Returns:
+        list: Filtered list of directories
+    """
+    try:
+        # Use pathlib.Path for robust path handling
+        path = Path(base_path)
+        # Filter directories with additional checks
+        directories = [
+            d.name for d in path.iterdir()
+            if d.is_dir() and
+               (show_hidden or not d.name.startswith('.'))
+        ]
+        return sorted(directories)
+    except PermissionError:
+        st.warning(f"Permission denied: Cannot access {base_path}")
+        return []
+    except FileNotFoundError:
+        st.warning(f"Directory not found: {base_path}")
+        return []
+    except Exception as e:
+        st.error(f"Unexpected error listing directories: {e}")
+        return []
+
+
+# Function to select a folder using the appropriate method
+# Use system-based folder selection for non-Docker environments
+def select_folder_non_docker(folder_key):
+    """Select a folder using a system-native method (Windows, macOS, Linux)."""
+    folder_path = None
+
+    if sys.platform == "darwin":  # macOS (AppleScript)
+        script = """
+        tell application "System Events"
+            activate
+            set folderPath to choose folder with prompt "Please select a folder"
+            set folderPath to POSIX path of folderPath
+        end tell
+        return folderPath
+        """
+        try:
+            folder_path = subprocess.check_output(["osascript", "-e", script]).decode("utf-8").strip()
+        except subprocess.CalledProcessError:
+            folder_path = None
+
+    elif sys.platform.startswith("linux"):  # Linux (Tkinter)
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.wm_attributes('-topmost', 1)
+        folder_path = filedialog.askdirectory()
+        root.destroy()
+
+    elif sys.platform.startswith("win"):  # Windows (Win32 API)
+        try:
+            import ctypes
+            from ctypes import wintypes
+            from win32com.shell import shell, shellcon
+
+            def win32_folder_picker():
+                pidl, display_name, image_list = shell.SHBrowseForFolder(
+                    None, None, "Select a folder", shellcon.BIF_RETURNONLYFSDIRS
+                )
+                if pidl:
+                    return shell.SHGetPathFromIDList(pidl)
+                return None
+
+            folder_path = win32_folder_picker()
+        except ImportError:  # Fallback to Tkinter if PyWin32 is unavailable
+            import tkinter as tk
+            from tkinter import filedialog
+            root = tk.Tk()
+            root.withdraw()
+            root.wm_attributes('-topmost', 1)
+            folder_path = filedialog.askdirectory()
+            root.destroy()
+
+    if folder_path:
+        st.session_state[folder_key] = folder_path
+        st.success(f"📁 {folder_key.replace('_', ' ').title()} set to: `{folder_path}`")
+
+# Function to select a folder using the appropriate method
+# Use browser-based folder selection for Docker environments
+# **Function for Docker Folder Selection (Now Uses Callbacks for Partial Rerun)**
+def update_navigation(folder_key):
+    """Callback to update navigation without full script rerun."""
+    selected_dir = st.session_state[f"dir_select_{folder_key}"]
+    current_path = st.session_state[f"current_path_{folder_key}"]
+
+    new_path = os.path.dirname(current_path) if selected_dir == ".." else os.path.join(current_path, selected_dir)
+    if os.path.isdir(new_path):
+        st.session_state[f"current_path_{folder_key}"] = new_path
+
+# Function to check for .pdb files in the input directory
+def contains_pdb_files(directory):
+    """Check if a directory contains any .pdb files."""
+    if not os.path.isdir(directory):
+        return False
+    return any(f.endswith(".pdb") for f in os.listdir(directory))
+
+def create_new_directory(folder_key):
+    """Callback to create new directory without full script rerun."""
+    current_path = st.session_state[f"current_path_{folder_key}"]
+    new_dir_name = st.session_state[f"new_dir_{folder_key}"]
+
+    if new_dir_name:
+        new_dir_path = os.path.join(current_path, new_dir_name)
+        try:
+            os.makedirs(new_dir_path, exist_ok=True)
+            st.session_state[f"current_path_{folder_key}"] = new_dir_path
+            st.success(f"📁 Created and selected: `{new_dir_path}`")
+        except OSError as e:
+            st.error(f"❌ Failed to create directory: {e}")
+
+# **Docker Folder Selection (Now Uses Callbacks)**
+def select_folder_in_docker(folder_key, title, allow_creation=False):
+    """Streamlit-based folder selection for Docker environments with navigation and optional directory creation."""
+    current_path = st.session_state[f"current_path_{folder_key}"]
+    directories = list_directories(current_path)
+
+    # st.markdown(f"### 📁 {title}")
+    st.write(f"**Current Path:** `{current_path}`")
+
+    # **Navigation Section (Uses Callbacks)**
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        st.write("📂 Navigate Directories:")
+    with col2:
+        st.selectbox("", [".."] + directories, key=f"dir_select_{folder_key}", label_visibility="collapsed",
+                     on_change=update_navigation, args=(folder_key,))
+    with col3:
+        st.button("🔄 Navigate", key=f"navigate_{folder_key}", on_click=update_navigation, args=(folder_key,))
+
+    # **Folder Creation (Optional, Uses Callback)**
+    if allow_creation:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col1:
+            st.write("🆕 New Directory Name:")
+        with col2:
+            st.text_input("", placeholder="Enter directory name", key=f"new_dir_{folder_key}", label_visibility="collapsed")
+        with col3:
+            st.button("📂 Create Directory", key=f"create_{folder_key}", on_click=create_new_directory, args=(folder_key,))
+
+    # **Final Selection (Only Saves Confirmed Selection)**
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.write("☑️ Confirm Selection:")
+    with col2:
+        if st.button("Set Directory", key=f"set_dir_{folder_key}"):
+            selected_path = st.session_state[f"current_path_{folder_key}"]  # Uses latest path
+            if os.access(selected_path, os.W_OK):
+                st.session_state[folder_key] = selected_path  # Saves only when confirmed
+                st.success(f"✅ Selected directory: `{selected_path}`")
+            else:
+                st.warning("⚠️ Selected directory is not writable.")
+
 
 def b_fac_on_structure_vis(pdbfilepath):
     '''
@@ -128,10 +280,23 @@ def multimodel_animation(pdbfilepath):
 
 
 # Session states initialisation
-# if 'input_directory' not in st.session_state:
-#     st.session_state.input_directory = ""
-# if 'output_directory' not in st.session_state:
-#     st.session_state.output_directory = ""
+if "input_directory" not in st.session_state:
+    st.session_state.input_directory = "/app/docker-data" if is_running_in_docker() else ""
+    input_directory = st.session_state.input_directory
+if "output_directory" not in st.session_state:
+    st.session_state.output_directory = "/app/docker-data" if is_running_in_docker() else ""
+    output_directory = st.session_state.output_directory
+if 'input_directory_liganded' not in st.session_state:
+    st.session_state.input_directory_liganded = st.session_state.output_directory
+    input_directory_liganded = st.session_state.input_directory_liganded
+# Initialize navigation state
+if "current_path_input_directory" not in st.session_state:
+    st.session_state.current_path_input_directory = st.session_state.input_directory
+if "current_path_output_directory" not in st.session_state:
+    st.session_state.current_path_output_directory = st.session_state.output_directory
+if "current_path_input_directory_liganded" not in st.session_state:
+    st.session_state.current_path_input_directory_liganded = st.session_state.output_directory
+
 if 'superimposed' not in st.session_state:
     st.session_state.superimposed = ""
 if 'superimposeisdone' not in st.session_state:
@@ -148,8 +313,6 @@ if 'BSidentifyisdone' not in st.session_state:
     st.session_state.BSidentifyisdone = False
 if 'loadinitialresidues' not in st.session_state:
     st.session_state.loadinitialresidues = False
-# if 'input_directory_liganded' not in st.session_state:
-#     st.session_state.input_directory_liganded = ""
 if 'superimposed_bs' not in st.session_state:
     st.session_state.superimposed_bs = ""
 if 'BSanalysisdone' not in st.session_state:
@@ -508,29 +671,57 @@ _Here is the place for data input and output and additional variable settings._
 # st.write('You selected `%s` files.' % len(structureFiles))
 # st.write(structureFiles)
 
-st.markdown('''#### Input Directory''')
-
-# selected_input_path = st.session_state.get("input_path", None)
-# input_folder_select_button = st.button("Select Folder")
-# if input_folder_select_button:
-#     selected_input_path = select_folder()
-#     st.session_state.input_path = selected_input_path
-# if selected_input_path:
-#     st.write("Selected input folder path:", selected_input_path)
-
+st.markdown('''#### 📁 Input Directory''')
 st.write('Please select your input directory (where your structure files are located):')
-input_directory = st_directory_picker_input(key="input_directory")
+# input_directory = st_directory_picker_input(key="input_directory")
 
-st.markdown('''#### Output Directory''')
+# Input Folder Picker
+if not is_running_in_docker():
+    if st.button("Select Input Folder"):
+        select_folder_non_docker("input_directory")
+else:
+    select_folder_in_docker("input_directory", "Select Input Directory")
+
+if "input_directory" in st.session_state:
+    st.write(f"📂 **Selected Input Folder:** `{st.session_state.input_directory}`")
+    input_directory = st.session_state.input_directory
+    # ✅ **Check if .pdb files exist in the input directory**
+    if contains_pdb_files(input_directory):
+        st.success("✅ PDB files found in the input directory.")
+    else:
+        st.warning("⚠️ No PDB files found in the selected input directory. Please ensure the correct folder is selected.")
+
+
+st.markdown('''#### 📁 Output Directory''')
 st.write('Please select your output directory (where all calculation results and files will be saved)\n '
          'It is recommended to select an empty folder:')
-output_directory = st_directory_picker_output(key="output_directory")
 
+# Output Folder Picker
+if not is_running_in_docker():
+    if st.button("Select Output Folder"):
+        select_folder_non_docker("output_directory")
+else:
+    select_folder_in_docker("output_directory", "Select Output Directory", allow_creation=True)
+
+if "output_directory" in st.session_state:
+    st.write(f"📂 **Selected Output Folder:** `{st.session_state.output_directory}`")
+    output_directory = st.session_state.output_directory
+    # **Check if output directory is empty**
+    if not len(os.listdir(output_directory)) == 0:
+        st.warning("⚠️ The selected output directory is not empty. Existing results may be overwritten.")
+
+# output_directory = st_directory_picker_output(key="output_directory")
+
+if st.session_state.input_directory and st.session_state.output_directory:
+    st.success("Input and output directories are set. You're ready to start the analysis.", icon="✅")
+else:
+    st.error('Please select both input and output directories to proceed.', icon="🚨")
 st.divider()
 #######################################################################################################################
 
 # Define the path where the session state will be saved
-session_state_file = str(output_directory)+"/session_state.json"
+if st.session_state.output_directory:
+    session_state_file = str(output_directory)+"/session_state.json"
 
 # List of keys that should be treated as paths (and excluded from saving)
 EXCLUDE_PATH_KEYS = [
@@ -645,7 +836,7 @@ st.write('*After running any of the preparation tools, don\'t forget to reset yo
          'Directory to the correct one and verify that your new Input Directory contains only the structures you want '
          'to include in the analysis.*')
 
-st.write('##### - Split PDBs (in case they contain multiple chains or are multi-model files)')
+st.write('##### ✂️ Split PDBs (in case they contain multiple chains or are multi-model files)')
 st.write('This is an additional optional tool that might help you with preparing you pdb ensemble.  '
          'In case your PDB structure files contain multiple chains or are multi-model files you need to split them '
          'before running the analysis.')
@@ -656,7 +847,7 @@ if st.button('Split PDBs', key="split_pdbs_btn"):
          '-o', str(output_directory) + "/split_pdbs"])
     st.write('PDB files are split and saved in: ', str(output_directory) + '/split_pdbs')
 
-st.write('##### - Sort/subset your pdb files based on gap occurrence')
+st.write('##### ↩️↪️ Sort/subset your pdb files based on gap occurrence')
 st.write('This is an additional optional tool that might help you with sorting/subsetting you pdb ensemble.  '
          'In case some of your structures have a missing loop region, you may want to consider subsetting your '
          'ensemble and analyse the two subsets "structures_with_gaps" and "structures_without_gaps" separately '
@@ -688,11 +879,6 @@ st.write("Your choice is: ", superimp_method)
 
 def superimpose(superimp_method):
     if superimp_method == "Bio3D":
-        #sys.which("Rscript")
-        # result = subprocess.Popen(["Rscript", str(parentfilepath)+"/superimpose_bio3d.R",
-        #                            '-i', str(input_directory), '-o', str(output_directory)],
-        #                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # result1 = result.communicate()
         result = subprocess.run(
             ["Rscript", str(parentfilepath)+"/superimpose_bio3d.R", '-i', str(input_directory), '-o', str(output_directory)])
         st.write("Bio3D calculations are running...")
@@ -764,18 +950,6 @@ def run_analysis_Bio3D():
     st.write("Files are saved in: ", outputdirBio3D)
     st.session_state.Bio3Danalysisdone = True
 
-# def show_report(parentpath, filename):
-#     # Show generated html report
-#     path_to_html = str(parentpath) + filename
-#     if os.path.isfile(path_to_html):
-#         # Read file and keep in variable
-#         with open(path_to_html, 'r') as f:
-#             html_data = f.read()
-#         ## Show in app
-#         #st.header("Show an external HTML")
-#         st.components.v1.html(html_data, height=200)
-#     else:
-#         st.write("HTML report could not be generated.")
 
 st.button('Run', key="analyse_Bio3D_btn", on_click=run_analysis_Bio3D)
 st.markdown("Results in form of images will be displayed below.  "
@@ -889,8 +1063,6 @@ if st.session_state.Bio3Danalysisdone == True:
             st.markdown("##### - on backbone coordinate UMAP results")
             with open(outputdirBio3D + '/cluster_validation_UMAP.txt') as f:
                 st.write(f.readlines())
-
-        #show_report(parentpath=outputdirBio3D, filename="/analysis_bio3d_html_report.html")
 
 
 
@@ -1053,10 +1225,39 @@ if st.session_state.PDBhasLigandSortisdone == True:
 
 
 st.markdown('''##### Liganded Structures - Input Directory''')
-st.write('Please select your input directory (where your liganded structure files are located):')
+st.write('Please select your input directory (where your liganded structure files are located) or just continue with the default location:')
 st.write(f'(If you have used the tool above, this should be: "{str(output_directory)}/structures_with_ligand")')
-input_directory_liganded = st_directory_picker_input_liganded(initial_path=output_directory, key='input_directory_liganded')
+# input_directory_liganded = st_directory_picker_input_liganded(initial_path=output_directory, key='input_directory_liganded')
 # st.session_state.input_directory_liganded = str(input_directory_liganded)
+# If output directory is selected, set the default liganded directory
+if st.session_state.output_directory:
+    default_liganded_dir = os.path.join(st.session_state.output_directory, "structures_with_ligand")
+    if os.path.isdir(default_liganded_dir):
+        st.session_state.input_directory_liganded = default_liganded_dir
+    else:    # If "structures_with_ligand" directory does not exist in output_directory, set output_directory as default
+        st.session_state.input_directory_liganded = st.session_state.output_directory
+
+    # if st.session_state.input_directory_liganded is None:
+    #     st.session_state.input_directory_liganded = default_liganded_dir
+
+    st.write(f"Default Liganded Structures Directory: `{st.session_state.input_directory_liganded}`")
+
+    # Custom Liganded Directory Selection
+    if not is_running_in_docker():
+        if st.button("Select Custom Directory for Liganded Structures"):
+            select_folder_non_docker("input_directory_liganded")
+    else:
+        select_folder_in_docker("input_directory_liganded", "Select Custom Liganded Directory")
+
+    st.write(f"📂 Selected Custom Directory of Liganded Structures: `{st.session_state.input_directory_liganded}`")
+
+else:
+    st.warning("⚠️ Please select an output directory first.")
+
+
+if st.session_state.input_directory_liganded:
+    input_directory_liganded = st.session_state.input_directory_liganded
+
 
 st.markdown('''##### Variables''')
 cutoff = st.number_input("Distance cutoff for binding site detection (in angstrom):", value=3.5, step=0.1, format="%.1f")
@@ -1073,13 +1274,6 @@ def run_bs_ident_Bio3D():
     st.write("Bio3D calculations are running...")
     st.write("Output files are saved in: ", outputdir_BindingSite_ident)
     st.session_state.BSidentifyisdone = True
-    # show binding site csv file
-    #csvfile = pd.read_csv(outputdir_BindingSite_ident+"/binding_site_residues.csv")  # path folder of the data file
-    #st.write(csvfile)
-    # show binding frequency plot
-    # st.image(outputdir_BindingSite_ident+'/Histogram_binding_residues_percentage_colored.png',
-    #          caption='Histogram of binding residues')
-    #show_report(parentpath=outputdir_BindingSite_ident, filename="/analysis_bio3d_html_report.html")
 
 st.markdown("##### Calculation and outputs:\n"
             " - Binding site residues are identified based on distance cutoff from ligand atoms.\n"
@@ -1525,6 +1719,9 @@ if st.session_state.ESSAisdone == True:
         except:
             st.write("ERROR: No output available.")
 
+
+# # Future projects
+#
 # toc.subheader("B) Monte-Carlo Sampling")
 # if st.button('Run', key="run_monte-carlo_btn"):
 #     st.write("Output files are saved in: ", output_directory)
@@ -1560,8 +1757,5 @@ st.write("***Funding***")
 st.write("*This work was supported by the EMBL ARISE Fellowship from the European Union’s Horizon 2020 research "
          "and innovation program under the Marie Skłodowska-Curie grant agreement No 945405.*")
 
-# toc.generate()
-toc.toc()
 
-# if __name__ == "__main__":
-#     main()
+toc.toc()
