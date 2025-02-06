@@ -28,13 +28,13 @@ You have different options for installing EnsembleFlex.
 Choose one of the following options depending on your expertise and required environment restrictions. 
 Here is the list of options ordered from highest environment reproducibility to lowest:
 - Using **Docker** - This is the most reproducible environment setup and comes with all benefits but also some 
-inconveniences of containers.
-- Using the `conda-lock.yml` file with **Conda-lock** or **Micromamba** - This provides also a highly reproducible 
+inconveniences of containers. (E.g. You will need to move your input pdb files into the mounted folder `ensembleflex/docker-data/` (or subdirectories).)
+- [Recommended] Using the `conda-lock.yml` file with **Conda-lock** or **Micromamba** - This provides also a highly reproducible 
 environment, but can only be used on Mac or Linux systems (not for Windows).
-- Using the `environment_versioned.yml` file with **Conda** or **Mamba** to create the environment - This ensures 
+- [Recommended] Using the `environment_versioned.yml` file with **Conda** or **Mamba** to create the environment - This ensures 
 package compatibility, but may give you slightly older package versions compared to the next option below.
 - Using the `environment.yml` file with **Conda** or **Mamba** to create the environment - This installs more recent 
-versions of required packages.
+versions of required packages, but be aware that with time some of them may become incompatible.
 - [NOT recommended] Installing all packages listed in the `environment.yml` **manually** on your system / in your custom environment - 
 This is the highest customizable installation option, but you need to manage the package dependencies.
 
@@ -44,15 +44,19 @@ This is the highest customizable installation option, but you need to manage the
 **Installation**:
 
         git clone https://gitlab.ebi.ac.uk/melanie/ensembleflex.git
-        cd EnsembleFlex
+        cd ensembleflex
         docker build -t ensembleflex-image .
+
+Attention Linux users!: Be aware that if you are on a linux system you need to run Docker commands as root (add `sudo` 
+in front of the `docker ...` commands), or follow the documentation [here](https://docs.docker.com/engine/install/linux-postinstall/) 
+on how to use Docker without root permissions on linux.
 
 **Launch**:  
 
         docker run -d -it --name ensembleflex -p 8501:8501 -p 80:80 --volume ./docker-data:/app/docker-data ensembleflex-image
 
 Then open your browser and navigate to `http://localhost:8501/`. There you should see the graphical user interface.
-Note that your input pdb files need to be put into `EnsembleFlex/docker-data/` (or subdirectories), 
+Note that your input pdb files need to be put into `ensembleflex/docker-data/` (or subdirectories), 
 as this is a mounted directory in the Docker image and will therefore be accessible from within the Docker container 
 and the user interface.
 
@@ -66,7 +70,7 @@ manager. (I recommend [`mamba` through miniforge](https://github.com/conda-forge
 Clone the repository and go to the EnsembleFlex folder:
 
       git clone https://gitlab.ebi.ac.uk/melanie/ensembleflex.git
-      cd EnsembleFlex
+      cd ensembleflex
   
 * install with `mamba` (if you prefer `conda`, just replace 'mamba' with 'conda'):
   
