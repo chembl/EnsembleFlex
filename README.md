@@ -241,7 +241,7 @@ EnsembleFlex
 ```
 
 ## Compliance with FAIR principles for research software
-- **F**indable: The EnsembleFlex code is available on [GitLab](https://gitlab.ebi.ac.uk/melanie/ensembleflex), 
+- **F**indable: The EnsembleFlex code is available on [GitHub](https://github.com/chembl/EnsembleFlex) and on [GitLab](https://gitlab.ebi.ac.uk/melanie/ensembleflex), 
 where the Docker image is also available in the Container Registry 
 and the tool is listed at Elixir [bio.tools](https://bio.tools/ensembleflex).
 - **A**ccessible: All code is available on GitHub and can be installed via Conda environment manager or simply 
