@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/916621111.svg)](https://doi.org/10.5281/zenodo.14851471)
 
 # EnsembleFlex - Flexibility Analysis of Structure Ensembles
 
