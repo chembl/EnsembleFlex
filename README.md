@@ -8,7 +8,7 @@ This program provides flexibility analysis tools for protein structure ensembles
 Nevertheless, all tools are provided as separately executable Python or R scripts and can therefore be integrated in 
 custom in-house pipelines, without using the GUI. 
 For more details, please see section 'Operating instructions' below, as well as the additional 
-[`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md) file.  
+[`user_guide.md`](documentation/user_guide.md) file.  
 
 ![EnsembleFlex_Screenshot](documentation/EnsembleFlex_Screenshot.png)
 
@@ -105,7 +105,7 @@ analysis.
 **Launch**:  
 With conda/mamba installation EnsemblFlex can be used with the 
 browser based Graphical User Interface (GUI) and the 
-Command Line (see detailed documentation in [`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md)).  
+Command Line (see detailed documentation in [`user_guide.md`](documentation/user_guide.md)).  
 
 First, activate the environment:
       
@@ -139,7 +139,7 @@ When using the graphical user interface analysis results are presented in a scro
 analysis is finished.  
 
 ### Analysis
-Please look into [`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md) 
+Please look into [`user_guide.md`](documentation/user_guide.md) 
 for a detailed interpretation help and description of methods.  
 
 Primary tools and packages used in the workflow are:
@@ -247,7 +247,7 @@ where the Docker image is also available in the Container Registry
 and the tool is listed at Elixir [bio.tools](https://bio.tools/ensembleflex).
 - **A**ccessible: All code is available on GitHub and can be installed via Conda environment manager or simply 
 executed as Docker image. 
-Documentation is provided via this `README.md` file and an additional [`user_guide.md`](https://gitlab.ebi.ac.uk/melanie/ensembleflex/-/blob/master/documentation/user_guide.md) 
+Documentation is provided via this `README.md` file and an additional [`user_guide.md`](documentation/user_guide.md) 
 file.
 - **I**nteroperable: The code is constructed in a building block manner, where all steps of the workflow can be 
 executed independently via command line execution of scripts having a consistent execution syntax (see `user_guide.md`), 
