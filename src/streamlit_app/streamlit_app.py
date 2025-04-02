@@ -1036,6 +1036,12 @@ if st.session_state.Bio3Danalysisdone == True:
         with tab7:
             st.markdown("#### Overall clustering results")
             st.image(outputdirBio3D + '/cluster_attributions_heatmap.png', caption='Cluster attributions')
+            st.markdown("#### Coassignment of clustering results")
+            st.markdown("With the coassignment of clustering results you can assess the consensus clustering.")
+            try:
+                st.image(outputdirBio3D + '/coassignment_heatmap.png', caption='Cluster coassignment heatmap')
+            except:
+                st.write("---")
             st.markdown("#### Clustering validation metrics")
             st.write("""
             INTERNAL VALIDATION MEASURES rely on information in the data only, that is the characteristics of the 
@@ -1077,7 +1083,7 @@ st.write('Your choice is:', cluster_option)
 
 if st.button('Run', key="subset_clusters_btn"):
     outputdirBio3D_clusters = str(output_directory) + '/Analysis_Bio3D/' + cluster_option
-    cluster_dataframe = str(output_directory) + '/Analysis_Bio3D/cluster_attributions_with_consensus.csv'
+    cluster_dataframe = str(output_directory) + '/Analysis_Bio3D/cluster_attributions.csv'
     result = subprocess.run(
         [f"{sys.executable}", str(parentfilepath) + "/tools/sort_pdbs_from_dataframe.py", '-i', superimposed, '-o',
          outputdirBio3D_clusters, '-d', cluster_dataframe, '-c', cluster_option])
@@ -1269,11 +1275,16 @@ outputdir_BindingSite_ident = str(output_directory) + '/BindingSite_ident_Bio3D'
 
 def run_bs_ident_Bio3D():
     result = subprocess.run(
-        ['Rscript', str(parentfilepath) + '/identify_binding_site_bio3d.R', '-i', input_directory_liganded, '-o', outputdir_BindingSite_ident, '-d', str(cutoff)])
+        ['Rscript', str(parentfilepath)+'/identify_binding_site_bio3d.R', '-i', input_directory_liganded, '-o', outputdir_BindingSite_ident, '-d', str(cutoff)])
     st.write("Structures are taken from ", input_directory_liganded)
     st.write("Bio3D calculations are running...")
     st.write("Output files are saved in: ", outputdir_BindingSite_ident)
     st.session_state.BSidentifyisdone = True
+    try:
+        result = subprocess.run(
+            [f"{sys.executable}", str(parentfilepath)+'/tools/combine_pdb_ligands.py', '-i', input_directory_liganded, '-o', outputdir_BindingSite_ident, '-p', outputdir_BindingSite_ident+'/binding_site_interface_labelled_frequency.pdb'])
+    finally:
+        pass
 
 st.markdown("##### Calculation and outputs:\n"
             " - Binding site residues are identified based on distance cutoff from ligand atoms.\n"

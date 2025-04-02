@@ -848,11 +848,9 @@ if (eDDM_analysis==TRUE) {
 
 # convert first column to rownames
 clusters_df <- data.frame(clusters_df, row.names = 1)
-# get consensus cluster attribution (most common) and add to df
-clusters_consensus_df <- clusters_df
-clusters_consensus_df["Consensus_Cluster"] <- apply(clusters_consensus_df, 1, function(x) names(which.max(table(x))))
+
 # safe dataframe
-write.csv(clusters_consensus_df, "cluster_attributions_with_consensus.csv", row.names=TRUE, quote=FALSE)
+write.csv(clusters_df, "cluster_attributions.csv", row.names=TRUE, quote=FALSE)
 
 # library(RColorBrewer)
 # default_color = colorRampPalette(rev(brewer.pal(n = 7, name ="RdYlBu")))#(100)
@@ -872,6 +870,70 @@ pheatmap(clusters_df, main="Cluster Attributions",
         )
 dev.off()
 print("Plot saved to file cluster_attributions_heatmap.png")
+
+#clusters_consensus_df <- clusters_df
+# get consensus cluster attribution (most common) and add to df
+#clusters_consensus_df["Consensus_Cluster"] <- apply(clusters_consensus_df, 1, function(x) names(which.max(table(x))))
+
+
+## Finding Consensus Cluster with co-assignment matrix
+
+# Compute co-assignment matrix from clusters_df
+compute_coassignment_matrix <- function(clusters_df) {
+  n <- nrow(clusters_df)
+  coassign_matrix <- matrix(0, n, n)
+  rownames(coassign_matrix) <- rownames(clusters_df)
+  colnames(coassign_matrix) <- rownames(clusters_df)
+
+  for (method in colnames(clusters_df)) {
+    clustering <- clusters_df[[method]]
+    for (i in 1:(n-1)) {
+      for (j in (i+1):n) {
+        if (clustering[i] == clustering[j]) {
+          coassign_matrix[i, j] <- coassign_matrix[i, j] + 1
+          coassign_matrix[j, i] <- coassign_matrix[i, j]
+        }
+      }
+    }
+  }
+
+  coassign_matrix <- coassign_matrix / ncol(clusters_df)  # Normalize by number of methods
+  diag(coassign_matrix) <- 1  # Each entry is always in the same cluster as itself
+  return(coassign_matrix)
+}
+
+# Compute co-assignment matrix
+coassign_matrix <- compute_coassignment_matrix(clusters_df)
+
+# Perform hierarchical clustering on co-assignment matrix to get consensus clustering
+hc <- hclust(as.dist(1 - coassign_matrix), method = "average")  # 1 - similarity for distance
+
+# Cut tree into predefined number of groups
+consensus_clusters <- cutree(hc, k = number_of_groups)
+
+# Convert to dataframe for annotation
+consensus_df <- data.frame(Consensus_Cluster = factor(consensus_clusters))
+rownames(consensus_df) <- rownames(clusters_df)
+
+# safe dataframe
+write.csv(consensus_df, "consensus_cluster.csv", row.names=TRUE, quote=FALSE)
+
+# Save and plot heatmap of co-assignment matrix
+png("coassignment_heatmap.png", units="in", width=8, height=5, res=300)
+pheatmap(coassign_matrix,
+         main = "Co-assignment Matrix",
+         fontsize = 6,
+         angle_col = 45,
+         cluster_rows = hc,
+         cluster_cols = hc,
+         annotation_row = consensus_df,
+         annotation_col = consensus_df,
+         show_rownames = TRUE,  # Show structure names
+         show_colnames = TRUE,
+         color = colorRampPalette(c("white", "black"))(100))
+dev.off()
+print("Plot saved to file coassignment_heatmap.png")
+
 
 
 

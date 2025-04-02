@@ -97,7 +97,7 @@ create an output directory called `EnsembleFlex` besides your input folder where
 **Pre-processing Tools**
 - [optional] Tool: PDB splitting on whole directory (if multiple chains are present in your PDB files)
 
-      Rscript ~/path/to/EnsembleFlex/src/tools/split_pdbs_bio3d.R -i pdbs -o split_pdbs
+      Rscript ~/path/to/EnsembleFlex/src/tools/split_pdbs_bio3d.R -i multimer_pdbs -o pdbs
 
 - [optional] Tool: subset PDBs based on gap occurrence (if you want to analyse "structures_with_gaps" and 
 "structures_without_gaps" separately)
@@ -130,7 +130,7 @@ create an output directory called `EnsembleFlex` besides your input folder where
 - Subset clusters  
 
       # Subset clusters based on dataframe (where option `-c ` specifies the column name of the data frame)
-      python3 ~/path/to/EnsembleFlex/src/tools/pdb_sorter_from_dataframe.py -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_Bio3D/Consensus_Clusters -d EnsembleFlex/Analysis_Bio3D/cluster_attributions_with_consensus.csv -c Consensus_Cluster
+      python3 ~/path/to/EnsembleFlex/src/tools/pdb_sorter_from_dataframe.py -i EnsembleFlex/superimposed -o EnsembleFlex/Analysis_Bio3D/Clusters -d EnsembleFlex/Analysis_Bio3D/cluster_attributions.csv -c backbone_RMSD
 
 
 **Binding Site Analysis**
@@ -138,13 +138,13 @@ create an output directory called `EnsembleFlex` besides your input folder where
 
       Rscript ~/path/to/EnsembleFlex/src/tools/pdb_sorter_has_ligand.R -i EnsembleFlex/superimposed -o EnsembleFlex
 
-- [optional] Removing crystallization factor DMSO (using resname DMS)
-
-      ~/path/to/EnsembleFlex/src/tools/run_pdb_del_on_directory.sh ~/path/to/EnsembleFlex/src/tools/pdb_delresname.py EnsembleFlex/superimposed DMS [EnsembleFlex/superimposed_no_DMS]
-
 - [optional] Removing Ions
 
-      ~/path/to/EnsembleFlex/src/tools/run_pdb_del_on_directory.sh ~/path/to/EnsembleFlex/src/tools/pdb_delhetatm_ions.py EnsembleFlex/superimposed[_no_DMS] ions [EnsembleFlex/superimposed[_no_DMS]_no_ions]
+      ~/path/to/EnsembleFlex/src/tools/run_pdb_del_on_directory.sh ~/path/to/EnsembleFlex/src/tools/pdb_delhetatm_ions.py EnsembleFlex/superimposed ions [EnsembleFlex/superimposed_no_ions]
+
+- [optional] Removing other HETATMs by ID, such as crystallization factor DMSO (using resname DMS)
+
+      ~/path/to/EnsembleFlex/src/tools/run_pdb_del_on_directory.sh ~/path/to/EnsembleFlex/src/tools/pdb_delresname.py EnsembleFlex/superimposed[_no_ions] DMS [EnsembleFlex/superimposed[_no_ions]_no_DMS]
 
 - [if one of the optional "removing" steps has been performed] Checking again for ligands
 
@@ -153,6 +153,10 @@ create an output directory called `EnsembleFlex` besides your input folder where
 - Binding site Identification and Analysis
 
       Rscript ~/path/to/EnsembleFlex/src/identify_binding_site_bio3d.R -i EnsembleFlex/structures_with_ligand -o EnsembleFlex/BindingSite_ident_Bio3D -d 4.0[3.5]
+
+- Combine all ligands into a single PDB multi-model file with interaction frequency of protein residues encoded in protein b-factor
+
+      python3 ~/path/to/EnsembleFlex/src/tools/combine_pdb_ligands.py -i EnsembleFlex/structures_with_ligand -o EnsembleFlex/BindingSite_ident_Bio3D -p EnsembleFlex/BindingSite_ident_Bio3D/binding_site_interface_labelled_frequency.pdb
 
 - [optional] Superimpose only on binding site
 
