@@ -180,3 +180,45 @@ CreatePyMOLscript(conservedWaters.data = conservedWaters,
                    lig.carbon.color = "cyan",
                    filename = "WaterAnalysis"
                    )
+
+
+# Generate a custom PyMOL script for global display of conserved waters with the same color-coding as the plots
+
+cat(
+  "# Load the protein structure (pdb1) from the file specified in files[1]\n",
+  sprintf("cmd.load('%s', 'pdb1')\n", files[1]),
+  "\n",
+  "# Delete all non-protein atoms from pdb1\n",
+  "cmd.remove('pdb1 and not polymer')\n",
+  "\n",
+  "# Color the protein (polymer) chain in gray70\n",
+  "cmd.color('gray70', 'pdb1')\n",
+  "\n",
+  "# Load the conserved waters file from the current directory\n",
+  "cmd.load('WaterAnalysis_ConservedWaters_PASSED.pdb', 'ConservedWaters')\n",
+  "\n",
+  "# Define and display conserved waters\n",
+  "cmd.alter('ConservedWaters', 'vdw=((q) / (8 * 3.14**2))**0.5 * 9')\n",
+  "cmd.show(\"spheres\", \"ConservedWaters\")\n",
+  "\n",
+  "# Only display conserved waters with 40% or greater conservation\n",
+  "cmd.show('spheres', 'ConservedWaters and (q>0.399999) and not hydro')\n",
+  "\n",
+  "# Create the custom colors for percent conservation\n",
+  "cmd.set_color('consLT50_grey', [0.851, 0.851, 0.851])\n",
+  "cmd.set_color('cons50_69_red', [0.6471, 0.05882, 0.08235])\n",
+  "cmd.set_color('cons70_79_mRed', [0.9373, 0.2314, 0.1725])\n",
+  "cmd.set_color('cons80_89_lBlue', [0.6196, 0.7922, 0.8824])\n",
+  "cmd.set_color('cons90_99_mBlue', [0.2588, 0.5725, 0.7765])\n",
+  "cmd.set_color('cons100_dBlue', [0.03137, 0.31765, 0.61176])\n",
+  "\n",
+  "# Color conserved waters based on percent conservation\n",
+  "cmd.color('consLT50_grey', 'ConservedWaters and (q<0.50)')\n",
+  "cmd.color('cons50_69_red', 'ConservedWaters and (q>0.49999 and q<0.70)')\n",
+  "cmd.color('cons70_79_mRed', 'ConservedWaters and (q>0.69999 and q<0.80)')\n",
+  "cmd.color('cons80_89_lBlue', 'ConservedWaters and (q>0.79999 and q<0.90)')\n",
+  "cmd.color('cons90_99_mBlue', 'ConservedWaters and (q>0.89999 and q<1.0)')\n",
+  "cmd.color('cons100_dBlue', 'ConservedWaters and (q=1.00)')\n",
+  "\n",
+  file = "WaterAnalysis_ConservedWaters_PASSED_PyMOL_global.pml"
+)
